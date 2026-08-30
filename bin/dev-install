@@ -70,9 +70,9 @@ omarchy plugin add "$snapshot_dir" --enable --yes
 loaded=false
 for _ in {1..50}; do
   if omarchy-shell disk-lens-service state 2>/dev/null | jq -e \
-      '.buildIdentity == "disk-lens-service-v0100"' >/dev/null \
+      '.buildIdentity == "disk-lens-service-v0200"' >/dev/null \
       && omarchy-shell disk-lens state 2>/dev/null | jq -e \
-      '.buildIdentity == "disk-lens-widget-v0100"' >/dev/null; then
+      '.buildIdentity == "disk-lens-widget-v0200"' >/dev/null; then
     loaded=true
     break
   fi

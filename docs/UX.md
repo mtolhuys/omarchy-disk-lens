@@ -14,15 +14,15 @@ Disk Lens feels precise, calm, and tactile: an instrument panel rather than a ge
 
 ## Bar widget and panel
 
-The horizontal bar state shows a disk glyph and used percentage; the vertical variant keeps only the glyph. Tooltip and accessibility text include mount target and available capacity. Middle-click refreshes capacity; ordinary click opens the host-owned `KeyboardPanel` through the live bar pointer route.
+Every bar orientation uses one square slot containing a proportional pie gauge. The percentage is intentionally absent from the bar and remains available in the tooltip, accessibility name, and panel. Gauge fill changes semantically at the same pressure thresholds as the panel. Middle-click refreshes capacity; ordinary click opens the host-owned `KeyboardPanel` through the live bar pointer route.
 
-The panel has five stable zones:
+The compact panel has five stable zones:
 
-1. header with pressure and scan state;
-2. Home-filesystem capacity rail with exact values;
+1. slim header with the same pie gauge, pressure, and scan state;
+2. condensed Home-filesystem capacity rail with exact values;
 3. scope, refresh/cancel, search, view, and filter controls;
 4. first-use/status surface or the analysis canvas;
-5. selection inspector and QDirStat bridge.
+5. selection inspector with **Ask Omarchy**, plus a QDirStat scope action or compact missing-dependency row.
 
 The panel scrolls when content exceeds its fitted height, keeping small displays usable.
 
@@ -31,6 +31,8 @@ The panel scrolls when content exceeds its fitted height, keeping small displays
 Both views are projections of one model. Treemap area represents allocated bytes and only renders a label when its rectangle is large enough. Pointer selection updates the shared inspector; an explicit **Drill in** action changes scope, so navigation never depends on double-click.
 
 The ranked list shows name, proportional bar, exact allocated size, and directory/file treatment. The 80-entry render bound is stated in the UI; filters expose a narrower result without changing stored scan totals. Control characters are repaired for display and invalid UTF-8 paths are not actionable.
+
+For an actionable selected directory, **Ask Omarchy** is visually primary without displacing **Drill in** or **Open**. Activating it closes the panel and opens the configured default agent with a read-only diagnostic question. QDirStat availability is represented once: a compact install row when absent and a small scope/selection action when present, instead of a second full status card.
 
 ## Filters
 
@@ -59,6 +61,7 @@ Active controls have selected styling, **Clear filters** becomes available when 
 | QDirStat missing | Optional value and AUR provenance are explicit | Install or keep using Disk Lens |
 | Installation launched | Availability is polled without claiming success | Finish/cancel in terminal |
 | QDirStat available | The current or selected directory can be opened | Open |
+| Agent dispatched | Panel closes and the configured agent terminal owns focus | Continue there or close it |
 
 ## Accessibility boundary
 
@@ -68,6 +71,6 @@ Disk Lens adds no custom looping or geometry animation, so its status and capaci
 
 ## Proven visual matrix and gaps
 
-The disposable lab has reviewed synthetic first-use, ready treemap, filtered list, cancelled, partial, long-scope, empty, missing-QDirStat, visible install terminal, available-QDirStat, and removed states in maintained dark and light themes.
+The disposable lab has reviewed synthetic first-use, compact ready treemap, selected-folder agent action, filtered list, cancelled, partial, long-scope, empty, missing-QDirStat, visible install terminal, available-QDirStat, and removed states in maintained dark and light themes.
 
 Warning/critical/unknown capacity fixtures, narrow panels, a dense 5,000-entry model, and complete assistive-technology behavior remain explicit release gaps.

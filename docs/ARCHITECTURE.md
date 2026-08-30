@@ -8,10 +8,10 @@ Omarchy shell
   │    ├─ one disk-lens-scan process
   │    └─ last completed in-memory result
   └─ Disk Lens bar widget + KeyboardPanel
-       ├─ capacity rail and scope controls
+       ├─ proportional pie gauge, capacity rail, and scope controls
        ├─ shared filters and selection
        ├─ treemap or ranked list
-       └─ structural launches: file manager, QDirStat, install terminal
+       └─ structural launches: file manager, Omarchy agent, QDirStat, install terminal
 
 disk-lens-scan
   └─ GNU du --all --one-file-system --max-depth=1 --null
@@ -48,7 +48,13 @@ The QML process collector promotes a complete parsed result atomically; it does 
 
 One in-memory entry array drives both projections. Filters are pure projections over name, kind, hidden status, minimum allocated bytes, and maximum modification age. Filtered bytes are labelled independently from scanned totals. Treemap geometry is bounded to the 48 largest visible entries; the ranked view renders at most 80 and directs the user to filters for further narrowing.
 
-Drilling into an actionable directory starts a new immediate-child scan. Parent navigation derives one structural absolute path. Version `0.1.0` does not persist scopes or results, so a shell reload returns to Home and first-use state.
+Drilling into an actionable directory starts a new immediate-child scan. Parent navigation derives one structural absolute path. Version `0.2.0` does not persist scopes or results, so a shell reload returns to Home and first-use state.
+
+## Omarchy agent adapter
+
+The selected-directory action constructs one explanatory prompt containing the exact path, allocated byte count, and a fixed non-destructive investigation contract. QML launches `omarchy agent prompt` as four process arguments; the path never becomes shell source. The prompt asks the configured default agent to investigate read-only, distinguish verified findings from guesses, explain necessity and reclaim options, and request confirmation before proposing any filesystem-changing command.
+
+The maintained Omarchy launcher chooses and starts the user's default agent. Disk Lens neither selects a provider nor overrides that agent's authentication, network, approval, or sandbox policy. Dispatch count and selected path are exposed only through local widget IPC for lifecycle and acceptance assertions.
 
 ## QDirStat adapter
 
@@ -61,7 +67,7 @@ After the terminal is launched, a three-second timer rechecks executable availab
 
 ## Btrfs accounting
 
-Filesystem free space and per-path allocation answer different questions. The UI explicitly notes that snapshots, compression, and shared extents can explain a gap. Version `0.1.0` does not calculate exclusive/shared extents, snapshot ownership, or reclaimable bytes.
+Filesystem free space and per-path allocation answer different questions. Snapshots, compression, and shared extents can explain a gap. Version `0.2.0` does not calculate exclusive/shared extents, snapshot ownership, or reclaimable bytes.
 
 ## Lifecycle and development snapshots
 

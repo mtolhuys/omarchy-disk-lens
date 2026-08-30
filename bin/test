@@ -12,6 +12,7 @@ node "$project_root/tests/model.test.js"
 if [[ -n ${OMARCHY_SOURCE:-} && -d $OMARCHY_SOURCE/shell ]] && command -v qmllint >/dev/null; then
   qmllint -I "$OMARCHY_SOURCE/shell" \
     "$project_root/src/Service.qml" \
-    "$project_root/src/BarWidget.qml"
+    "$project_root/src/BarWidget.qml" \
+    "$project_root/src/PieGauge.qml"
   printf 'ok - QML lint against selected Omarchy source\n'
 fi

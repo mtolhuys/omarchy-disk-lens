@@ -11,7 +11,7 @@
 ## M1 — Honest vertical slice — complete
 
 - Valid Omarchy manifest with working service and bar-widget entry points.
-- Theme-native bar percentage, capacity rail, and panel.
+- Theme-native proportional pie gauge, capacity rail, and panel.
 - Strict capacity and scan adapters.
 - Synthetic immediate-child scans, source tests, and loaded build identities.
 
@@ -34,9 +34,16 @@
 - Selected-directory launch through a structured process argument.
 - Disposable-guest AUR package installation and mapped-window acceptance.
 
-Package, unpackaged-file, and cache-file views are deliberately not implemented in `0.1.0`; each requires a separate literal product contract before it can ship.
+Package, unpackaged-file, and cache-file views are deliberately not implemented in `0.2.0`; each requires a separate literal product contract before it can ship.
 
-## M4 — Release hardening — in progress
+## M4 — Selected-folder agent guidance — complete
+
+- **Ask Omarchy** is limited to actionable selected directories.
+- Exact path and allocation are passed through the maintained `omarchy agent prompt` contract.
+- The fixed prompt requires a read-only investigation and an explicit confirmation boundary.
+- Disposable-guest acceptance uses a default-agent shim to capture the full argument without host credentials or provider access.
+
+## M5 — Release hardening — in progress
 
 Completed:
 
@@ -63,4 +70,4 @@ Still required for a public release:
 - Saved scan scopes or bounded persistent cache.
 - Explicit package or unpackaged-file entry points.
 
-These are not version `0.1.0` promises.
+These are not version `0.2.0` promises.

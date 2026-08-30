@@ -28,8 +28,8 @@ omarchy_host_test() {
 
   ssh_session "cd /tmp/disk-lens-candidate && make dev-install"
   wait_for_guest_state "QDirStat scenario loads the exact service and widget identity" 25 ssh_session \
-    "omarchy-shell disk-lens-service state | jq -e '.buildIdentity == \"disk-lens-service-v0100\" and .qdirStatAvailable == false' && \
-     omarchy-shell disk-lens state | jq -e '.buildIdentity == \"disk-lens-widget-v0100\"'" || return 1
+    "omarchy-shell disk-lens-service state | jq -e '.buildIdentity == \"disk-lens-service-v0200\" and .qdirStatAvailable == false' && \
+     omarchy-shell disk-lens state | jq -e '.buildIdentity == \"disk-lens-widget-v0200\"'" || return 1
 
   geometry="$(ssh_session "omarchy-shell shell debugBarGeometry | jq -r \
     '.[] | select(.id == \"io.github.mtolhuys.disk-lens\" and .visible) | [.x,.y,.width,.height] | @tsv' | head -n1")"
@@ -39,8 +39,8 @@ omarchy_host_test() {
   icon_y=$((icon_y + widget_height / 2))
   read -r screen_width screen_height < <(ssh_session \
     "hyprctl -j monitors | jq -r 'map(select(.focused))[0] // .[0] | [.width,.height] | @tsv'")
-  qdir_x=$((screen_width - 67))
-  qdir_y=682
+  qdir_x=$((screen_width - 50))
+  qdir_y=572
 
   qmp_pointer_tap "$screen_width" "$screen_height" "$icon_x" "$icon_y" left
   wait_for_guest_state "real bar pointer opens the missing-dependency state" 12 ssh_session \
@@ -118,6 +118,8 @@ omarchy_host_test() {
       '.opened == true and .qdirStatAvailable == true and \
        .scope == \"/tmp/disk-lens-qdir-fixture\" and .scanState == \"ready\"'" || return 1
 
+  qdir_x=$((screen_width - 40))
+  qdir_y=177
   qmp_pointer_tap "$screen_width" "$screen_height" "$qdir_x" "$qdir_y" left
   wait_for_guest_state "public Open control maps QDirStat on the selected scope as the desktop user" 30 ssh_session \
     "pgrep -u \"\$(id -u)\" -af '[q]dirstat /tmp/disk-lens-qdir-fixture' >/dev/null && \

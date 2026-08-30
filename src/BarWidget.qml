@@ -11,7 +11,7 @@ BarWidget {
 
   moduleName: "io.github.mtolhuys.disk-lens"
 
-  readonly property string buildIdentity: "disk-lens-widget-v0100"
+  readonly property string buildIdentity: "disk-lens-widget-v0200"
   readonly property var diskService: bar && bar.shell
     ? bar.shell.serviceFor("io.github.mtolhuys.disk-lens") : null
   readonly property var capacity: diskService ? diskService.capacity : Model.parseCapacity("")
@@ -50,6 +50,8 @@ BarWidget {
   property string viewMode: "treemap"
   property string selectedPath: ""
   property bool installLaunched: false
+  property int agentLaunchCount: 0
+  property string lastAgentPath: ""
 
   function entryForPath(path) {
     var value = String(path || "")
@@ -151,6 +153,11 @@ BarWidget {
     Quickshell.execDetached(["uwsm-app", "--", "qdirstat", selectedDirectoryPath()])
   }
 
+  function openScopeInQDirStat() {
+    if (!diskService || !diskService.qdirStatAvailable) return
+    Quickshell.execDetached(["uwsm-app", "--", "qdirstat", currentScope])
+  }
+
   function installQDirStat() {
     installLaunched = true
     Quickshell.execDetached([
@@ -158,6 +165,33 @@ BarWidget {
       "omarchy pkg aur add qdirstat"
     ])
     qdirDetectionTimer.restart()
+  }
+
+  function askOmarchyAboutSelected() {
+    if (!selectedEntry || selectedEntry.actionable !== true || selectedEntry.kind !== "directory") return false
+
+    var path = String(selectedEntry.path)
+    var allocatedBytes = Number(selectedEntry.allocatedBytes || 0)
+    var prompt = [
+      "Investigate this local directory for me:",
+      "",
+      "Path: " + path,
+      "Allocated size reported by Omarchy Disk Lens: " + Model.formatBytes(allocatedBytes)
+        + " (" + allocatedBytes + " bytes)",
+      "",
+      "Please answer: Why is this directory this large? Is it necessary? Is it safe to delete?",
+      "",
+      "Begin with read-only inspection. Do not delete, move, modify, install, or change permissions.",
+      "Explain what normally creates this directory, what appears to be using the space, whether it is required,",
+      "which parts may be safely reclaimable, and the safest next step. Clearly separate verified findings from guesses.",
+      "Ask for explicit confirmation before proposing any command that would change the filesystem."
+    ].join("\n")
+
+    Quickshell.execDetached(["omarchy", "agent", "prompt", prompt])
+    agentLaunchCount += 1
+    lastAgentPath = path
+    close()
+    return true
   }
 
   function cycleKindFilter() {
@@ -223,7 +257,9 @@ BarWidget {
       includeHidden: includeHidden,
       kindFilter: kindFilter,
       qdirStatAvailable: diskService ? diskService.qdirStatAvailable : false,
-      installLaunched: installLaunched
+      installLaunched: installLaunched,
+      agentLaunchCount: agentLaunchCount,
+      lastAgentPath: lastAgentPath
     }
   }
 
@@ -238,21 +274,30 @@ BarWidget {
     id: button
     anchors.fill: parent
     bar: root.bar
-    text: root.vertical
-      ? ""
-      : (root.capacityReady ? "  " + root.capacity.percent + "%" : "  —")
+    text: ""
+    labelVisible: false
+    hasVisualContent: true
     tooltipText: root.capacityTooltip()
     active: root.capacityReady && root.capacity.percent >= 90
     activeColor: root.stateColor()
-    fontSize: root.vertical ? Style.font.icon : Style.font.bodySmall
-    horizontalMargin: 7.5
-    fixedWidth: root.vertical ? root.barSize : -1
+    fixedWidth: root.barSize
     Accessible.name: root.capacityTooltip()
     Accessible.role: Accessible.Button
 
     onPressed: function(button) {
       if (button === Qt.MiddleButton && root.diskService) root.diskService.refreshCapacity()
       else root.toggle()
+    }
+
+    PieGauge {
+      width: Math.min(parent.width, parent.height) * 0.52
+      height: width
+      anchors.centerIn: parent
+      value: root.capacityReady ? root.capacity.percent : 0
+      available: root.capacityReady
+      fillColor: root.stateColor()
+      trackColor: Util.alpha(button.foreground, 0.18)
+      outlineColor: button.foreground
     }
   }
 
@@ -263,8 +308,8 @@ BarWidget {
     owner: root
     open: root.popupOpen
     focusTarget: searchField.enabled ? searchField : closeButton
-    contentWidth: popup.fittedContentWidth(Style.space(620))
-    contentHeight: popup.fittedContentHeight(Math.min(panelColumn.implicitHeight, Style.space(700)))
+    contentWidth: popup.fittedContentWidth(Style.space(520))
+    contentHeight: popup.fittedContentHeight(Math.min(panelColumn.implicitHeight, Style.space(640)))
 
     Flickable {
       id: panelScroll
@@ -285,30 +330,33 @@ BarWidget {
       Column {
         id: panelColumn
         width: panelScroll.width
-        spacing: Style.spacing.panelGap
+        spacing: Style.space(9)
 
         Row {
           width: parent.width
-          spacing: Style.space(12)
+          spacing: Style.space(10)
 
           BorderSurface {
-            width: Style.space(44)
+            width: Style.space(36)
             height: width
             color: Style.selectedFillFor(root.stateColor(), Color.accent)
             borderSpec: Border.controlSpec("normal", root.stateColor(), Color.accent)
             radius: Style.cornerRadius
 
-            Text {
+            PieGauge {
+              width: parent.width * 0.58
+              height: width
               anchors.centerIn: parent
-              text: ""
-              color: root.stateColor()
-              font.family: Style.font.family
-              font.pixelSize: Style.font.display
+              value: root.capacityReady ? root.capacity.percent : 0
+              available: root.capacityReady
+              fillColor: root.stateColor()
+              trackColor: Util.alpha(Color.popups.text, 0.14)
+              outlineColor: root.stateColor()
             }
           }
 
           Column {
-            width: parent.width - Style.space(44) - Style.space(12) - closeButton.width
+            width: parent.width - Style.space(36) - Style.space(10) - closeButton.width
             anchors.verticalCenter: parent.verticalCenter
             spacing: Style.space(2)
 
@@ -317,7 +365,7 @@ BarWidget {
               text: "Disk Lens"
               color: Color.popups.text
               font.family: Style.font.family
-              font.pixelSize: Style.font.heading
+              font.pixelSize: Style.font.title
               font.bold: true
               textFormat: Text.PlainText
             }
@@ -344,7 +392,7 @@ BarWidget {
 
         BorderSurface {
           width: parent.width
-          implicitHeight: capacityColumn.implicitHeight + Style.space(28)
+          implicitHeight: capacityColumn.implicitHeight + Style.space(18)
           color: Style.normalFillFor(Color.popups.text, Color.accent)
           borderSpec: Border.controlSpec("normal", Color.popups.text, Color.accent)
           radius: Style.cornerRadius
@@ -354,8 +402,8 @@ BarWidget {
             anchors.left: parent.left
             anchors.right: parent.right
             anchors.verticalCenter: parent.verticalCenter
-            anchors.margins: Style.space(14)
-            spacing: Style.space(10)
+            anchors.margins: Style.space(9)
+            spacing: Style.space(6)
 
             Row {
               width: parent.width
@@ -371,7 +419,7 @@ BarWidget {
                     : "Home filesystem"
                   color: Color.popups.text
                   font.family: Style.font.family
-                  font.pixelSize: Style.font.subtitle
+                  font.pixelSize: Style.font.body
                   font.bold: true
                   elide: Text.ElideMiddle
                   textFormat: Text.PlainText
@@ -380,11 +428,11 @@ BarWidget {
                 Text {
                   width: parent.width
                   text: root.capacityReady
-                    ? Model.formatBytes(root.capacity.used) + " used  ·  " + Model.formatBytes(root.capacity.avail) + " available"
+                    ? Model.formatBytes(root.capacity.used) + " used  ·  " + Model.formatBytes(root.capacity.avail) + " free"
                     : (root.diskService ? root.diskService.capacityError : "Waiting for the Disk Lens service")
                   color: Color.muted
                   font.family: Style.font.family
-                  font.pixelSize: Style.font.bodySmall
+                  font.pixelSize: Style.font.caption
                   elide: Text.ElideRight
                   textFormat: Text.PlainText
                 }
@@ -395,7 +443,7 @@ BarWidget {
                 text: root.capacityReady ? root.capacity.percent + "%" : "—"
                 color: root.stateColor()
                 font.family: Style.font.family
-                font.pixelSize: Style.font.displayLarge
+                font.pixelSize: Style.font.title
                 font.bold: true
                 textFormat: Text.PlainText
               }
@@ -403,7 +451,7 @@ BarWidget {
 
             Rectangle {
               width: parent.width
-              height: Style.space(8)
+              height: Style.space(4)
               radius: height / 2
               color: Util.alpha(Color.popups.text, 0.1)
 
@@ -426,6 +474,7 @@ BarWidget {
             spacing: Style.space(8)
 
             Button {
+              id: parentButton
               iconText: "‹"
               tooltipText: "Scan parent directory"
               focusable: true
@@ -435,7 +484,8 @@ BarWidget {
             }
 
             BorderSurface {
-              width: parent.width - parent.children[0].width - parent.children[2].width - Style.space(16)
+              width: parent.width - parentButton.width - scanButton.width
+                - (qdirScopeButton.visible ? qdirScopeButton.width + Style.space(8) : 0) - Style.space(16)
               height: scanButton.height
               color: Style.normalFillFor(Color.popups.text, Color.accent)
               borderSpec: Border.controlSpec("normal", Color.popups.text, Color.accent)
@@ -466,6 +516,15 @@ BarWidget {
               active: root.scanRunning
               onClicked: root.scanOrCancel()
             }
+
+            Button {
+              id: qdirScopeButton
+              visible: root.diskService && root.diskService.qdirStatAvailable
+              iconText: "▦"
+              tooltipText: "Open this scope in QDirStat"
+              focusable: true
+              onClicked: root.openScopeInQDirStat()
+            }
           }
 
           Row {
@@ -474,7 +533,8 @@ BarWidget {
 
             TextField {
               id: searchField
-              width: parent.width - viewButton.width - clearFilterButton.width - Style.space(16)
+              width: parent.width - viewButton.width
+                - (clearFilterButton.visible ? clearFilterButton.width + Style.space(8) : 0) - Style.space(8)
               placeholderText: "Filter this scan…"
               text: root.query
               enabled: root.diskService && root.diskService.entries.length > 0
@@ -730,21 +790,20 @@ BarWidget {
         BorderSurface {
           visible: root.diskService && root.diskService.scanState === "partial"
           width: parent.width
-          implicitHeight: partialColumn.implicitHeight + Style.space(24)
+          implicitHeight: partialRow.implicitHeight + Style.space(16)
           color: Util.alpha(Color.accent, 0.08)
           borderSpec: Border.controlSpec("normal", Color.accent, Color.accent)
           radius: Style.cornerRadius
 
-          Column {
-            id: partialColumn
+          Row {
+            id: partialRow
             anchors.left: parent.left
             anchors.right: parent.right
             anchors.verticalCenter: parent.verticalCenter
-            anchors.margins: Style.space(12)
-            spacing: Style.space(3)
+            anchors.margins: Style.space(8)
+            spacing: Style.space(9)
 
             Text {
-              width: parent.width
               text: "Partial scan · " + (root.diskService ? root.diskService.warnings.length : 0)
                 + ((root.diskService && root.diskService.warnings.length === 1) ? " warning" : " warnings")
               color: Color.accent
@@ -755,7 +814,7 @@ BarWidget {
             }
 
             Text {
-              width: parent.width
+              width: parent.width - parent.children[0].width - Style.space(9)
               text: root.diskService && root.diskService.warnings.length > 0
                 ? String(root.diskService.warnings[0])
                 : "Some paths could not be measured; the available results remain useful."
@@ -858,7 +917,7 @@ BarWidget {
             id: treemapFrame
             visible: root.viewMode === "treemap"
             width: parent.width
-            height: Style.space(270)
+            height: Style.space(215)
             color: Util.alpha(Color.popups.text, 0.035)
             borderSpec: Border.controlSpec("normal", Color.popups.text, Color.accent)
             radius: Style.cornerRadius
@@ -956,7 +1015,7 @@ BarWidget {
                 required property var modelData
                 required property int index
                 width: parent.width
-                height: Style.space(42)
+                height: Style.space(36)
                 color: root.selectedPath === modelData.path
                   ? Style.selectedFillFor(Color.popups.text, Color.accent)
                   : (rowHover.hovered ? Style.hoverFillFor(Color.popups.text, Color.accent) : "transparent")
@@ -1054,7 +1113,7 @@ BarWidget {
         BorderSurface {
           visible: root.selectedEntry !== null
           width: parent.width
-          implicitHeight: inspectorColumn.implicitHeight + Style.space(24)
+          implicitHeight: inspectorColumn.implicitHeight + Style.space(18)
           color: Style.selectedFillFor(Color.popups.text, Color.accent)
           borderSpec: Border.controlSpec("normal", Color.popups.text, Color.accent)
           radius: Style.cornerRadius
@@ -1062,8 +1121,8 @@ BarWidget {
           Column {
             id: inspectorColumn
             anchors.fill: parent
-            anchors.margins: Style.space(12)
-            spacing: Style.space(8)
+            anchors.margins: Style.space(9)
+            spacing: Style.space(6)
 
             Row {
               width: parent.width
@@ -1077,7 +1136,7 @@ BarWidget {
                   text: root.selectedEntry ? Model.safeLabel(root.selectedEntry.name) : ""
                   color: Color.popups.text
                   font.family: Style.font.family
-                  font.pixelSize: Style.font.subtitle
+                  font.pixelSize: Style.font.body
                   font.bold: true
                   elide: Text.ElideMiddle
                   textFormat: Text.PlainText
@@ -1104,7 +1163,7 @@ BarWidget {
                 text: root.selectedEntry ? Model.formatBytes(root.selectedEntry.allocatedBytes) : ""
                 color: Color.popups.text
                 font.family: Style.font.family
-                font.pixelSize: Style.font.title
+                font.pixelSize: Style.font.subtitle
                 font.bold: true
                 textFormat: Text.PlainText
               }
@@ -1133,7 +1192,20 @@ BarWidget {
               }
 
               Button {
+                visible: root.selectedEntry && root.selectedEntry.kind === "directory" && root.selectedEntry.actionable
+                text: "Ask Omarchy"
+                iconText: "✦"
+                bordered: true
+                selected: true
+                focusable: true
+                tooltipText: "Ask your default Omarchy agent to inspect this folder read-only"
+                Accessible.name: "Ask Omarchy about the selected folder"
+                onClicked: root.askOmarchyAboutSelected()
+              }
+
+              Button {
                 visible: root.diskService && root.diskService.qdirStatAvailable
+                  && root.selectedEntry && root.selectedEntry.kind === "directory"
                 text: "QDirStat"
                 iconText: "▦"
                 focusable: true
@@ -1144,11 +1216,10 @@ BarWidget {
         }
 
         BorderSurface {
+          visible: root.diskService && !root.diskService.qdirStatAvailable
           width: parent.width
-          implicitHeight: qdirRow.implicitHeight + Style.space(24)
-          color: root.diskService && root.diskService.qdirStatAvailable
-            ? Util.alpha(Color.accent, 0.08)
-            : Style.normalFillFor(Color.popups.text, Color.accent)
+          implicitHeight: qdirRow.implicitHeight + Style.space(16)
+          color: Style.normalFillFor(Color.popups.text, Color.accent)
           borderSpec: Border.controlSpec("normal", Color.popups.text, Color.accent)
           radius: Style.cornerRadius
 
@@ -1157,82 +1228,38 @@ BarWidget {
             anchors.left: parent.left
             anchors.right: parent.right
             anchors.verticalCenter: parent.verticalCenter
-            anchors.margins: Style.space(12)
-            spacing: Style.space(12)
+            anchors.margins: Style.space(8)
+            spacing: Style.space(9)
 
-            BorderSurface {
-              width: Style.space(36)
-              height: width
-              color: Util.alpha(root.diskService && root.diskService.qdirStatAvailable ? Color.accent : Color.foreground, 0.12)
-              borderSpec: Border.none()
-              radius: Style.cornerRadius
-
-              Text {
-                anchors.centerIn: parent
-                text: "▦"
-                color: root.diskService && root.diskService.qdirStatAvailable ? Color.accent : Color.muted
-                font.family: Style.font.family
-                font.pixelSize: Style.font.iconLarge
-              }
+            Text {
+              text: "▦"
+              color: Color.muted
+              font.family: Style.font.family
+              font.pixelSize: Style.font.icon
             }
 
-            Column {
-              width: parent.width - Style.space(36) - Style.space(12) - qdirAction.width
+            Text {
+              width: parent.width - parent.children[0].width - qdirAction.width - Style.space(18)
               anchors.verticalCenter: parent.verticalCenter
-              spacing: Style.space(2)
-
-              Text {
-                width: parent.width
-                text: root.diskService && root.diskService.qdirStatAvailable
-                  ? "Deep inspection is ready" : (root.installLaunched ? "Installation opened in a terminal" : "Unlock QDirStat deep inspection")
-                color: Color.popups.text
-                font.family: Style.font.family
-                font.pixelSize: Style.font.body
-                font.bold: true
-                elide: Text.ElideRight
-                textFormat: Text.PlainText
-              }
-
-              Text {
-                width: parent.width
-                text: root.diskService && root.diskService.qdirStatAvailable
-                  ? "Open the current scope in the full desktop analyzer."
-                  : (root.installLaunched
-                    ? "Finish or cancel there; Disk Lens will re-check availability."
-                    : "Optional AUR package · explicit terminal install · never runs as root")
-                color: Color.muted
-                font.family: Style.font.family
-                font.pixelSize: Style.font.caption
-                elide: Text.ElideRight
-                textFormat: Text.PlainText
-              }
+              text: root.installLaunched
+                ? "QDirStat installation opened · finish or cancel in the terminal"
+                : "QDirStat deep inspection · optional AUR package"
+              color: root.installLaunched ? Color.accent : Color.muted
+              font.family: Style.font.family
+              font.pixelSize: Style.font.caption
+              elide: Text.ElideRight
+              textFormat: Text.PlainText
             }
 
             Button {
               id: qdirAction
-              text: root.diskService && root.diskService.qdirStatAvailable ? "Open" : "Install"
-              iconText: root.diskService && root.diskService.qdirStatAvailable ? "↗" : "+"
+              text: "Install"
+              iconText: "+"
               bordered: true
               focusable: true
-              onClicked: {
-                if (root.diskService && root.diskService.qdirStatAvailable) root.openInQDirStat()
-                else root.installQDirStat()
-              }
+              onClicked: root.installQDirStat()
             }
           }
-        }
-
-        Text {
-          width: parent.width
-          text: root.capacityReady && root.capacity.fstype === "btrfs"
-            ? "Capacity and directory allocation answer different questions on Btrfs; snapshots, compression and shared extents can explain the gap."
-            : "Capacity is a filesystem measurement; directory totals are measured separately and only on request."
-          color: Color.muted
-          font.family: Style.font.family
-          font.pixelSize: Style.font.caption
-          wrapMode: Text.WordWrap
-          horizontalAlignment: Text.AlignHCenter
-          textFormat: Text.PlainText
         }
       }
     }

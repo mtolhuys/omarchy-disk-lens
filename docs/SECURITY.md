@@ -7,6 +7,7 @@ Disk Lens inspects filenames, metadata, and allocated sizes on local filesystems
 - Paths and filenames are untrusted data, including whitespace, newlines, control characters, leading dashes, and invalid UTF-8 bytes.
 - Scanner output is untrusted until every record matches protocol version `1`, its record type, path rules, numeric bounds, and the 5,000-entry limit.
 - QDirStat is third-party optional software installed from the AUR only after an explicit user action.
+- **Ask Omarchy** delegates one selected path and measured size to the user's configured coding agent after an explicit user action. That agent may use a remote provider and follows Omarchy's own launch/approval policy.
 - The Omarchy shell is a long-lived user process, so recursive work and retained models are bounded.
 
 ## Enforced invariants
@@ -18,8 +19,9 @@ Disk Lens inspects filenames, metadata, and allocated sizes on local filesystems
 - The helper forwards `TERM` to its owned `du` child, waits for it, removes its private temporary directory, and exits `130`. Service destruction stops its owned helper process.
 - The last completed result is not replaced by a cancelled or protocol-invalid attempt.
 - QDirStat and the file manager receive selected paths as individual process arguments.
+- `omarchy agent prompt` receives the complete fixed-format question as one process argument. Selected paths never become shell source.
 - Disk Lens does not expose deletion, cleanup, permission changes, package removal, snapshot actions, or a generic command runner.
-- No scan result, path, mount data, or analytics leave the machine.
+- Capacity and scan data remain local unless the user explicitly activates **Ask Omarchy**. Only that selected path and its measured allocation are included in the delegated prompt.
 
 ## Installation boundary
 
@@ -31,9 +33,20 @@ omarchy pkg aur add qdirstat
 
 No path or UI text is interpolated into that command. The terminal owns AUR review, prompts, privilege entry, success, failure, and cancellation. Disk Lens sets only an “installation launched” state, keeps the missing-dependency copy visible until executable detection succeeds, and polls availability while that state is relevant.
 
+## Agent boundary
+
+**Ask Omarchy** is available only for an actionable selected directory. Disk Lens sends the maintained `omarchy agent prompt` command one prompt argument containing:
+
+- the exact selected path;
+- allocated bytes and the formatted size;
+- the user's necessity and deletion-safety questions;
+- explicit instructions to inspect read-only, make no filesystem change, separate findings from guesses, and ask for confirmation before proposing a change-oriented command.
+
+This is an instruction boundary, not a hard sandbox. The maintained Omarchy launcher may start agents with their configured approval behavior, and the selected agent may contact a network provider. Disk Lens does not choose the agent, capture credentials, inspect responses, or claim that its prompt can override the agent's runtime policy. The panel closes immediately after dispatch and exposes no follow-up mutation action.
+
 ## State and lifecycle
 
-Version `0.1.0` keeps capacity, scan results, filters, and selection in memory. It writes no scan-result cache or plugin settings. A shell reload therefore requires a new scan.
+Version `0.2.0` keeps capacity, scan results, filters, selection, and agent-dispatch bookkeeping in memory. It writes no scan-result cache or plugin settings. A shell reload therefore requires a new scan.
 
 Disablement and removal unload the service and widget. The accepted lifecycle leaves scanned user files and QDirStat untouched; only Omarchy-owned plugin installation/runtime data follow the normal plugin lifecycle. The opt-in development installer uses a dedicated snapshot under the user's XDG cache and replaces only plugin id `io.github.mtolhuys.disk-lens`.
 

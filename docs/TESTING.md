@@ -42,11 +42,12 @@ cd "$OMARCHY_PLUGIN_LAB_ROOT"
 2. real bar geometry and QMP pointer routing into the real panel;
 3. exact synthetic scan scope, entry count, allocated total, and explicit refresh;
 4. treemap selection plus rendered list/search/clear interaction;
-5. Catppuccin Latte and Tokyo Night rendering without state loss or compositor errors;
-6. cancellation with the last completed result preserved and no scanner left behind;
-7. explicit partial, long-scope, empty, and missing-QDirStat states;
-8. a same-path public plugin update replacing both loaded runtime identities;
-9. disable, re-enable, removal, user-data preservation, and post-run log cleanliness.
+5. the visible **Ask Omarchy** action closing the panel and launching an `org.omarchy.agent` terminal with the exact selected path, size, read-only constraint, and confirmation boundary captured by a guest-only default-agent shim;
+6. Catppuccin Latte and Tokyo Night rendering without state loss or compositor errors;
+7. cancellation with the last completed result preserved and no scanner left behind;
+8. explicit partial, long-scope, empty, and missing-QDirStat states;
+9. a same-path public plugin update replacing both loaded runtime identities;
+10. disable, re-enable, removal, user-data preservation, and post-run log cleanliness.
 
 `qdirstat.sh` separately proves:
 
@@ -59,7 +60,7 @@ cd "$OMARCHY_PLUGIN_LAB_ROOT"
 
 ## Visual review boundary
 
-The current vertical-slice matrix covers first use, treemap ready, filtered list, light theme, cancelled, partial, long scope, empty, missing dependency, visible installation terminal, mapped QDirStat, and removed states. Every screenshot uses synthetic guest data and is paired with a machine assertion.
+The current vertical-slice matrix covers first use, compact treemap ready, selected-folder agent hand-off, filtered list, light theme, cancelled, partial, long scope, empty, missing dependency, visible installation terminal, mapped QDirStat, and removed states. Every screenshot uses synthetic guest data and is paired with a machine assertion. The agent prompt is captured by an inert guest-only executable; no maintainer credentials, host agent, or real user path enters the VM.
 
 Before a public release, add quantified warning/critical/unknown-capacity fixtures, narrow and dense layouts, composed-panel reduced-motion acceptance, complete keyboard focus order, contrast measurement, and assistive-technology review. Disk Lens itself adds no custom looping or geometry animation.
 

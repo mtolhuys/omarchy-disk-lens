@@ -2,21 +2,22 @@
 
 > A calm, visual answer to “what is eating my disk?” for Omarchy.
 
-Omarchy Disk Lens is a native bar widget and disk-usage panel for Omarchy. It keeps filesystem pressure glanceable, turns an explicit directory scan into a ranked list and squarified treemap, and hands the selected scope to QDirStat when deeper desktop analysis is useful.
+Omarchy Disk Lens is a native bar widget and disk-usage panel for Omarchy. It keeps filesystem pressure glanceable, turns an explicit directory scan into a ranked list and squarified treemap, asks the configured Omarchy agent to explain suspicious folders, and hands a scope to QDirStat when deeper desktop analysis is useful.
 
-Version `0.1.0` is a working development preview. Its vertical slice has passed real-session acceptance in the disposable Omarchy Plugin Lab; it has not been tagged, published, or submitted to a marketplace.
+Version `0.2.0` is a working development preview. Its vertical slice has passed real-session acceptance in the disposable Omarchy Plugin Lab; it has not been tagged, published, or submitted to a marketplace.
 
 ## What works today
 
-- The bar shows used capacity for the filesystem backing Home without starting a recursive scan.
+- A compact pie gauge shows used capacity for the filesystem backing Home without spending bar width on a percentage label or starting a recursive scan.
 - The panel shows exact used and available capacity and keeps scan freshness separate from capacity refreshes.
 - Scans are explicit, cancellable, same-user, same-filesystem, and limited to the immediate children of one absolute scope.
 - Treemap and ranked-list views share selection, totals, name search, type, hidden-entry, minimum-size, and modification-age filters.
 - First-use, scanning, ready, partial, cancelled, failed, empty, filtered-empty, and optional-QDirStat states have distinct recovery paths.
-- Selected entries can be drilled into or opened in the file manager. QDirStat opens the selected directory as the desktop user.
+- Selected entries can be drilled into or opened in the file manager. Selected directories expose **Ask Omarchy**, which launches the configured default agent with the exact path, measured size, and an explicit read-only investigation prompt.
+- QDirStat opens the current scope or selected directory as the desktop user.
 - If QDirStat is missing, **Install** opens a visible terminal with the fixed command `omarchy pkg aur add qdirstat`; Disk Lens never claims that merely opening the terminal installed it.
 
-Disk Lens never scans on panel open, silently installs packages, runs a privileged GUI, or offers destructive cleanup actions.
+Disk Lens never scans on panel open, silently installs packages, runs a privileged GUI, or offers destructive cleanup actions. The agent hand-off is explicit and follows the configured agent's own provider and Omarchy launch policy; Disk Lens supplies a non-destructive prompt but does not claim to sandbox that agent.
 
 ## Install the current development tree
 

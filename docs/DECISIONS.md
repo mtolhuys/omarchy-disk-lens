@@ -63,3 +63,11 @@
 **Why:** A valid manifest or attractive screenshot does not prove hot loading, pointer routing, cancellation, or lifecycle cleanup.
 
 **Consequence:** Release evidence is a first-class artifact and the README names the project as a development preview until every public-release gate passes.
+
+## D009 — Ask the maintained Omarchy agent, never build a cleanup agent
+
+**Decision:** A selected actionable directory can be sent through `omarchy agent prompt` with its measured allocation and a fixed, read-only explanation request. Disk Lens does not parse the answer or execute a cleanup result.
+
+**Why:** Users need help interpreting unfamiliar caches and application data, but embedding agent selection, provider credentials, or destructive automation would duplicate Omarchy and expand the trust boundary dramatically.
+
+**Consequence:** The selected path is a structural process argument inside one prompt, the panel closes after dispatch, and documentation states that the configured agent's provider, network, approval, and sandbox policies still apply.

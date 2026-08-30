@@ -6,7 +6,27 @@ All notable changes to Omarchy Disk Lens are documented here. The format follows
 
 ### Changed
 
-- Reserved for changes after the `0.1.0` development milestone.
+- Reserved for changes after the `0.2.0` development milestone.
+
+## 0.2.0 — 2026-08-31
+
+### Added
+
+- **Ask Omarchy** for actionable selected directories, using the maintained default-agent prompt route with exact path and allocation context.
+- A fixed non-destructive investigation contract that asks why a folder is large, whether it is necessary, what may be reclaimable, and whether deletion is safe.
+- Disposable Plugin Lab acceptance that captures the exact agent argument through an inert guest-only default-agent shim and verifies the visible agent terminal.
+
+### Changed
+
+- Replaced the horizontal disk glyph and percentage label with one compact proportional pie gauge in every bar orientation.
+- Reduced the panel from 620 to 520 layout units, condensed the capacity card and partial warning, shortened the treemap, tightened list/inspector spacing, and removed the duplicate available-QDirStat card.
+- Moved available QDirStat access into compact scope and selected-directory actions; the missing dependency remains a single explicit install row.
+- Bumped loaded service and widget identities to `v0200` and updated the exact-working-tree development installer accordingly.
+
+### Security
+
+- Selected paths remain structural process data and never become shell source.
+- Documentation now distinguishes the prompt's non-destructive instruction boundary from the configured agent's own provider, network, approval, and sandbox policy.
 
 ## 0.1.0 — 2026-08-30
 
