@@ -1,0 +1,199 @@
+#!/bin/bash
+
+set -uo pipefail
+
+readonly protocol=1
+readonly max_entries=5000
+scan_path=""
+work_dir=""
+du_pid=""
+
+emit_error() {
+  local code=$1
+  local message=$2
+  jq -cn \
+    --argjson protocol "$protocol" \
+    --arg code "$code" \
+    --arg message "$message" \
+    '{protocol: $protocol, type: "error", code: $code, message: $message}'
+}
+
+cleanup() {
+  if [[ -n $work_dir && -d $work_dir ]]; then
+    rm -rf -- "$work_dir"
+  fi
+}
+
+stop_scan() {
+  trap - INT TERM
+  if [[ -n $du_pid ]] && kill -0 "$du_pid" 2>/dev/null; then
+    kill -TERM "$du_pid" 2>/dev/null || true
+    wait "$du_pid" 2>/dev/null || true
+  fi
+  cleanup
+  exit 130
+}
+
+usage() {
+  printf 'Usage: disk-lens-scan --path ABSOLUTE_DIRECTORY\n' >&2
+}
+
+if (( EUID == 0 )); then
+  emit_error "root-refused" "Disk Lens scans must run as the desktop user."
+  exit 77
+fi
+
+if (( $# != 2 )) || [[ $1 != "--path" ]]; then
+  usage
+  emit_error "invalid-arguments" "Expected exactly --path and one directory."
+  exit 64
+fi
+
+if [[ $2 != /* ]]; then
+  emit_error "relative-path" "The scan path must be absolute."
+  exit 64
+fi
+
+if [[ ! -d $2 ]]; then
+  emit_error "not-a-directory" "The selected scan path is not a directory."
+  exit 66
+fi
+
+scan_path=$(realpath -e -- "$2") || {
+  emit_error "unresolvable-path" "The selected scan path could not be resolved."
+  exit 66
+}
+
+work_dir=$(mktemp -d -t omarchy-disk-lens.XXXXXX) || {
+  emit_error "temporary-storage" "Disk Lens could not create temporary scan storage."
+  exit 73
+}
+
+trap cleanup EXIT
+trap stop_scan INT TERM
+
+jq -cn \
+  --argjson protocol "$protocol" \
+  --arg path "$scan_path" \
+  '{protocol: $protocol, type: "start", path: $path}'
+
+LC_ALL=C du --all --one-file-system --block-size=1 --max-depth=1 --null -- "$scan_path" \
+  >"$work_dir/records" 2>"$work_dir/errors" &
+du_pid=$!
+
+if wait "$du_pid"; then
+  du_status=0
+else
+  du_status=$?
+fi
+du_pid=""
+
+entry_count=0
+warning_count=0
+total_bytes=0
+truncated=false
+
+while IFS= read -r -d '' record; do
+  [[ $record == *$'\t'* ]] || continue
+  allocated_bytes=${record%%$'\t'*}
+  entry_path=${record#*$'\t'}
+
+  [[ $allocated_bytes =~ ^[0-9]+$ ]] || continue
+  if [[ $entry_path == "$scan_path" ]]; then
+    total_bytes=$allocated_bytes
+    continue
+  fi
+
+  if (( entry_count >= max_entries )); then
+    truncated=true
+    continue
+  fi
+
+  if [[ -L $entry_path ]]; then
+    entry_kind="symlink"
+  elif [[ -d $entry_path ]]; then
+    entry_kind="directory"
+  elif [[ -f $entry_path ]]; then
+    entry_kind="file"
+  else
+    entry_kind="other"
+  fi
+
+  entry_mtime=$(stat -c '%Y' -- "$entry_path" 2>/dev/null || printf '0')
+  entry_b64=$(printf '%s' "$entry_path" | base64 -w0)
+  entry_name=${entry_path##*/}
+  valid_utf8=true
+  actionable=true
+  if ! printf '%s' "$entry_path" | iconv -f UTF-8 -t UTF-8 >/dev/null 2>&1; then
+    valid_utf8=false
+    actionable=false
+    entry_name="[name is not valid UTF-8]"
+  fi
+
+  jq -cn \
+    --argjson protocol "$protocol" \
+    --arg path "$entry_path" \
+    --arg pathB64 "$entry_b64" \
+    --arg name "$entry_name" \
+    --arg kind "$entry_kind" \
+    --argjson allocatedBytes "$allocated_bytes" \
+    --argjson mtime "$entry_mtime" \
+    --argjson validUtf8 "$valid_utf8" \
+    --argjson actionable "$actionable" \
+    '{
+      protocol: $protocol,
+      type: "entry",
+      path: $path,
+      pathB64: $pathB64,
+      name: $name,
+      kind: $kind,
+      allocatedBytes: $allocatedBytes,
+      mtime: $mtime,
+      validUtf8: $validUtf8,
+      actionable: $actionable
+    }'
+  (( entry_count += 1 ))
+done <"$work_dir/records"
+
+while IFS= read -r warning_line || [[ -n $warning_line ]]; do
+  [[ -n $warning_line ]] || continue
+  (( warning_count += 1 ))
+  if (( warning_count <= 20 )); then
+    jq -cn \
+      --argjson protocol "$protocol" \
+      --arg message "$warning_line" \
+      '{protocol: $protocol, type: "warning", message: $message}'
+  fi
+done <"$work_dir/errors"
+
+if [[ $truncated == true ]]; then
+  (( warning_count += 1 ))
+  jq -cn \
+    --argjson protocol "$protocol" \
+    --argjson limit "$max_entries" \
+    '{protocol: $protocol, type: "warning", code: "entry-limit", message: ("Only the first " + ($limit|tostring) + " entries are shown.")}'
+fi
+
+partial=false
+if (( du_status != 0 || warning_count > 0 )); then
+  partial=true
+fi
+
+jq -cn \
+  --argjson protocol "$protocol" \
+  --arg path "$scan_path" \
+  --argjson totalBytes "$total_bytes" \
+  --argjson entries "$entry_count" \
+  --argjson warnings "$warning_count" \
+  --argjson partial "$partial" \
+  '{
+    protocol: $protocol,
+    type: "complete",
+    path: $path,
+    totalBytes: $totalBytes,
+    entries: $entries,
+    warnings: $warnings,
+    partial: $partial
+  }'
+
+exit 0

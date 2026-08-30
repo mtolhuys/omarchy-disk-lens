@@ -1,0 +1,84 @@
+#!/bin/bash
+
+# Install an exact snapshot of the current development working tree into the
+# active Omarchy user session. This is intentionally opt-in: invoking it
+# replaces the installed development copy of Disk Lens.
+
+set -euo pipefail
+
+readonly plugin_id="io.github.mtolhuys.disk-lens"
+readonly project_root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
+readonly cache_root="${XDG_CACHE_HOME:-$HOME/.cache}/omarchy-disk-lens"
+readonly snapshot_dir="$cache_root/development-source"
+
+fail() {
+  printf 'dev-install: %s\n' "$*" >&2
+  exit 1
+}
+
+(( EUID != 0 )) || fail "run this as the Omarchy desktop user, not root"
+
+for command_name in git jq omarchy omarchy-shell tar; do
+  command -v "$command_name" >/dev/null 2>&1 || fail "required command is missing: $command_name"
+done
+
+printf 'Checking the current Disk Lens working tree...\n'
+"$project_root/bin/test"
+omarchy plugin validate "$project_root"
+
+mkdir -p -- "$cache_root"
+if [[ -e $snapshot_dir && ! -d $snapshot_dir/.git ]]; then
+  fail "$snapshot_dir exists but is not a development snapshot"
+fi
+
+if [[ ! -d $snapshot_dir/.git ]]; then
+  mkdir -p -- "$snapshot_dir"
+  git -C "$snapshot_dir" init -q
+fi
+
+# Remove every path owned by the previous snapshot before extracting the new
+# working tree. NUL-delimited Git output keeps unusual development filenames
+# structural rather than interpreting them as shell input.
+while IFS= read -r -d '' tracked_path; do
+  rm -f -- "$snapshot_dir/$tracked_path"
+done < <(git -C "$snapshot_dir" ls-files -z)
+
+tar -C "$project_root" \
+  --exclude-vcs \
+  --exclude='./test-results' \
+  --exclude='./dist' \
+  -cf - . | tar -C "$snapshot_dir" -xf -
+
+git -C "$snapshot_dir" add -A
+if ! git -C "$snapshot_dir" rev-parse --verify HEAD >/dev/null 2>&1 \
+    || ! git -C "$snapshot_dir" diff --cached --quiet; then
+  git -C "$snapshot_dir" \
+    -c user.name="Disk Lens Development" \
+    -c user.email="disk-lens-development@invalid" \
+    commit -qm "Development snapshot"
+fi
+
+snapshot_commit=$(git -C "$snapshot_dir" rev-parse --short=12 HEAD)
+
+if omarchy plugin list --json | jq -e --arg id "$plugin_id" 'any(.[]; .id == $id)' >/dev/null; then
+  printf 'Replacing the installed Disk Lens development copy...\n'
+  omarchy plugin remove "$plugin_id" --yes
+fi
+
+omarchy plugin add "$snapshot_dir" --enable --yes
+
+loaded=false
+for _ in {1..50}; do
+  if omarchy-shell disk-lens-service state 2>/dev/null | jq -e \
+      '.buildIdentity == "disk-lens-service-v0100"' >/dev/null \
+      && omarchy-shell disk-lens state 2>/dev/null | jq -e \
+      '.buildIdentity == "disk-lens-widget-v0100"' >/dev/null; then
+    loaded=true
+    break
+  fi
+  sleep 0.1
+done
+
+[[ $loaded == true ]] || fail "the plugin was installed but its runtime identity did not become ready"
+
+printf 'Disk Lens development snapshot %s is installed, enabled, and loaded.\n' "$snapshot_commit"

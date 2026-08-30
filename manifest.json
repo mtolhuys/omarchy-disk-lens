@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "id": "io.github.mtolhuys.disk-lens",
+  "name": "Omarchy Disk Lens",
+  "version": "0.1.0",
+  "author": "Maarten Tolhuijs",
+  "description": "A calm, visual answer to what is eating your disk.",
+  "kinds": [
+    "service",
+    "bar-widget"
+  ],
+  "keepLoaded": true,
+  "entryPoints": {
+    "service": "src/Service.qml",
+    "barWidget": "src/BarWidget.qml"
+  },
+  "barWidget": {
+    "displayName": "Disk Lens",
+    "description": "Inspect storage pressure and the largest local paths",
+    "category": "System",
+    "allowMultiple": false,
+    "defaultSection": "right"
+  }
+}
