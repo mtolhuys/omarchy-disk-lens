@@ -7,7 +7,7 @@ This record describes the strongest verified `0.1.0` development milestone. It i
 - Manifest: `io.github.mtolhuys.disk-lens` version `0.1.0`
 - Service identity: `disk-lens-service-v0100`
 - Widget identity: `disk-lens-widget-v0100`
-- Candidate commit: recorded after the final exact-candidate run
+- Runtime candidate commit: `d5d914486f0a718138167bf26cb3a66293f27287`
 - Omarchy source revision: `83881e979b35468c3e7d60b171e319ede61a88fd`
 - Plugin Lab revision: `12f8120056e23dc17e454afe35f15dc45e2f986a`
 - ISO/base identity: `omarchy-2026.08.27-x86_64-local`, verified official ISO checksum, reusable clean base plus fresh per-run overlay
@@ -32,10 +32,9 @@ cd "$OMARCHY_PLUGIN_LAB_ROOT"
 
 | Run id | Result | Scope |
 | --- | --- | --- |
-| `20260830-233756` | green | native product scenario: real pointer, synthetic scans, treemap/list/filter controls, dark/light themes, cancellation, partial/long/empty states, same-path update, disable/re-enable/remove |
-| `20260830-235308` | green | optional bridge: visible exact install command, cancelled terminal state, QDirStat `2.0-1`, live detection, selected synthetic scope mapped in QDirStat, removal ownership boundary |
-| final generic fast run | pending record | maintained Omarchy source suite in a fresh guest |
-| final exact-candidate product run | pending record | committed candidate after documentation alignment |
+| `20260830-235755` | green | generic Plugin Lab fast gate: all 207 maintained Omarchy test files passed in a fresh guest |
+| `20260831-000146` | green | exact committed native candidate: real pointer, synthetic scans, treemap/list/filter controls, dark/light themes, cancellation, partial/long/empty states, same-path update, disable/re-enable/remove |
+| `20260831-000341` | green | exact committed optional bridge: visible exact install command, cancelled terminal state, QDirStat `2.0-1`, live detection, selected synthetic scope mapped in QDirStat, removal ownership boundary |
 
 Run directories and VM overlays remain outside the repository under the Plugin Lab's timestamped evidence root. No VM image, package cache, or generated screenshot is committed.
 
@@ -71,7 +70,7 @@ The panel showed calm hierarchy, readable exact values, bounded scope elision, r
 ## Deliberate limitations
 
 - No tag, release artifact, artifact SHA-256, public install URL, marketplace entry, or minimum supported Omarchy release exists yet.
-- The daily Omarchy host was not used for activation, visual testing, package installation, update, or lifecycle tests.
+- The daily Omarchy host was not used for activation, visual testing, package installation, update, or lifecycle tests. `make dev-install` was invoked only inside disposable guests.
 - Scan state is in memory and returns to Home after a shell reload.
 - Performance budgets are structurally bounded but not yet quantified.
 - Warning, critical, and unavailable capacity fixtures; narrow and dense layouts; full keyboard item navigation; focus/contrast measurement; screen-reader announcements; and composed reduced-motion acceptance remain unverified.

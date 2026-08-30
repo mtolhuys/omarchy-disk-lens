@@ -40,6 +40,7 @@ Package, unpackaged-file, and cache-file views are deliberately not implemented 
 
 Completed:
 
+- clean committed runtime candidate with exact Plugin Lab evidence;
 - same-path runtime update identity;
 - enable, disable, re-enable, and removal cleanup;
 - exact-working-tree development installation;
@@ -48,7 +49,7 @@ Completed:
 
 Still required for a public release:
 
-- clean committed candidate and version tag;
+- version tag;
 - reproducible distribution artifact and SHA-256;
 - clean-clone installation on the declared minimum Omarchy version;
 - quantified performance and accessibility gates;
