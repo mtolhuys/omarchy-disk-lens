@@ -20,6 +20,7 @@ All notable changes to Omarchy Disk Lens are documented here. The format follows
 
 ### Fixed
 
+- Fixed the header close control to a centered 32-pixel square and kept initial keyboard focus on the useful scope/search control instead of painting the close action as a tall focused tile.
 - Back navigation no longer starts a new scan when the prior validated result remains in the bounded cache.
 - Replaced the evaluated native `QtQuick.Dialogs` picker after disposable-lab coredump evidence showed it could abort Quickshell in the GTK/GVFS directory-monitor path.
 

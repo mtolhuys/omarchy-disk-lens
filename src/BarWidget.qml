@@ -339,6 +339,9 @@ BarWidget {
       folderPickerState: folderPickerState,
       folderPickerCount: folderPickerEntries.length,
       scanActionCount: (scanButton.visible ? 1 : 0) + (firstUseSurface.visible ? 1 : 0),
+      closeButtonWidth: closeButton.width,
+      closeButtonHeight: closeButton.height,
+      closeButtonFocused: closeButton.activeFocus,
       scanIndicatorRunning: scanRunning,
       activityIndicatorCount: scanRunning ? 1 : 0
     }
@@ -512,9 +515,17 @@ BarWidget {
 
           Button {
             id: closeButton
+            width: Style.space(32)
+            height: width
+            anchors.verticalCenter: parent.verticalCenter
             iconText: "×"
+            iconSize: Style.font.body
+            horizontalPadding: 0
+            verticalPadding: 0
             tooltipText: "Close Disk Lens"
             focusable: true
+            Accessible.name: "Close Disk Lens"
+            Accessible.role: Accessible.Button
             onClicked: root.close()
           }
         }

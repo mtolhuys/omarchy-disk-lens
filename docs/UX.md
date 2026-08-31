@@ -16,7 +16,7 @@ Disk Lens feels precise, calm, and tactile: an instrument panel rather than a ge
 
 Every bar orientation uses one square slot containing a proportional pie gauge. The percentage is absent from the bar and remains available in the tooltip, accessibility name, and panel. While a scan runs, a thin activity ring orbits the gauge without changing its capacity meaning. Middle-click refreshes capacity; ordinary click opens the host-owned `KeyboardPanel` through the live bar pointer route.
 
-The compact panel has five stable zones:
+The compact panel has five stable zones. Its header ends in one centered 32-pixel square close control; first focus goes to the editable scope on first use or search after results exist, so the close action never becomes an accidental visual tile.
 
 1. slim header with the same pie gauge, pressure, and scan state;
 2. condensed Home-filesystem capacity rail with exact values;

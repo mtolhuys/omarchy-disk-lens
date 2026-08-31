@@ -8,7 +8,7 @@ omarchy_host_test() {
   local project_dir lab_root plugin_dir geometry icon_x icon_y widget_width widget_height
   local screen_width screen_height scan_total runtime_before runtime_after
   local scan_button_x scan_button_y view_button_x search_x filter_y clear_x agent_x agent_y
-  local back_button_x folder_picker_x scope_field_x drill_x fixture_scanned_at
+  local back_button_x folder_picker_x scope_field_x drill_x close_button_x close_button_y fixture_scanned_at
   local agent_pid agent_sid scanned_before long_scope hostile_path_b64
   project_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/../.." && pwd)"
   lab_root="${OMARCHY_PLUGIN_LAB_ROOT:?Set OMARCHY_PLUGIN_LAB_ROOT to the disposable Plugin Lab checkout}"
@@ -84,12 +84,23 @@ omarchy_host_test() {
   folder_picker_x=$((screen_width - 36))
   scope_field_x=$((screen_width - 290))
   drill_x=$((screen_width - 451))
+  close_button_x=$((screen_width - 27))
+  close_button_y=64
 
   qmp_pointer_tap "$screen_width" "$screen_height" "$icon_x" "$icon_y" left
   wait_for_guest_state "real bar pointer opens the first-use panel" 12 ssh_session \
     "omarchy-shell disk-lens state | jq -e \
-      '.opened == true and .scanState == \"idle\" and .capacityPercent >= 0 and .includeHidden == true and .scanActionCount == 1'" || return 1
+      '.opened == true and .scanState == \"idle\" and .capacityPercent >= 0 and .includeHidden == true \
+       and .scanActionCount == 1 and .closeButtonWidth == 32 and .closeButtonHeight == 32 \
+       and .closeButtonFocused == false'" || return 1
   capture_console "success-disk-lens-01-first-use"
+
+  qmp_pointer_tap "$screen_width" "$screen_height" "$close_button_x" "$close_button_y" left
+  wait_for_guest_state "rendered square close control dismisses the panel" 12 ssh_session \
+    "omarchy-shell disk-lens state | jq -e '.opened == false'" || return 1
+  qmp_pointer_tap "$screen_width" "$screen_height" "$icon_x" "$icon_y" left
+  wait_for_guest_state "real bar pointer reopens the panel after close" 12 ssh_session \
+    "omarchy-shell disk-lens state | jq -e '.opened == true and .closeButtonFocused == false'" || return 1
 
   qmp_pointer_tap "$screen_width" "$screen_height" "$folder_picker_x" "$scan_button_y" left
   wait_for_guest_state "rendered folder control opens the inline folder browser" 12 ssh_session \

@@ -25,7 +25,7 @@ cd "$OMARCHY_PLUGIN_LAB_ROOT"
 `acceptance.sh` installs through public `make update` inside the guest and proves:
 
 1. interrupted-add recovery, source tests, manifest validation, catalog discovery, registration, and loaded identities;
-2. real bar geometry and QMP pointer routing into the real panel;
+2. real bar geometry and QMP pointer routing into the real panel, including square close-control geometry, rendered dismissal, and bar-pointer reopening;
 3. exactly one first-use scan action, hidden entries shown by default, the rendered inline folder browser, Escape recovery, typed scope entry, exact synthetic count and total, and explicit refresh;
 4. treemap selection, rendered Drill in, Back restoring the exact prior timestamp without a scanner process, plus rendered list, search, and clear interaction;
 5. visible **Ask Omarchy** closing the panel and launching an `org.omarchy.agent` terminal with the bounded path value, size, read-only constraint, untrusted-data boundary, and confirmation boundary captured by a guest-only shim, including a scanner-derived newline-injection fixture;
