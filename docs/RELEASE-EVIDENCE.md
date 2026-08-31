@@ -7,14 +7,14 @@ This record describes the strongest verified `0.5.0` pre-1.0 development milesto
 - Manifest: `io.github.mtolhuys.disk-lens` version `0.5.0`
 - Service identity: `disk-lens-service-v0500`
 - Widget identity: `disk-lens-widget-v0500`
-- Accepted working-tree snapshot: `7a69c5c7892d`, based on repository revision `93fe75e5e60e950a2cfaf9043c54144669abadc8`
+- Accepted repository candidate: `90b1f6865dd3ed0119ddb63d5b269757b0014557`, installed as exact development snapshot `f2ab87b65dc4`
 - Last public clean-clone candidate: `5d84d58563f577136ce9c517979bafbfeb157889` (`0.4.1`)
 - Omarchy base revision: `83881e979b35468c3e7d60b171e319ede61a88fd`
 - Plugin Lab base revision: `259ef26e9909bd74323177d2d29e2007cf8c73db`
 - Omarchy ISO harness revision: `268bac16d351a21d867e37565738f458b11cb06c`
 - ISO/base identity: `omarchy-2026.08.27-x86_64-local`, verified official ISO checksum, reusable clean base plus a fresh per-run overlay
-- README showcase: `1000x563`, 161 frames, 2,370,393 bytes, SHA-256 `3dcb9f139ce13c86d8329483b9086a49505f237de5a0446feebe95854829db44`
-- Marketplace preview: `1000x563`, 165,961 bytes, SHA-256 `9f4640dca8fdf6cf9e135fc2ac4e7bc4f6eb72635dcd63b5892a5d37f51c63fd`
+- README showcase: `1000x563`, 161 frames, 2,375,497 bytes, SHA-256 `dfccab9f3b26b0bb009d25eae61963032b97b4439edef42a56fc00b9c5baba9a`
+- Marketplace preview: `1000x563`, 166,009 bytes, SHA-256 `21d440e1e26b3fcf4e4b50499ac2e948b734048e48d49abadccf8a74062b40a9`
 
 ## Required commands
 
@@ -39,7 +39,7 @@ After `0.5.0` is published, its distribution gate additionally requires:
 
 | Run id | Result | Scope |
 | --- | --- | --- |
-| `20260831-221753` | green | exact working-tree snapshot `7a69c5c`: loaded `v0500` identities, real bar pointer, one first-use scan action, hidden entries shown, inline folder browser, typed scope, explicit refresh, cached Back without a scanner process, agent hand-off, filters, themes, one activity indicator, cancellation, hostile paths, partial/long/empty states, same-path update, and full lifecycle cleanup |
+| `20260831-223300` | green | clean repository candidate `90b1f68`, installed as snapshot `f2ab87b65dc4`: loaded `v0500` identities, real bar pointer, one first-use scan action, hidden entries shown, inline folder browser, typed scope, explicit refresh, cached Back without a scanner process, agent hand-off, filters, themes, one activity indicator, cancellation, hostile paths, partial/long/empty states, same-path update, and full lifecycle cleanup |
 | `20260831-221223` | rejected | native `QtQuick.Dialogs` folder-picker experiment reproducibly aborted Quickshell; coredump and logs located the abort in the GLib/GIO GTK/GVFS directory-monitor path despite available memory, so the candidate was replaced by the accepted inline browser |
 | `20260831-215559` | green | mandatory disposable-lab baseline source suite for the current session |
 | `20260831-145042` | green | last public proof: clean HTTPS clone of `0.4.1` commit `5d84d58`, Omarchy validation, enablement, loaded `v0401` identities, documented removal, unload, checkout cleanup, and clean compositor/log state |
