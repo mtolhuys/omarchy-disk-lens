@@ -26,7 +26,7 @@ omarchy_host_test() {
     dd if=/dev/zero of='/tmp/disk-lens-qdir-fixture/Archive/media.bin' bs=1M count=6 status=none && \
     dd if=/dev/zero of='/tmp/disk-lens-qdir-fixture/Projects/source.bin' bs=1M count=2 status=none"
 
-  ssh_session "cd /tmp/disk-lens-candidate && make dev-install"
+  ssh_session "cd /tmp/disk-lens-candidate && make update"
   wait_for_guest_state "QDirStat scenario loads the exact service and widget identity" 25 ssh_session \
     "omarchy-shell disk-lens-service state | jq -e '.buildIdentity == \"disk-lens-service-v0200\" and .qdirStatAvailable == false' && \
      omarchy-shell disk-lens state | jq -e '.buildIdentity == \"disk-lens-widget-v0200\"'" || return 1

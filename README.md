@@ -24,10 +24,10 @@ Disk Lens never scans on panel open, silently installs packages, runs a privileg
 From this checkout, run:
 
 ```bash
-make dev-install
+make update
 ```
 
-This is an explicit, host-mutating development command. It first runs the complete source suite and Omarchy manifest validation, snapshots the exact current working tree—including uncommitted edits—then replaces only the installed `io.github.mtolhuys.disk-lens` development copy, enables it, and waits for both loaded runtime identities. Run it again after any local change to guarantee that the active Omarchy session uses the newest code in this checkout.
+This is an explicit, host-mutating development command. It first runs the complete source suite and Omarchy manifest validation, snapshots the exact current working tree—including uncommitted edits—then replaces only the installed `io.github.mtolhuys.disk-lens` development copy, enables it, verifies the installed Git commit, and waits for both build identities read from the current source tree. Run it again after any local change to guarantee that the active Omarchy session uses the newest code in this checkout. `make dev-install` and `make install` are equivalent aliases.
 
 Do not use `sudo`. The snapshot lives under `${XDG_CACHE_HOME:-$HOME/.cache}/omarchy-disk-lens/development-source`; it is stable across repeated same-path plugin updates. The development installer itself was accepted inside the disposable Plugin Lab before being documented here, but was not invoked on the maintainer's daily host during development.
 

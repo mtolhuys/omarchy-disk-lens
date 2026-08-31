@@ -36,7 +36,7 @@ omarchy_host_test() {
     chmod 000 '/tmp/disk-lens-permission/restricted' && \
     dd if=/dev/zero of='$long_scope/long-path.bin' bs=1M count=1 status=none"
 
-  ssh_session "cd /tmp/disk-lens-candidate && make dev-install"
+  ssh_session "cd /tmp/disk-lens-candidate && make update"
 
   wait_for_guest_state "service and widget load with matching candidate identity" 25 ssh_session \
     "omarchy-plugin-list --json | jq -e 'any(.[]; .id == \"io.github.mtolhuys.disk-lens\" and .enabled == true)' && \

@@ -73,4 +73,4 @@ Filesystem free space and per-path allocation answer different questions. Snapsh
 
 Disablement unloads both entry points and stops their processes and timers. Removal uses Omarchy's normal lifecycle and does not remove user data or QDirStat.
 
-`make dev-install` first validates the current checkout, copies its exact committed and uncommitted working tree into a dedicated Git snapshot under XDG cache, removes only an existing Disk Lens plugin, then adds and enables that stable snapshot path. This avoids stale same-path source identity and verifies both loaded identities before success.
+`make update` first validates the current checkout, copies its exact committed and uncommitted working tree into a dedicated Git snapshot under XDG cache, removes only an existing Disk Lens plugin, then adds and enables that stable snapshot path. This avoids stale same-path source identity and verifies the installed snapshot commit plus both source-derived loaded identities before success. `make dev-install` and `make install` are equivalent aliases.

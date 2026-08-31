@@ -36,7 +36,7 @@ cd "$OMARCHY_PLUGIN_LAB_ROOT"
 ./bin/lab plugin /absolute/path/to/omarchy-disk-lens/tests/lab/qdirstat.sh
 ```
 
-`acceptance.sh` installs through `make dev-install` inside the guest and proves:
+`acceptance.sh` installs through the public `make update` target inside the guest and proves:
 
 1. source tests, manifest validation, plugin registration, and loaded service/widget identities;
 2. real bar geometry and QMP pointer routing into the real panel;

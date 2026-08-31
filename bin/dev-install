@@ -10,6 +10,7 @@ readonly plugin_id="io.github.mtolhuys.disk-lens"
 readonly project_root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
 readonly cache_root="${XDG_CACHE_HOME:-$HOME/.cache}/omarchy-disk-lens"
 readonly snapshot_dir="$cache_root/development-source"
+readonly installed_dir="${XDG_CONFIG_HOME:-$HOME/.config}/omarchy/plugins/$plugin_id"
 
 fail() {
   printf 'dev-install: %s\n' "$*" >&2
@@ -18,9 +19,19 @@ fail() {
 
 (( EUID != 0 )) || fail "run this as the Omarchy desktop user, not root"
 
-for command_name in git jq omarchy omarchy-shell tar; do
+for command_name in git jq omarchy omarchy-shell sed tar; do
   command -v "$command_name" >/dev/null 2>&1 || fail "required command is missing: $command_name"
 done
+
+identity_from() {
+  sed -n 's/^[[:space:]]*readonly property string buildIdentity: "\([^"]*\)".*/\1/p' "$1"
+}
+
+readonly expected_service_identity=$(identity_from "$project_root/src/Service.qml")
+readonly expected_widget_identity=$(identity_from "$project_root/src/BarWidget.qml")
+
+[[ -n $expected_service_identity ]] || fail "could not read the service build identity"
+[[ -n $expected_widget_identity ]] || fail "could not read the widget build identity"
 
 printf 'Checking the current Disk Lens working tree...\n'
 "$project_root/bin/test"
@@ -44,7 +55,7 @@ while IFS= read -r -d '' tracked_path; do
 done < <(git -C "$snapshot_dir" ls-files -z)
 
 tar -C "$project_root" \
-  --exclude-vcs \
+  --exclude='./.git' \
   --exclude='./test-results' \
   --exclude='./dist' \
   -cf - . | tar -C "$snapshot_dir" -xf -
@@ -58,7 +69,8 @@ if ! git -C "$snapshot_dir" rev-parse --verify HEAD >/dev/null 2>&1 \
     commit -qm "Development snapshot"
 fi
 
-snapshot_commit=$(git -C "$snapshot_dir" rev-parse --short=12 HEAD)
+snapshot_commit=$(git -C "$snapshot_dir" rev-parse HEAD)
+snapshot_short_commit=$(git -C "$snapshot_dir" rev-parse --short=12 HEAD)
 
 if omarchy plugin list --json | jq -e --arg id "$plugin_id" 'any(.[]; .id == $id)' >/dev/null; then
   printf 'Replacing the installed Disk Lens development copy...\n'
@@ -67,12 +79,23 @@ fi
 
 omarchy plugin add "$snapshot_dir" --enable --yes
 
+[[ -d $installed_dir/.git ]] || fail "Omarchy did not create the installed plugin checkout"
+installed_commit=$(git -C "$installed_dir" rev-parse HEAD)
+installed_origin=$(git -C "$installed_dir" remote get-url origin)
+
+[[ $installed_origin == "$snapshot_dir" ]] \
+  || fail "the installed plugin does not point to the current development snapshot"
+[[ $installed_commit == "$snapshot_commit" ]] \
+  || fail "the installed plugin commit does not match the current development snapshot"
+[[ -z $(git -C "$installed_dir" status --porcelain) ]] \
+  || fail "the installed plugin checkout differs from the current development snapshot"
+
 loaded=false
 for _ in {1..50}; do
   if omarchy-shell disk-lens-service state 2>/dev/null | jq -e \
-      '.buildIdentity == "disk-lens-service-v0200"' >/dev/null \
+      --arg expected "$expected_service_identity" '.buildIdentity == $expected' >/dev/null \
       && omarchy-shell disk-lens state 2>/dev/null | jq -e \
-      '.buildIdentity == "disk-lens-widget-v0200"' >/dev/null; then
+      --arg expected "$expected_widget_identity" '.buildIdentity == $expected' >/dev/null; then
     loaded=true
     break
   fi
@@ -81,4 +104,4 @@ done
 
 [[ $loaded == true ]] || fail "the plugin was installed but its runtime identity did not become ready"
 
-printf 'Disk Lens development snapshot %s is installed, enabled, and loaded.\n' "$snapshot_commit"
+printf 'Disk Lens development snapshot %s is installed, enabled, and loaded.\n' "$snapshot_short_commit"
