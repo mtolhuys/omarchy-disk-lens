@@ -6,7 +6,7 @@
 
 Disk Lens puts storage pressure in one quiet Omarchy bar slot. Open it for exact Home-filesystem capacity, type or browse to a scope, explicitly scan it, and use the ranked list or proportional treemap to find the branch worth investigating.
 
-Version **0.5.0** is the current public pre-1.0 release. Version **0.5.1** is the current development candidate, with a quieter header and the active bar widget as its single visible panel toggle.
+Version **0.5.1** is the current public pre-1.0 release. Its quieter header, active-bar toggle, complete native journey, and clean GitHub distribution path are verified in disposable Omarchy desktops.
 
 ## The useful path from full disk to a clear next step
 
@@ -96,6 +96,6 @@ Start with [CONTRIBUTING.md](CONTRIBUTING.md), [the product contract](docs/PRODU
 
 ## Status
 
-The `0.5.1` development candidate retains the complete verified `0.5.0` product journey and removes the redundant header close action. Exact-candidate bar-toggle, visual, update, lifecycle, and public clean-clone evidence are required before publication. End-to-end performance budgets, dense/narrow layouts, pressure fixtures, complete assistive-technology review, and composed reduced-motion acceptance remain explicit pre-1.0 hardening work.
+The public `0.5.1` release has source, clean-clone, real-shell, active-bar toggle, inline-folder, typed-scope, cache-restored Back, single-indicator, guarded Trash, visual, hostile-path agent-prompt, update, and lifecycle evidence in disposable guests. Scanner post-processing has a source-enforced process budget. End-to-end performance budgets, dense/narrow layouts, pressure fixtures, complete assistive-technology review, and composed reduced-motion acceptance remain explicit pre-1.0 hardening work.
 
 MIT licensed. See [LICENSE](LICENSE).
