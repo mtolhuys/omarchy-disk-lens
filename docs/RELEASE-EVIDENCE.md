@@ -7,14 +7,14 @@ This record describes the strongest verified `0.5.0` pre-1.0 development milesto
 - Manifest: `io.github.mtolhuys.disk-lens` version `0.5.0`
 - Service identity: `disk-lens-service-v0500`
 - Widget identity: `disk-lens-widget-v0500`
-- Accepted repository candidate: `90b1f6865dd3ed0119ddb63d5b269757b0014557`, installed as exact development snapshot `f2ab87b65dc4`
+- Accepted repository candidate: `54973b88185ddd017672776b31c972c0259ef90c`, installed as exact development snapshot `fe65d927d937`
 - Last public clean-clone candidate: `5d84d58563f577136ce9c517979bafbfeb157889` (`0.4.1`)
 - Omarchy base revision: `83881e979b35468c3e7d60b171e319ede61a88fd`
 - Plugin Lab base revision: `259ef26e9909bd74323177d2d29e2007cf8c73db`
 - Omarchy ISO harness revision: `268bac16d351a21d867e37565738f458b11cb06c`
 - ISO/base identity: `omarchy-2026.08.27-x86_64-local`, verified official ISO checksum, reusable clean base plus a fresh per-run overlay
-- README showcase: `1000x563`, 161 frames, 2,375,497 bytes, SHA-256 `dfccab9f3b26b0bb009d25eae61963032b97b4439edef42a56fc00b9c5baba9a`
-- Marketplace preview: `1000x563`, 166,009 bytes, SHA-256 `21d440e1e26b3fcf4e4b50499ac2e948b734048e48d49abadccf8a74062b40a9`
+- README showcase: `1000x563`, 161 frames, 2,375,757 bytes, SHA-256 `a624529a06f406796a54ab429113b0f96029d4bdc2ca887083d052876289fbc2`
+- Marketplace preview: `1000x563`, 165,875 bytes, SHA-256 `4cda620dc14791af79fe958c48d2b68e90f9bfac9c6197f16b92d77f392d096f`
 
 ## Required commands
 
@@ -39,7 +39,8 @@ After `0.5.0` is published, its distribution gate additionally requires:
 
 | Run id | Result | Scope |
 | --- | --- | --- |
-| `20260831-223300` | green | clean repository candidate `90b1f68`, installed as snapshot `f2ab87b65dc4`: loaded `v0500` identities, real bar pointer, one first-use scan action, hidden entries shown, inline folder browser, typed scope, explicit refresh, cached Back without a scanner process, agent hand-off, filters, themes, one activity indicator, cancellation, hostile paths, partial/long/empty states, same-path update, and full lifecycle cleanup |
+| `20260831-224131` | green | clean repository candidate `54973b8`, installed as snapshot `fe65d927d937`: loaded `v0500` identities, exact 32-pixel square close geometry, real pointer dismissal and bar reopening, one first-use scan action, hidden entries shown, inline folder browser, typed scope, explicit refresh, cached Back without a scanner process, agent hand-off, filters, themes, one activity indicator, cancellation, hostile paths, partial/long/empty states, same-path update, and full lifecycle cleanup |
+| `20260831-223912` | rejected | the first square-only close candidate passed geometry and focus assertions, but the real pointer dismissal failed; its screenshot exposed a second missing header gap that placed part of the control outside the available row width, which the accepted candidate corrects and guards with an exact content-width assertion |
 | `20260831-221223` | rejected | native `QtQuick.Dialogs` folder-picker experiment reproducibly aborted Quickshell; coredump and logs located the abort in the GLib/GIO GTK/GVFS directory-monitor path despite available memory, so the candidate was replaced by the accepted inline browser |
 | `20260831-215559` | green | mandatory disposable-lab baseline source suite for the current session |
 | `20260831-145042` | green | last public proof: clean HTTPS clone of `0.4.1` commit `5d84d58`, Omarchy validation, enablement, loaded `v0401` identities, documented removal, unload, checkout cleanup, and clean compositor/log state |
