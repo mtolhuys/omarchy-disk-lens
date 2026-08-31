@@ -135,7 +135,7 @@ panel_capture disk-lens-treemap.png '520x585+755+28' '+520+12' '#7aa2f7' "$work_
 scene_svg 3 '#63d8c6' 'READ-ONLY GUIDANCE' 'ASK BEFORE' 'YOU DELETE.' \
   'Send one selected folder to your Omarchy agent.' 'The prompt starts read-only and asks before change.' 'EXACT PATH' 'CONFIRM CHANGES'
 cp "$work_dir/scene-3-base.png" "$work_dir/scene-3.png"
-panel_capture disk-lens-agent.png '520x585+755+28' '+520+12' '#63d8c6' "$work_dir/scene-3.png"
+panel_capture disk-lens-agent.png '520x510+755+28' '+520+38' '#63d8c6' "$work_dir/scene-3.png"
 
 scene_svg 4 '#ff7f91' 'FAST, FOCUSED ANSWERS' 'NARROW THE' 'ANSWER.' \
   'Search and filters reshape one canonical result.' 'Exact sizes stay one click away.' 'SHARED MODEL' 'NO EXTRA APP'
