@@ -7,7 +7,8 @@ This record describes the strongest verified `0.2.0` development milestone. It i
 - Manifest: `io.github.mtolhuys.disk-lens` version `0.2.0`
 - Service identity: `disk-lens-service-v0200`
 - Widget identity: `disk-lens-widget-v0200`
-- Runtime candidate commit: `2b2c7b86b1a803db0a330359cd4e8e88ca32717b`
+- Current candidate commit: `dd0cdef259aaa5481e5e649c697864580510b76d`
+- Runtime feature commit: `2b2c7b86b1a803db0a330359cd4e8e88ca32717b`
 - Omarchy source revision: `83881e979b35468c3e7d60b171e319ede61a88fd`
 - Plugin Lab revision: `12f8120056e23dc17e454afe35f15dc45e2f986a`
 - ISO/base identity: `omarchy-2026.08.27-x86_64-local`, verified official ISO checksum, reusable clean base plus a fresh per-run overlay
@@ -35,12 +36,14 @@ cd "$OMARCHY_PLUGIN_LAB_ROOT"
 | `20260830-235755` | green | generic Plugin Lab fast gate: all 207 maintained Omarchy test files passed in a fresh guest; this platform gate predates the `0.2.0` runtime candidate |
 | `20260831-004011` | green | exact committed `0.2.0` runtime candidate: compact pie indicator and panel, scan and selection, guarded Omarchy-agent hand-off, list/map/filter controls, dark/light themes, cancellation, partial/long/empty states, same-path update, disable/re-enable/remove |
 | `20260831-004241` | green | exact committed `0.2.0` optional bridge: public install control, visible exact command, cancelled terminal state, QDirStat `2.0-1`, live detection, scoped launch, and removal ownership boundary |
+| `20260831-072400` | green | exact current candidate installed through public `make update`: source validation, installed snapshot commit, source-derived loaded identities, public behavior, same-path update, disable/re-enable/remove |
 
 Run directories and VM overlays remain outside the repository under the Plugin Lab's timestamped evidence root. No VM image, package cache, generated prompt capture, or screenshot is committed.
 
 ## Machine assertions passed
 
 - Source tests and Omarchy manifest validation run before the guest development install.
+- The public `make update` target snapshots committed and uncommitted working-tree files, verifies the installed checkout has the same Git commit and origin, and compares both loaded identities with values read from the current source tree.
 - Plugin registry, service IPC, and widget IPC agree on enabled state and the `v0200` build identities.
 - Real bar geometry meets the tested host minimum; the bar exposes one square, proportional capacity pie without percentage text, and a QMP pointer opens the panel through the public route.
 - The opened panel remains within the tested `520` pixel width and compact height envelope.
