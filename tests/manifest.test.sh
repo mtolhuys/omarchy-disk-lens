@@ -9,7 +9,7 @@ readonly manifest="$project_root/manifest.json"
 jq -e '
   .schemaVersion == 1
   and .id == "io.github.mtolhuys.disk-lens"
-  and (.version | test("^[0-9]+\\.[0-9]+\\.[0-9]+$"))
+  and .version == "0.3.0"
   and (.kinds | sort == ["bar-widget", "service"])
   and .entryPoints.service == "src/Service.qml"
   and .entryPoints.barWidget == "src/BarWidget.qml"
@@ -22,6 +22,9 @@ while IFS= read -r entry_point; do
   [[ $entry_point != *..* ]]
   [[ -f $project_root/$entry_point ]]
 done < <(jq -r '.entryPoints[]' "$manifest")
+
+rg -F 'disk-lens-service-v0300' "$project_root/src/Service.qml" >/dev/null
+rg -F 'disk-lens-widget-v0300' "$project_root/src/BarWidget.qml" >/dev/null
 
 if find "$project_root" -path "$project_root/.git" -prune -o -type l -print -quit | grep -q .; then
   echo "plugin tree contains a symbolic link" >&2
