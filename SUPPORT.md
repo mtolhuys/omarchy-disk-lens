@@ -1,6 +1,6 @@
 # Support
 
-Omarchy Disk Lens `0.2.0` is a working development preview, not a published or supported release. Development installation is documented for contributors, while public installation and compatibility guarantees wait for release hardening.
+Omarchy Disk Lens `0.3.0` is a working development preview, not a published or supported release. Development installation is documented for contributors, while public installation and compatibility guarantees wait for release hardening.
 
 Development feedback should include:
 

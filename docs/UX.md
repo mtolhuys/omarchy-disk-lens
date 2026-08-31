@@ -14,7 +14,7 @@ Disk Lens feels precise, calm, and tactile: an instrument panel rather than a ge
 
 ## Bar widget and panel
 
-Every bar orientation uses one square slot containing a proportional pie gauge. The percentage is intentionally absent from the bar and remains available in the tooltip, accessibility name, and panel. Gauge fill changes semantically at the same pressure thresholds as the panel. Middle-click refreshes capacity; ordinary click opens the host-owned `KeyboardPanel` through the live bar pointer route.
+Every bar orientation uses one square slot containing a proportional pie gauge. The percentage is intentionally absent from the bar and remains available in the tooltip, accessibility name, and panel. Gauge fill changes semantically at the same pressure thresholds as the panel. While a scan runs, a thin activity ring orbits the gauge without changing its capacity meaning. Middle-click refreshes capacity; ordinary click opens the host-owned `KeyboardPanel` through the live bar pointer route.
 
 The compact panel has five stable zones:
 
@@ -51,7 +51,7 @@ Active controls have selected styling, **Clear filters** becomes available when 
 | State | Visible behavior | Recovery |
 | --- | --- | --- |
 | First use | Capacity plus an explanation that no scan has run | Scan Home |
-| Scanning | Activity and the last completed result remain intact | Cancel or wait |
+| Scanning | Activity rings, status text, and the spinning cancel affordance identify the live job while the last completed result remains intact | Cancel or wait |
 | Ready | Timestamp, shared analysis model, and filtered totals | Refresh or drill in |
 | Partial | Warning count and first warning remain above usable results | Scan a narrower scope |
 | Cancelled | Last completed result remains when one exists | Refresh |
@@ -67,10 +67,10 @@ Active controls have selected styling, **Clear filters** becomes available when 
 
 The bar has a semantic button role and descriptive name. Panel controls are keyboard-focusable, the search field is the initial focus target, Escape closes the panel, and list/treemap information is duplicated in exact text and the inspector. The filtered-list keyboard input and clear action have passed real-session QMP acceptance.
 
-Disk Lens adds no custom looping or geometry animation, so its status and capacity information do not depend on motion. This is not yet a complete accessibility claim: before public release, prove full keyboard traversal and visible focus for every item/action, treemap keyboard selection, screen-reader announcements, WCAG contrast across supported themes, minimum pointer targets, and the composed panel's behavior under the platform's reduced-motion configuration.
+Only an active scan uses custom looping motion: a restrained activity ring that starts and stops with the owned job. The same state is always communicated through literal status text, control labels, and accessibility metadata, so progress does not depend on perceiving motion. This is not yet a complete accessibility claim: before public release, prove full keyboard traversal and visible focus for every item/action, treemap keyboard selection, screen-reader announcements, WCAG contrast across supported themes, minimum pointer targets, and the composed panel's behavior under the platform's reduced-motion configuration.
 
 ## Proven visual matrix and gaps
 
-The disposable lab has reviewed synthetic first-use, compact ready treemap, selected-folder agent action, filtered list, cancelled, partial, long-scope, empty, missing-QDirStat, visible install terminal, available-QDirStat, and removed states in maintained dark and light themes.
+The disposable lab matrix includes synthetic first-use, active scanning, compact ready treemap, selected-folder agent action, filtered list, cancelled, partial, long-scope, empty, missing-QDirStat, visible install terminal, available-QDirStat, and removed states in maintained dark and light themes.
 
 Warning/critical/unknown capacity fixtures, narrow panels, a dense 5,000-entry model, and complete assistive-technology behavior remain explicit release gaps.

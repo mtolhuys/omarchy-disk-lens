@@ -22,7 +22,7 @@ Runtime code uses commands supplied by the tested Omarchy/Arch environment:
 
 The opt-in development installer additionally requires `git`, `tar`, `jq`, `omarchy`, and `omarchy-shell`. It refuses UID `0`.
 
-Node.js is used only by source tests. `qmllint` plus a selected Omarchy source tree can provide an additional development lint pass; neither is a plugin runtime dependency.
+Node.js is used only by source tests. ShellCheck is used automatically when present. `qmllint` plus a selected Omarchy source tree can provide an additional development lint pass. None is a plugin runtime dependency.
 
 `dua` remains a useful Omarchy terminal application, but Disk Lens does not parse its presentation-oriented output as an API.
 
@@ -35,7 +35,7 @@ QDirStat unlocks deep inspection and remains optional:
 - runtime executable: `qdirstat`;
 - supported Disk Lens input: one selected directory path.
 
-Disk Lens does not vendor QDirStat, copy its treemap code, own its UI, or remove it. Package, unpackaged-file, and cache-file inputs are not part of `0.2.0`.
+Disk Lens does not vendor QDirStat, copy its treemap code, own its UI, or remove it. Package, unpackaged-file, and cache-file inputs are not part of `0.3.0`.
 
 ## Optional agent dependency
 

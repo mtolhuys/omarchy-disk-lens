@@ -11,8 +11,11 @@ omarchy_host_test() {
 
   project_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/../.." && pwd)"
   lab_root="${OMARCHY_PLUGIN_LAB_ROOT:?Set OMARCHY_PLUGIN_LAB_ROOT to the disposable Plugin Lab checkout}"
+  # Expands only inside guest commands.
+  # shellcheck disable=SC2016
   plugin_dir='${HOME}/.config/omarchy/plugins/io.github.mtolhuys.disk-lens'
 
+  # shellcheck disable=SC1091
   source "$lab_root/host-tests/helpers/pointer.sh"
 
   log "Staging the exact Disk Lens candidate and QDirStat hand-off fixture"
@@ -28,8 +31,8 @@ omarchy_host_test() {
 
   ssh_session "cd /tmp/disk-lens-candidate && make update"
   wait_for_guest_state "QDirStat scenario loads the exact service and widget identity" 25 ssh_session \
-    "omarchy-shell disk-lens-service state | jq -e '.buildIdentity == \"disk-lens-service-v0200\" and .qdirStatAvailable == false' && \
-     omarchy-shell disk-lens state | jq -e '.buildIdentity == \"disk-lens-widget-v0200\"'" || return 1
+    "omarchy-shell disk-lens-service state | jq -e '.buildIdentity == \"disk-lens-service-v0300\" and .qdirStatAvailable == false' && \
+     omarchy-shell disk-lens state | jq -e '.buildIdentity == \"disk-lens-widget-v0300\"'" || return 1
 
   geometry="$(ssh_session "omarchy-shell shell debugBarGeometry | jq -r \
     '.[] | select(.id == \"io.github.mtolhuys.disk-lens\" and .visible) | [.x,.y,.width,.height] | @tsv' | head -n1")"

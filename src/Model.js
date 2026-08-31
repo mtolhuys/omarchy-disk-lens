@@ -1,5 +1,9 @@
 var PROTOCOL_VERSION = 1
 var MAX_SAFE_BYTES = 9007199254740991
+var MAX_ENTRIES = 5000
+var MAX_WARNINGS = 20
+var MAX_PATH_LENGTH = 4096
+var MAX_WARNING_LENGTH = 8192
 var VALID_KINDS = ["directory", "file", "symlink", "other"]
 
 function plainObject(value) {
@@ -9,6 +13,23 @@ function plainObject(value) {
 function finiteBytes(value) {
   var number = Number(value)
   return isFinite(number) && number >= 0 && number <= MAX_SAFE_BYTES
+}
+
+function protocolInteger(value) {
+  return typeof value === "number" && finiteBytes(value) && Math.floor(value) === value
+}
+
+function validBase64(value) {
+  return typeof value === "string" && value.length > 0
+    && value.length <= MAX_PATH_LENGTH * 2 && value.length % 4 === 0
+    && /^[A-Za-z0-9+/]*={0,2}$/.test(value)
+}
+
+function immediateChild(path, parent) {
+  if (parent === "/") return path.length > 1 && path.indexOf("/", 1) < 0
+  var prefix = parent + "/"
+  return path.indexOf(prefix) === 0 && path.length > prefix.length
+    && path.indexOf("/", prefix.length) < 0
 }
 
 function emptyCapacity(error) {
@@ -37,8 +58,9 @@ function parseCapacity(raw) {
     return emptyCapacity("Capacity data did not identify one home filesystem")
 
   var fs = payload.filesystems[0]
+  if (!plainObject(fs)) return emptyCapacity("Capacity values were incomplete")
   var percent = parseInt(String(fs["use%"] || "").replace("%", ""), 10)
-  if (!plainObject(fs) || !finiteBytes(fs.size) || !finiteBytes(fs.used)
+  if (!finiteBytes(fs.size) || !finiteBytes(fs.used)
       || !finiteBytes(fs.avail) || !isFinite(percent) || percent < 0 || percent > 100)
     return emptyCapacity("Capacity values were incomplete")
 
@@ -79,18 +101,27 @@ function parseScan(raw) {
       protocolError = "Scanner output used an unsupported protocol"
       break
     }
+    if (completed) {
+      protocolError = "Scanner output continued after completion"
+      break
+    }
 
     if (record.type === "start") {
-      if (started || typeof record.path !== "string" || record.path.charAt(0) !== "/") {
+      if (started || typeof record.path !== "string" || record.path.charAt(0) !== "/"
+          || record.path.length > MAX_PATH_LENGTH || record.path.indexOf("\u0000") >= 0) {
         protocolError = "Scanner start record was invalid"
         break
       }
       started = record
     } else if (record.type === "entry") {
-      if (!started || completed || entries.length >= 5000
-          || typeof record.path !== "string" || typeof record.pathB64 !== "string"
+      if (!started || entries.length >= MAX_ENTRIES
+          || typeof record.path !== "string" || !validBase64(record.pathB64)
           || typeof record.name !== "string" || VALID_KINDS.indexOf(record.kind) < 0
-          || !finiteBytes(record.allocatedBytes) || !finiteBytes(record.mtime)) {
+          || record.path.length > MAX_PATH_LENGTH || record.path.indexOf("\u0000") >= 0
+          || !immediateChild(record.path, started.path) || record.name.length > 1024
+          || typeof record.validUtf8 !== "boolean" || typeof record.actionable !== "boolean"
+          || (record.actionable && !record.validUtf8)
+          || !protocolInteger(record.allocatedBytes) || !protocolInteger(record.mtime)) {
         protocolError = "Scanner entry record was invalid"
         break
       }
@@ -105,14 +136,28 @@ function parseScan(raw) {
         actionable: record.actionable === true
       })
     } else if (record.type === "warning") {
-      warnings.push(String(record.message || "Scan warning"))
+      if (!started || warnings.length >= MAX_WARNINGS
+          || typeof record.message !== "string" || record.message.length === 0
+          || record.message.length > MAX_WARNING_LENGTH) {
+        protocolError = "Scanner warning record was invalid"
+        break
+      }
+      warnings.push(record.message)
     } else if (record.type === "error") {
-      protocolError = String(record.message || "The scanner reported an error")
+      if (typeof record.message !== "string" || record.message.length === 0
+          || record.message.length > MAX_WARNING_LENGTH) {
+        protocolError = "Scanner error record was invalid"
+        break
+      }
+      protocolError = record.message
       break
     } else if (record.type === "complete") {
-      if (!started || completed || typeof record.path !== "string"
-          || record.path !== started.path || !finiteBytes(record.totalBytes)
-          || !finiteBytes(record.entries) || !finiteBytes(record.warnings)) {
+      if (!started || typeof record.path !== "string"
+          || record.path !== started.path || !protocolInteger(record.totalBytes)
+          || !protocolInteger(record.entries) || record.entries !== entries.length
+          || !protocolInteger(record.warnings) || record.warnings < warnings.length
+          || typeof record.partial !== "boolean"
+          || (record.warnings > 0 && !record.partial)) {
         protocolError = "Scanner completion record was invalid"
         break
       }
@@ -302,6 +347,8 @@ function treemap(entries, width, height, limit) {
 if (typeof module !== "undefined") {
   module.exports = {
     PROTOCOL_VERSION: PROTOCOL_VERSION,
+    MAX_ENTRIES: MAX_ENTRIES,
+    MAX_WARNINGS: MAX_WARNINGS,
     parseCapacity: parseCapacity,
     parseScan: parseScan,
     formatBytes: formatBytes,

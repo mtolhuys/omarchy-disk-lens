@@ -4,6 +4,7 @@ set -uo pipefail
 
 readonly protocol=1
 readonly max_entries=5000
+readonly max_emitted_warnings=20
 scan_path=""
 work_dir=""
 du_pid=""
@@ -18,12 +19,14 @@ emit_error() {
     '{protocol: $protocol, type: "error", code: $code, message: $message}'
 }
 
+# shellcheck disable=SC2329 # Invoked by EXIT and signal traps.
 cleanup() {
   if [[ -n $work_dir && -d $work_dir ]]; then
     rm -rf -- "$work_dir"
   fi
 }
 
+# shellcheck disable=SC2329 # Invoked by INT and TERM traps.
 stop_scan() {
   trap - INT TERM
   if [[ -n $du_pid ]] && kill -0 "$du_pid" 2>/dev/null; then
@@ -90,6 +93,7 @@ du_pid=""
 
 entry_count=0
 warning_count=0
+emitted_warning_count=0
 total_bytes=0
 truncated=false
 
@@ -155,23 +159,32 @@ while IFS= read -r -d '' record; do
   (( entry_count += 1 ))
 done <"$work_dir/records"
 
+warning_slots=$max_emitted_warnings
+if [[ $truncated == true ]]; then
+  (( warning_slots -= 1 ))
+fi
+
 while IFS= read -r warning_line || [[ -n $warning_line ]]; do
   [[ -n $warning_line ]] || continue
   (( warning_count += 1 ))
-  if (( warning_count <= 20 )); then
+  if (( emitted_warning_count < warning_slots )); then
     jq -cn \
       --argjson protocol "$protocol" \
       --arg message "$warning_line" \
       '{protocol: $protocol, type: "warning", message: $message}'
+    (( emitted_warning_count += 1 ))
   fi
 done <"$work_dir/errors"
 
 if [[ $truncated == true ]]; then
   (( warning_count += 1 ))
-  jq -cn \
-    --argjson protocol "$protocol" \
-    --argjson limit "$max_entries" \
-    '{protocol: $protocol, type: "warning", code: "entry-limit", message: ("Only the first " + ($limit|tostring) + " entries are shown.")}'
+  if (( emitted_warning_count < max_emitted_warnings )); then
+    jq -cn \
+      --argjson protocol "$protocol" \
+      --argjson limit "$max_entries" \
+      '{protocol: $protocol, type: "warning", code: "entry-limit", message: ("Only the first " + ($limit|tostring) + " entries are shown.")}'
+    (( emitted_warning_count += 1 ))
+  fi
 fi
 
 partial=false

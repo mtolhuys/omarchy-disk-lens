@@ -4,12 +4,12 @@
 
 Omarchy Disk Lens makes Home-filesystem pressure understandable within seconds and provides a clear route from “the disk is filling up” to “this directory deserves investigation.” It is a fast Omarchy-native overview with an optional hand-off to QDirStat, not a replacement for QDirStat's complete desktop analyzer.
 
-## Implemented `0.2.0` journey
+## Implemented `0.3.0` journey
 
 1. The bar shows used capacity for the filesystem backing Home as a compact proportional pie gauge.
 2. Clicking the widget opens a theme-native panel without starting a recursive scan.
 3. Capacity is immediately available when `findmnt` succeeds; scan freshness is independently labelled.
-4. The user explicitly starts or refreshes an immediate-child scan.
+4. The user explicitly starts or refreshes an immediate-child scan; a bounded activity ring and status text stay visible until that job ends.
 5. A squarified treemap and ranked list reveal the largest entries from the same canonical model.
 6. Search and type, hidden-entry, minimum-size, and modification-age filters narrow only the visible projection.
 7. Selection exposes exact allocated size, type, modification time, and safe actions.
@@ -28,6 +28,7 @@ Omarchy Disk Lens makes Home-filesystem pressure understandable within seconds a
 ### Analysis panel
 
 - One explicit, cancellable scan at a time.
+- Purposeful live scan activity in the bar, panel header, scan control, and status card without replacing the last completed result.
 - Immediate children and total allocated bytes for one absolute, same-filesystem scope.
 - Parent navigation and directory drill-down.
 - Ranked list and proportional treemap with shared selection.
@@ -59,7 +60,7 @@ Omarchy Disk Lens makes Home-filesystem pressure understandable within seconds a
 - **Recoverable:** cancellation preserves the last completed result and every current failure/dependency state names a next action.
 - **Private by default:** capacity and directory analysis stay local. The explicit agent hand-off delegates path and size data to the user's configured agent, whose provider and network behavior are outside Disk Lens.
 
-## Non-goals for `0.2.0`
+## Non-goals for `0.3.0`
 
 - Automatic cleanup, deletion, trash management, bulk actions, or scripted recipes.
 - Root scanning, a privileged GUI, or privilege handling inside Disk Lens.

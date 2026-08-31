@@ -20,6 +20,8 @@ assert.equal(capacity.available, true)
 assert.equal(capacity.percent, 72)
 assert.equal(capacity.target, "/home")
 assert.equal(Model.parseCapacity("not json").available, false)
+assert.doesNotThrow(() => Model.parseCapacity(JSON.stringify({ filesystems: [null] })))
+assert.equal(Model.parseCapacity(JSON.stringify({ filesystems: [null] })).available, false)
 
 const scanOutput = [
   record({ type: "start", path: "/fixture" }),
@@ -66,6 +68,33 @@ assert.equal(scan.totalBytes, 1000)
 assert.equal(Model.parseScan(scanOutput.replace('"protocol":1', '"protocol":2')).ok, false)
 assert.equal(Model.parseScan(scanOutput.replace(/\n[^\n]+$/, "")).ok, false)
 assert.equal(Model.parseScan(scanOutput + "\nnot-json").ok, false)
+assert.equal(Model.parseScan(scanOutput.replace('"entries":2', '"entries":3')).ok, false)
+assert.equal(Model.parseScan(scanOutput.replace('"validUtf8":true', '"validUtf8":"yes"')).ok, false)
+assert.equal(Model.parseScan(scanOutput.replace('"allocatedBytes":800', '"allocatedBytes":"800"')).ok, false)
+assert.equal(Model.parseScan(scanOutput.replace('"path":"/fixture/large folder"', '"path":"/outside"')).ok, false)
+assert.equal(Model.parseScan(scanOutput.replace('"pathB64":"L2ZpeHR1cmUvbGFyZ2UgZm9sZGVy"', '"pathB64":"not base64"')).ok, false)
+assert.equal(Model.parseScan(scanOutput + "\n" + record({ type: "warning", message: "too late" })).ok, false)
+assert.equal(Model.parseScan(scanOutput.replace('"partial":true', '"partial":false')).ok, false)
+assert.equal(Model.parseScan([
+  record({ type: "warning", message: "too early" }),
+  record({ type: "start", path: "/fixture" }),
+  record({ type: "complete", path: "/fixture", totalBytes: 0, entries: 0, warnings: 1, partial: true })
+].join("\n")).ok, false)
+
+const boundedWarnings = [record({ type: "start", path: "/fixture" })]
+for (let index = 0; index < Model.MAX_WARNINGS; index += 1)
+  boundedWarnings.push(record({ type: "warning", message: `warning ${index}` }))
+boundedWarnings.push(record({
+  type: "complete",
+  path: "/fixture",
+  totalBytes: 0,
+  entries: 0,
+  warnings: Model.MAX_WARNINGS,
+  partial: true
+}))
+assert.equal(Model.parseScan(boundedWarnings.join("\n")).ok, true)
+boundedWarnings.splice(-1, 0, record({ type: "warning", message: "one warning too many" }))
+assert.equal(Model.parseScan(boundedWarnings.join("\n")).ok, false)
 
 const visibleDefault = Model.filterEntries(scan.entries, {})
 assert.deepEqual(visibleDefault.map(entry => entry.name), ["large folder"])

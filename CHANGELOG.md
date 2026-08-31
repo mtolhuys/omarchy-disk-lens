@@ -4,11 +4,29 @@ All notable changes to Omarchy Disk Lens are documented here. The format follows
 
 ## Unreleased
 
+No unreleased changes yet.
+
+## 0.3.0 — 2026-08-31
+
+### Added
+
+- A restrained activity ring in the bar, panel header, and scan status card, plus a spinning scan/cancel affordance while traversal is active.
+- A machine-visible scan-activity state and disposable Plugin Lab checkpoint for the live, cancellable scanning state.
+- Current-product synthetic screenshots and a deterministic widescreen README showcase.
+- Optional ShellCheck coverage in the source gate and a parser regression set for malformed capacity, entry, warning, and completion records.
+
 ### Changed
 
 - Added `make update` and `make install` aliases for the exact-working-tree development installer.
 - The installer now verifies the installed snapshot commit and reads expected runtime identities from the current source tree.
 - Split development add, catalog discovery, and enablement into bounded phases so a slow shell scan or interrupted add is recoverable by rerunning `make update`.
+- Tightened protocol limits for path, name, encoded path, warning count, warning length, flags, and exact completion counts before a scan result can replace the last good model.
+- Removed the completed kickstart brief and empty media placeholder; retained documentation now maps only to active product, engineering, support, or release contracts.
+
+### Accessibility
+
+- Scan progress is expressed through status text and control state as well as motion; the activity ring stops as soon as the owned scan stops.
+- Composed reduced-motion behavior remains an explicit release gate rather than a completed claim.
 
 ## 0.2.0 — 2026-08-31
 

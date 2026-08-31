@@ -2,7 +2,8 @@
 
 set -euo pipefail
 
-readonly project_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
+project_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
+readonly project_root
 readonly manifest="$project_root/manifest.json"
 
 jq -e '

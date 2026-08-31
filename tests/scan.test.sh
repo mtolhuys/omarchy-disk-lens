@@ -2,7 +2,8 @@
 
 set -euo pipefail
 
-readonly project_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
+project_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
+readonly project_root
 readonly scanner="$project_root/scripts/disk-lens-scan"
 readonly slow_bin="$project_root/tests/fixtures/slow-bin"
 fixture=$(mktemp -d -t disk-lens-scan-test.XXXXXX)
@@ -69,7 +70,10 @@ cancel_status=$?
 set -e
 [[ $cancel_status -eq 130 ]]
 sleep 0.05
-! pgrep -P "$scanner_pid" >/dev/null 2>&1
+if pgrep -P "$scanner_pid" >/dev/null 2>&1; then
+  echo "scanner cancellation left a child process running" >&2
+  exit 1
+fi
 jq -e -s 'length == 1 and .[0].type == "start"' "$cancel_output" >/dev/null
 
 if $scanner --path relative >/dev/null 2>&1; then

@@ -2,7 +2,8 @@
 
 set -euo pipefail
 
-readonly project_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
+project_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
+readonly project_root
 
 if rg -n --ignore-case \
   '\b(annuleren|bestanden|bestand|beschikbaar|foutmelding|gebruikte|mappen|opnieuw|schijf|verwijderen|waarschuwing)\b' \

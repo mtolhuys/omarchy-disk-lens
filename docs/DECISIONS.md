@@ -71,3 +71,11 @@
 **Why:** Users need help interpreting unfamiliar caches and application data, but embedding agent selection, provider credentials, or destructive automation would duplicate Omarchy and expand the trust boundary dramatically.
 
 **Consequence:** The selected path is a structural process argument inside one prompt, the panel closes after dispatch, and documentation states that the configured agent's provider, network, approval, and sandbox policies still apply.
+
+## D010 — Motion belongs only to live scan activity
+
+**Decision:** Use one restrained rotating ring only while the owned scan job is active, and duplicate that state in literal text, control labels, and accessibility metadata.
+
+**Why:** A recursive traversal otherwise looks stalled, but decorative perpetual motion would add noise and make status depend on animation.
+
+**Consequence:** Every scan surface binds to the same service state and stops immediately when the job completes, fails, or is cancelled. Composed reduced-motion behavior remains a release gate.

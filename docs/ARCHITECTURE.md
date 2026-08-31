@@ -8,7 +8,7 @@ Omarchy shell
   │    ├─ one disk-lens-scan process
   │    └─ last completed in-memory result
   └─ Disk Lens bar widget + KeyboardPanel
-       ├─ proportional pie gauge, capacity rail, and scope controls
+       ├─ proportional pie gauge, bounded scan activity rings, capacity rail, and scope controls
        ├─ shared filters and selection
        ├─ treemap or ranked list
        └─ structural launches: file manager, Omarchy agent, QDirStat, install terminal
@@ -40,7 +40,7 @@ The helper emits protocol-versioned NDJSON records:
 {"protocol":1,"type":"entry","path":"/tmp/example/Archive","pathB64":"L3RtcC9leGFtcGxlL0FyY2hpdmU=","name":"Archive","kind":"directory","allocatedBytes":123456,"mtime":1760000000,"validUtf8":true,"actionable":true}
 ```
 
-The parser requires one start record, no more than 5,000 valid entry records, optional warnings, and one matching completion record. Unknown versions, types, malformed JSON, invalid fields, truncation, or missing completion fail the attempt without replacing the last good result.
+The parser requires one start record, no more than 5,000 valid entry records, no more than 20 bounded warnings, and one matching completion record whose path, entry count, warning floor, totals, and completeness flag agree with the parsed stream. Paths, names, encoded paths, flags, warnings, and numeric fields have explicit type or length bounds. Unknown versions, types, malformed JSON, invalid fields, truncation, or missing completion fail the attempt without replacing the last good result.
 
 The QML process collector promotes a complete parsed result atomically; it does not stream partial rows into the visible model. Permission and I/O messages become a bounded warning set and mark the completed result partial. Cancellation stops the helper, which terminates its owned `du` child and cleans temporary state.
 
@@ -48,7 +48,9 @@ The QML process collector promotes a complete parsed result atomically; it does 
 
 One in-memory entry array drives both projections. Filters are pure projections over name, kind, hidden status, minimum allocated bytes, and maximum modification age. Filtered bytes are labelled independently from scanned totals. Treemap geometry is bounded to the 48 largest visible entries; the ranked view renders at most 80 and directs the user to filters for further narrowing.
 
-Drilling into an actionable directory starts a new immediate-child scan. Parent navigation derives one structural absolute path. Version `0.2.0` does not persist scopes or results, so a shell reload returns to Home and first-use state.
+Drilling into an actionable directory starts a new immediate-child scan. Parent navigation derives one structural absolute path. Version `0.3.0` does not persist scopes or results, so a shell reload returns to Home and first-use state.
+
+`src/ActivityRing.qml` is the shared scan-ring primitive. It paints a theme-derived bounded arc, exists visually only while its `running` property is true, and exposes progress semantics. The bar, header, and status card bind it to the service-owned scan state; the scan control uses the host button's matching `iconSpinning` contract. Scan status remains available as text when motion cannot be perceived.
 
 ## Omarchy agent adapter
 
@@ -67,7 +69,7 @@ After the terminal is launched, a three-second timer rechecks executable availab
 
 ## Btrfs accounting
 
-Filesystem free space and per-path allocation answer different questions. Snapshots, compression, and shared extents can explain a gap. Version `0.2.0` does not calculate exclusive/shared extents, snapshot ownership, or reclaimable bytes.
+Filesystem free space and per-path allocation answer different questions. Snapshots, compression, and shared extents can explain a gap. Version `0.3.0` does not calculate exclusive/shared extents, snapshot ownership, or reclaimable bytes.
 
 ## Lifecycle and development snapshots
 

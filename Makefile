@@ -1,12 +1,13 @@
 .DEFAULT_GOAL := help
 
-.PHONY: help test validate update install dev-install
+.PHONY: help test validate showcase update install dev-install
 
 help:
 	@printf '%s\n' \
 		'Omarchy Disk Lens development commands:' \
 		'  make update       Install the exact current working tree locally' \
 		'  make dev-install  Alias-compatible explicit development install' \
+		'  make showcase     Rebuild the deterministic README product tour' \
 		'  make test         Run the source test suite' \
 		'  make validate     Test and validate the Omarchy plugin manifest'
 
@@ -15,6 +16,9 @@ test:
 
 validate: test
 	omarchy plugin validate .
+
+showcase:
+	./scripts/build-showcase
 
 # Explicitly mutates the current user's Omarchy session. The script snapshots
 # the complete working tree, so committed and uncommitted development changes

@@ -1,0 +1,172 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+project_root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd -P)
+readonly project_root
+readonly media_dir="$project_root/docs/media"
+readonly output="$media_dir/disk-lens-showcase.gif"
+readonly canvas_width=1000
+readonly canvas_height=563
+
+fail() {
+  printf 'build-showcase: %s\n' "$*" >&2
+  exit 1
+}
+
+for command_name in fc-match ffmpeg magick; do
+  command -v "$command_name" >/dev/null 2>&1 || fail "required command not found: $command_name"
+done
+
+sans_font=$(fc-match -f '%{file}' 'Noto Sans:style=Bold')
+mono_font=$(fc-match -f '%{file}' 'JetBrainsMono Nerd Font:style=Bold')
+readonly sans_font mono_font
+[[ -f $sans_font && -f $mono_font ]] || fail "required Noto Sans and JetBrains Mono fonts were not found"
+
+for source_image in \
+  disk-lens-first-use.png \
+  disk-lens-scanning.png \
+  disk-lens-treemap.png \
+  disk-lens-agent.png \
+  disk-lens-qdirstat.png; do
+  [[ -f $media_dir/$source_image ]] || fail "missing current-product capture: $source_image"
+done
+
+work_dir=$(mktemp -d "${TMPDIR:-/tmp}/disk-lens-showcase.XXXXXX")
+trap 'rm -rf -- "$work_dir"' EXIT
+
+scene_svg() {
+  local index="$1" accent="$2" eyebrow="$3" title_one="$4" title_two="$5"
+  local body_one="$6" body_two="$7" chip_one="$8" chip_two="$9"
+  local svg="$work_dir/scene-${index}.svg"
+  local progress_x=$((index * 36))
+
+  cat >"$svg" <<SVG
+<svg xmlns="http://www.w3.org/2000/svg" width="$canvas_width" height="$canvas_height" viewBox="0 0 $canvas_width $canvas_height">
+  <defs>
+    <linearGradient id="background" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#080a0f"/>
+      <stop offset="0.58" stop-color="#11141c"/>
+      <stop offset="1" stop-color="#21182b"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="78%" cy="47%" r="62%">
+      <stop offset="0" stop-color="$accent" stop-opacity="0.4"/>
+      <stop offset="0.58" stop-color="$accent" stop-opacity="0.1"/>
+      <stop offset="1" stop-color="$accent" stop-opacity="0"/>
+    </radialGradient>
+    <pattern id="grid" width="48" height="48" patternUnits="userSpaceOnUse">
+      <path d="M48 0H0V48" fill="none" stroke="#ffffff" stroke-opacity="0.025"/>
+    </pattern>
+  </defs>
+  <rect width="1000" height="563" fill="url(#background)"/>
+  <rect width="1000" height="563" fill="url(#glow)"/>
+  <rect width="1000" height="563" fill="url(#grid)"/>
+  <path d="M555 0H1000V563H665Z" fill="#ffffff" fill-opacity="0.024"/>
+  <path d="M610 0H1000V563H720Z" fill="none" stroke="$accent" stroke-opacity="0.2"/>
+
+  <g transform="translate(52 42)">
+    <rect width="38" height="38" rx="4" fill="#ffffff" fill-opacity="0.04" stroke="$accent" stroke-width="1.5"/>
+    <circle cx="19" cy="19" r="11" fill="#ffffff" fill-opacity="0.1" stroke="#f7f4fb" stroke-opacity="0.88"/>
+    <path d="M19 19V8A11 11 0 0 1 28.5 24.5Z" fill="$accent"/>
+    <text x="52" y="15" fill="#ffffff" font-family="JetBrainsMono Nerd Font" font-size="11" font-weight="700" letter-spacing="2.8">DISK LENS</text>
+    <text x="52" y="33" fill="#9da1ad" font-family="JetBrainsMono Nerd Font" font-size="9" font-weight="700" letter-spacing="1.5">FOR OMARCHY · 0.3.0</text>
+  </g>
+
+  <g transform="translate(52 158)">
+    <text fill="$accent" font-family="JetBrainsMono Nerd Font" font-size="11" font-weight="700" letter-spacing="2.7">$eyebrow</text>
+    <text y="62" fill="#fbf9fd" font-family="Noto Sans" font-size="45" font-weight="800" letter-spacing="-1.5">
+      <tspan x="0">$title_one</tspan>
+      <tspan x="0" dy="50">$title_two</tspan>
+    </text>
+    <text y="180" fill="#b9bac4" font-family="Noto Sans" font-size="16">
+      <tspan x="0">$body_one</tspan>
+      <tspan x="0" dy="26">$body_two</tspan>
+    </text>
+    <g transform="translate(0 240)" font-family="JetBrainsMono Nerd Font" font-size="8.5" font-weight="700" letter-spacing="1">
+      <rect width="178" height="34" fill="#ffffff" fill-opacity="0.045" stroke="#ffffff" stroke-opacity="0.13"/>
+      <rect x="8" y="8" width="4" height="18" fill="$accent"/>
+      <text x="22" y="22" fill="#e9e6ee">$chip_one</text>
+      <rect x="190" width="178" height="34" fill="#ffffff" fill-opacity="0.045" stroke="#ffffff" stroke-opacity="0.13"/>
+      <rect x="198" y="8" width="4" height="18" fill="$accent"/>
+      <text x="212" y="22" fill="#e9e6ee">$chip_two</text>
+    </g>
+  </g>
+
+  <g transform="translate(52 522)">
+    <text fill="#858995" font-family="JetBrainsMono Nerd Font" font-size="8.5" font-weight="700" letter-spacing="1.3">CAPACITY → SCAN → UNDERSTAND</text>
+    <g transform="translate(654 0)">
+      <rect width="28" height="3" fill="#ffffff" fill-opacity="0.14"/>
+      <rect x="36" width="28" height="3" fill="#ffffff" fill-opacity="0.14"/>
+      <rect x="72" width="28" height="3" fill="#ffffff" fill-opacity="0.14"/>
+      <rect x="108" width="28" height="3" fill="#ffffff" fill-opacity="0.14"/>
+      <rect x="144" width="28" height="3" fill="#ffffff" fill-opacity="0.14"/>
+      <rect x="$progress_x" y="-1" width="28" height="5" fill="$accent"/>
+    </g>
+    <text x="900" fill="#858995" font-family="JetBrainsMono Nerd Font" font-size="8.5" font-weight="700">0$((index + 1)) / 05</text>
+  </g>
+</svg>
+SVG
+  magick "$svg" "$work_dir/scene-${index}-base.png"
+}
+
+panel_capture() {
+  local input="$1" crop="$2" geometry="$3" accent="$4" target="$5"
+  local panel="$work_dir/panel-${input%.png}.png"
+  magick "$media_dir/$input" -crop "$crop" +repage -resize '470x500>' \
+    -bordercolor '#090b10' -border 7 -bordercolor "$accent" -border 1 "$panel"
+  magick "$target" "$panel" -gravity northwest -geometry "$geometry" -composite "$target"
+}
+
+scene_svg 0 '#9f7aea' 'CAPACITY AT A GLANCE' 'SEE THE' 'PRESSURE.' \
+  'One quiet pie in the Omarchy bar.' 'Exact filesystem context when you open it.' 'NO AUTO-SCAN' 'ONE BAR SLOT'
+cp "$work_dir/scene-0-base.png" "$work_dir/scene-0.png"
+panel_capture disk-lens-first-use.png '520x590+755+28' '+520+20' '#9f7aea' "$work_dir/scene-0.png"
+
+scene_svg 1 '#f6ad55' 'EXPLICIT + CANCELLABLE' 'SCAN WHEN' 'YOU ASK.' \
+  'A visible activity ring follows the live job.' 'Cancel safely; the last result stays intact.' 'LIVE ACTIVITY' 'SAFE CANCEL'
+cp "$work_dir/scene-1-base.png" "$work_dir/scene-1.png"
+panel_capture disk-lens-scanning.png '520x540+755+28' '+520+20' '#f6ad55' "$work_dir/scene-1.png"
+
+scene_svg 2 '#7aa2f7' 'VISUAL ANALYSIS' 'FIND THE' 'HEAVY BRANCH.' \
+  'Treemap area means allocated bytes.' 'List, filters, and exact values share one model.' 'TREEMAP + LIST' 'EXACT SIZES'
+cp "$work_dir/scene-2-base.png" "$work_dir/scene-2.png"
+panel_capture disk-lens-treemap.png '520x585+755+28' '+520+12' '#7aa2f7' "$work_dir/scene-2.png"
+
+scene_svg 3 '#63d8c6' 'READ-ONLY GUIDANCE' 'ASK BEFORE' 'YOU DELETE.' \
+  'Send one selected folder to your Omarchy agent.' 'The prompt starts read-only and asks before change.' 'EXACT PATH' 'CONFIRM CHANGES'
+cp "$work_dir/scene-3-base.png" "$work_dir/scene-3.png"
+panel_capture disk-lens-agent.png '520x585+755+28' '+520+12' '#63d8c6' "$work_dir/scene-3.png"
+
+scene_svg 4 '#ff7f91' 'OPTIONAL DEEP DIVE' 'OPEN THE SAME' 'SCOPE IN QDIRSTAT.' \
+  'Disk Lens stays fast and native.' 'QDirStat remains the specialist desktop analyzer.' 'STRUCTURED PATH' 'DESKTOP USER'
+cp "$work_dir/scene-4-base.png" "$work_dir/scene-4.png"
+panel_capture disk-lens-qdirstat.png '1240x760+20+28' '+442+118' '#ff7f91' "$work_dir/scene-4.png"
+
+ffmpeg -hide_banner -loglevel error -y \
+  -loop 1 -t 2.8 -i "$work_dir/scene-0.png" \
+  -loop 1 -t 2.8 -i "$work_dir/scene-1.png" \
+  -loop 1 -t 2.8 -i "$work_dir/scene-2.png" \
+  -loop 1 -t 2.8 -i "$work_dir/scene-3.png" \
+  -loop 1 -t 2.8 -i "$work_dir/scene-4.png" \
+  -loop 1 -t 2.8 -i "$work_dir/scene-0.png" \
+  -filter_complex \
+    "[0:v][1:v]xfade=transition=fade:duration=0.35:offset=2.45[v1]; \
+     [v1][2:v]xfade=transition=fade:duration=0.35:offset=4.90[v2]; \
+     [v2][3:v]xfade=transition=fade:duration=0.35:offset=7.35[v3]; \
+     [v3][4:v]xfade=transition=fade:duration=0.35:offset=9.80[v4]; \
+     [v4][5:v]xfade=transition=fade:duration=0.35:offset=12.25, \
+     fps=10,split[frames][palettebase]; \
+     [palettebase]palettegen=max_colors=112:stats_mode=diff[palette]; \
+     [frames][palette]paletteuse=dither=bayer:bayer_scale=3:diff_mode=rectangle" \
+  -t 14.7 -loop 0 "$output"
+
+magick "$output" -layers Optimize "$work_dir/optimized.gif"
+mv -- "$work_dir/optimized.gif" "$output"
+
+frame_count=$(identify "$output" | wc -l)
+dimensions=$(identify -format '%wx%h' "${output}[0]")
+[[ $dimensions == "${canvas_width}x${canvas_height}" ]] || fail "unexpected output dimensions: $dimensions"
+(( frame_count >= 100 )) || fail "showcase contains too few frames: $frame_count"
+
+printf 'Built %s (%s, %s frames, %s bytes).\n' "$output" \
+  "$dimensions" "$frame_count" "$(stat -c '%s' "$output")"

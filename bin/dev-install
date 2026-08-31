@@ -7,7 +7,8 @@
 set -euo pipefail
 
 readonly plugin_id="io.github.mtolhuys.disk-lens"
-readonly project_root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
+project_root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
+readonly project_root
 readonly cache_root="${XDG_CACHE_HOME:-$HOME/.cache}/omarchy-disk-lens"
 readonly snapshot_dir="$cache_root/development-source"
 readonly installed_dir="${XDG_CONFIG_HOME:-$HOME/.config}/omarchy/plugins/$plugin_id"
@@ -53,8 +54,9 @@ wait_for_plugin_state() {
   return 1
 }
 
-readonly expected_service_identity=$(identity_from "$project_root/src/Service.qml")
-readonly expected_widget_identity=$(identity_from "$project_root/src/BarWidget.qml")
+expected_service_identity=$(identity_from "$project_root/src/Service.qml")
+expected_widget_identity=$(identity_from "$project_root/src/BarWidget.qml")
+readonly expected_service_identity expected_widget_identity
 
 [[ -n $expected_service_identity ]] || fail "could not read the service build identity"
 [[ -n $expected_widget_identity ]] || fail "could not read the widget build identity"

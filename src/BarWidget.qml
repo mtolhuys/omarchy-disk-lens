@@ -11,7 +11,7 @@ BarWidget {
 
   moduleName: "io.github.mtolhuys.disk-lens"
 
-  readonly property string buildIdentity: "disk-lens-widget-v0200"
+  readonly property string buildIdentity: "disk-lens-widget-v0300"
   readonly property var diskService: bar && bar.shell
     ? bar.shell.serviceFor("io.github.mtolhuys.disk-lens") : null
   readonly property var capacity: diskService ? diskService.capacity : Model.parseCapacity("")
@@ -259,7 +259,8 @@ BarWidget {
       qdirStatAvailable: diskService ? diskService.qdirStatAvailable : false,
       installLaunched: installLaunched,
       agentLaunchCount: agentLaunchCount,
-      lastAgentPath: lastAgentPath
+      lastAgentPath: lastAgentPath,
+      scanIndicatorRunning: scanRunning && popupOpen
     }
   }
 
@@ -290,7 +291,7 @@ BarWidget {
     }
 
     PieGauge {
-      width: Math.min(parent.width, parent.height) * 0.52
+      width: Math.min(parent.width, parent.height) * 0.48
       height: width
       anchors.centerIn: parent
       value: root.capacityReady ? root.capacity.percent : 0
@@ -298,6 +299,16 @@ BarWidget {
       fillColor: root.stateColor()
       trackColor: Util.alpha(button.foreground, 0.18)
       outlineColor: button.foreground
+    }
+
+    ActivityRing {
+      width: Math.min(parent.width, parent.height) * 0.68
+      height: width
+      anchors.centerIn: parent
+      running: root.scanRunning
+      foreground: root.stateColor()
+      track: Util.alpha(button.foreground, 0.12)
+      strokeWidth: Math.max(1, width * 0.07)
     }
   }
 
@@ -344,7 +355,7 @@ BarWidget {
             radius: Style.cornerRadius
 
             PieGauge {
-              width: parent.width * 0.58
+              width: parent.width * 0.5
               height: width
               anchors.centerIn: parent
               value: root.capacityReady ? root.capacity.percent : 0
@@ -352,6 +363,16 @@ BarWidget {
               fillColor: root.stateColor()
               trackColor: Util.alpha(Color.popups.text, 0.14)
               outlineColor: root.stateColor()
+            }
+
+            ActivityRing {
+              width: parent.width * 0.72
+              height: width
+              anchors.centerIn: parent
+              running: root.popupOpen && root.scanRunning
+              foreground: root.stateColor()
+              track: Util.alpha(Color.popups.text, 0.12)
+              strokeWidth: Math.max(1, width * 0.075)
             }
           }
 
@@ -510,7 +531,8 @@ BarWidget {
               text: root.scanRunning
                 ? (root.diskService && root.diskService.scanState === "cancelling" ? "Cancelling…" : "Cancel")
                 : (root.diskService && root.diskService.lastScanPath ? "Refresh" : "Scan Home")
-              iconText: root.scanRunning ? "■" : "↻"
+              iconText: "↻"
+              iconSpinning: root.scanRunning
               bordered: true
               focusable: true
               active: root.scanRunning
@@ -663,15 +685,19 @@ BarWidget {
             anchors.margins: Style.space(12)
             spacing: Style.space(10)
 
-            Text {
-              text: "↻"
-              color: Color.accent
-              font.family: Style.font.family
-              font.pixelSize: Style.font.iconLarge
+            ActivityRing {
+              id: scanProgressIndicator
+              width: Style.space(28)
+              height: width
+              anchors.verticalCenter: parent.verticalCenter
+              running: root.popupOpen && root.scanRunning
+              foreground: Color.accent
+              track: Util.alpha(Color.popups.text, 0.14)
+              strokeWidth: Math.max(2, width * 0.09)
             }
 
             Column {
-              width: parent.width - parent.children[0].width - Style.space(10)
+              width: parent.width - scanProgressIndicator.width - Style.space(10)
               spacing: Style.space(2)
 
               Text {

@@ -5,7 +5,7 @@ Disk Lens inspects filenames, metadata, and allocated sizes on local filesystems
 ## Trust boundaries
 
 - Paths and filenames are untrusted data, including whitespace, newlines, control characters, leading dashes, and invalid UTF-8 bytes.
-- Scanner output is untrusted until every record matches protocol version `1`, its record type, path rules, numeric bounds, and the 5,000-entry limit.
+- Scanner output is untrusted until every record matches protocol version `1`, its record type, path and string-length rules, boolean and numeric bounds, the 5,000-entry limit, the 20-warning limit, and exact completion accounting.
 - QDirStat is third-party optional software installed from the AUR only after an explicit user action.
 - **Ask Omarchy** delegates one selected path and measured size to the user's configured coding agent after an explicit user action. That agent may use a remote provider and follows Omarchy's own launch/approval policy.
 - The Omarchy shell is a long-lived user process, so recursive work and retained models are bounded.
@@ -46,7 +46,7 @@ This is an instruction boundary, not a hard sandbox. The maintained Omarchy laun
 
 ## State and lifecycle
 
-Version `0.2.0` keeps capacity, scan results, filters, selection, and agent-dispatch bookkeeping in memory. It writes no scan-result cache or plugin settings. A shell reload therefore requires a new scan.
+Version `0.3.0` keeps capacity, scan results, filters, selection, and agent-dispatch bookkeeping in memory. It writes no scan-result cache or plugin settings. A shell reload therefore requires a new scan.
 
 Disablement and removal unload the service and widget. The accepted lifecycle leaves scanned user files and QDirStat untouched; only Omarchy-owned plugin installation/runtime data follow the normal plugin lifecycle. The opt-in development installer uses a dedicated snapshot under the user's XDG cache and replaces only plugin id `io.github.mtolhuys.disk-lens`.
 

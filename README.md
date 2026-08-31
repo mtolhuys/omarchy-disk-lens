@@ -4,7 +4,7 @@
 
 Omarchy Disk Lens is a native bar widget and disk-usage panel for Omarchy. It keeps filesystem pressure glanceable, turns an explicit directory scan into a ranked list and squarified treemap, asks the configured Omarchy agent to explain suspicious folders, and hands a scope to QDirStat when deeper desktop analysis is useful.
 
-Version `0.2.0` is a working development preview. Its vertical slice has passed real-session acceptance in the disposable Omarchy Plugin Lab; it has not been tagged, published, or submitted to a marketplace.
+Version `0.3.0` is a working development preview. Its vertical slice is verified in the disposable Omarchy Plugin Lab; it has not been tagged, published, or submitted to a marketplace.
 
 ## What works today
 
@@ -29,7 +29,7 @@ make update
 
 This is an explicit, host-mutating development command. It first runs the complete source suite and Omarchy manifest validation, snapshots the exact current working tree—including uncommitted edits—then replaces only the installed `io.github.mtolhuys.disk-lens` development copy. Installation, catalog discovery, and enablement are separate bounded phases, so rerunning the command also recovers a valid checkout left disabled by an interrupted or delayed Omarchy discovery. It verifies the installed Git commit and waits for both build identities read from the current source tree. Run it again after any local change to guarantee that the active Omarchy session uses the newest code in this checkout. `make dev-install` and `make install` are equivalent aliases.
 
-Do not use `sudo`. The snapshot lives under `${XDG_CACHE_HOME:-$HOME/.cache}/omarchy-disk-lens/development-source`; it is stable across repeated same-path plugin updates. The development installer itself was accepted inside the disposable Plugin Lab before being documented here, but was not invoked on the maintainer's daily host during development.
+Do not use `sudo`. The snapshot lives under `${XDG_CACHE_HOME:-$HOME/.cache}/omarchy-disk-lens/development-source`; it is stable across repeated same-path plugin updates. Automated installation and lifecycle acceptance stay inside the disposable Plugin Lab; `make update` is the maintainer's explicit opt-in route for a daily host.
 
 To remove the development copy:
 
