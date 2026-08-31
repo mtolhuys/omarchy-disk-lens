@@ -7,7 +7,7 @@ This record describes the strongest verified `0.2.0` development milestone. It i
 - Manifest: `io.github.mtolhuys.disk-lens` version `0.2.0`
 - Service identity: `disk-lens-service-v0200`
 - Widget identity: `disk-lens-widget-v0200`
-- Current candidate commit: `dd0cdef259aaa5481e5e649c697864580510b76d`
+- Current candidate commit: `9e8f5955073668be224ec7a0ca1c00da5da4ccf2`
 - Runtime feature commit: `2b2c7b86b1a803db0a330359cd4e8e88ca32717b`
 - Omarchy source revision: `83881e979b35468c3e7d60b171e319ede61a88fd`
 - Plugin Lab revision: `12f8120056e23dc17e454afe35f15dc45e2f986a`
@@ -37,6 +37,7 @@ cd "$OMARCHY_PLUGIN_LAB_ROOT"
 | `20260831-004011` | green | exact committed `0.2.0` runtime candidate: compact pie indicator and panel, scan and selection, guarded Omarchy-agent hand-off, list/map/filter controls, dark/light themes, cancellation, partial/long/empty states, same-path update, disable/re-enable/remove |
 | `20260831-004241` | green | exact committed `0.2.0` optional bridge: public install control, visible exact command, cancelled terminal state, QDirStat `2.0-1`, live detection, scoped launch, and removal ownership boundary |
 | `20260831-072400` | green | exact current candidate installed through public `make update`: source validation, installed snapshot commit, source-derived loaded identities, public behavior, same-path update, disable/re-enable/remove |
+| `20260831-073627` | green | exact discovery-race repair candidate: starts with a checkout left by an interrupted add, removes it, waits for catalog absence, adds without auto-enable, waits for discovery, enables explicitly, and completes public behavior plus lifecycle acceptance |
 
 Run directories and VM overlays remain outside the repository under the Plugin Lab's timestamped evidence root. No VM image, package cache, generated prompt capture, or screenshot is committed.
 
@@ -44,6 +45,7 @@ Run directories and VM overlays remain outside the repository under the Plugin L
 
 - Source tests and Omarchy manifest validation run before the guest development install.
 - The public `make update` target snapshots committed and uncommitted working-tree files, verifies the installed checkout has the same Git commit and origin, and compares both loaded identities with values read from the current source tree.
+- Add, catalog discovery, and enablement are separate bounded phases. A checkout left disabled by an interrupted add is recoverable by rerunning `make update`.
 - Plugin registry, service IPC, and widget IPC agree on enabled state and the `v0200` build identities.
 - Real bar geometry meets the tested host minimum; the bar exposes one square, proportional capacity pie without percentage text, and a QMP pointer opens the panel through the public route.
 - The opened panel remains within the tested `520` pixel width and compact height envelope.
@@ -77,7 +79,7 @@ The panel showed calm hierarchy, readable exact values, bounded scope elision, r
 ## Deliberate limitations
 
 - No tag, release artifact, artifact SHA-256, public install URL, marketplace entry, or minimum supported Omarchy release exists yet.
-- The daily Omarchy host was not used for activation, visual testing, package installation, agent dispatch, update, or lifecycle tests. `make dev-install` was invoked only inside disposable guests.
+- Automated activation, visual testing, package installation, agent dispatch, update, and lifecycle tests remained inside disposable guests. A user-initiated daily-host update exposed the catalog-discovery race; subsequent host inspection was read-only and the repair candidate was activated only in Plugin Lab.
 - The agent prompt is an instruction boundary, not a hard sandbox. The selected Omarchy agent provider, its network behavior, approval policy, and sandbox remain outside Disk Lens.
 - Scan state is in memory and returns to Home after a shell reload.
 - Performance budgets are structurally bounded but not yet quantified.
