@@ -8,18 +8,19 @@ Repository media must come from the current Disk Lens runtime in a disposable Om
 - `disk-lens-folder-picker.png`: theme-native inline browser listing folders without measuring them;
 - `disk-lens-scanning.png`: active scan with the single bar activity ring and cancellable panel state;
 - `disk-lens-treemap.png`: completed synthetic scan with hidden entries visible and proportional treemap;
-- `disk-lens-agent.png`: selected synthetic directory with visible **Ask Omarchy** in the maintained light theme;
+- `disk-lens-trash.png`: exact synthetic target confirmation with **Cancel** selected;
+- `disk-lens-agent.png`: selected synthetic directory with visible **Ask Omarchy** and **Trash** actions;
 - `disk-lens-filtered-list.png`: one-result ranked list after rendered search and view controls;
 - `disk-lens-showcase.gif`: deterministic widescreen product tour built from the captures above;
-- `preview.png`: deterministic marketplace preview extracted from the visual-analysis scene.
+- `preview.png`: deterministic marketplace preview extracted from the safe-removal scene.
 
-The GIF presents six truthful native scenes: one clear starting action, in-place folder choice, explicit scanning, visual analysis, read-only agent guidance, and focused filtering. It stays legible at GitHub README width and does not imply automatic scans, cleanup, deletion, privileged analysis, package installation, or a sandboxed agent.
+The GIF presents seven truthful native scenes: one clear starting action, in-place folder choice, explicit scanning, visual analysis, recoverable selected-item removal, read-only agent guidance, and focused filtering. It stays legible at GitHub README width and does not imply automatic scans, permanent deletion, empty-Trash cleanup, privileged analysis, package installation, or a sandboxed agent.
 
 ## Current provenance
 
-All six source captures come from green `0.5.0` Plugin Lab run `20260831-224131`, which exercised repository candidate `54973b88185ddd017672776b31c972c0259ef90c` through installed development snapshot `fe65d927d937`. The synthetic `1280x800` captures cover first use, the inline browser, the single-indicator scan state, hidden-by-default storage visibility, the selected-folder agent action, and filtering.
+All seven source captures come from green `0.5.0` Plugin Lab run `20260831-231750`, which exercised clean repository candidate `0fd5be3121d77db522294e7264be8de26fbf5b8a` through installed development snapshot `fcf8b5a5370f`. The synthetic `1280x800` captures cover first use, the inline browser, the single-indicator scan state, hidden-by-default storage visibility, exact-target Trash confirmation, the selected-folder agent action, and filtering.
 
-The regenerated showcase is `1000x563`, 161 frames, 2,375,757 bytes, with SHA-256 `a624529a06f406796a54ab429113b0f96029d4bdc2ca887083d052876289fbc2`. The 165,875-byte marketplace preview has SHA-256 `4cda620dc14791af79fe958c48d2b68e90f9bfac9c6197f16b92d77f392d096f`. Two consecutive deterministic builds produced those exact hashes.
+The regenerated showcase is `1000x563`, 184 frames, 3,039,973 bytes, with SHA-256 `1d07822b55bf2ce9b97a3a700c5567b22e4f66d3f2a40998d943211a7fba994b`. The 191,208-byte marketplace preview has SHA-256 `7393c330bf981e9bfcfb6708cb35097dca4229cbcfca7878b65a7351e946bcf3`. Two consecutive deterministic builds produced those exact hashes.
 
 Rebuild both derivatives with:
 

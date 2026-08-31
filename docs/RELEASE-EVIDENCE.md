@@ -7,14 +7,14 @@ This record describes the strongest verified `0.5.0` pre-1.0 development milesto
 - Manifest: `io.github.mtolhuys.disk-lens` version `0.5.0`
 - Service identity: `disk-lens-service-v0500`
 - Widget identity: `disk-lens-widget-v0500`
-- Accepted repository candidate: `54973b88185ddd017672776b31c972c0259ef90c`, installed as exact development snapshot `fe65d927d937`
+- Accepted repository candidate: `0fd5be3121d77db522294e7264be8de26fbf5b8a`, installed as exact development snapshot `fcf8b5a5370f`
 - Last public clean-clone candidate: `5d84d58563f577136ce9c517979bafbfeb157889` (`0.4.1`)
 - Omarchy base revision: `83881e979b35468c3e7d60b171e319ede61a88fd`
 - Plugin Lab base revision: `259ef26e9909bd74323177d2d29e2007cf8c73db`
 - Omarchy ISO harness revision: `268bac16d351a21d867e37565738f458b11cb06c`
 - ISO/base identity: `omarchy-2026.08.27-x86_64-local`, verified official ISO checksum, reusable clean base plus a fresh per-run overlay
-- README showcase: `1000x563`, 161 frames, 2,375,757 bytes, SHA-256 `a624529a06f406796a54ab429113b0f96029d4bdc2ca887083d052876289fbc2`
-- Marketplace preview: `1000x563`, 165,875 bytes, SHA-256 `4cda620dc14791af79fe958c48d2b68e90f9bfac9c6197f16b92d77f392d096f`
+- README showcase: `1000x563`, 184 frames, 3,039,973 bytes, SHA-256 `1d07822b55bf2ce9b97a3a700c5567b22e4f66d3f2a40998d943211a7fba994b`
+- Marketplace preview: `1000x563`, 191,208 bytes, SHA-256 `7393c330bf981e9bfcfb6708cb35097dca4229cbcfca7878b65a7351e946bcf3`
 
 ## Required commands
 
@@ -39,6 +39,8 @@ After `0.5.0` is published, its distribution gate additionally requires:
 
 | Run id | Result | Scope |
 | --- | --- | --- |
+| `20260831-231750` | green | clean repository candidate `0fd5be3`, installed as snapshot `fcf8b5a5370f`: loaded `v0500` identities, exact 32-pixel square close geometry, real pointer dismissal and bar reopening, one first-use scan action, hidden entries shown, inline folder browser, typed scope, explicit refresh, cached Back without a scanner process, selected-folder agent hand-off, exact-target Trash confirmation on Cancel, cancellation without change, unsupported-mount preservation with a visible error, user-home Trash move plus automatic remeasurement, filters, themes, one activity indicator, scan cancellation, hostile paths, partial/long/empty states, same-path update, retained Trash contents, and full lifecycle cleanup |
+| `20260831-230121` | rejected | the initial success fixture attempted desktop Trash from the guest's internal `/tmp` mount; GIO correctly refused that mount, exposing a missing explicit platform-failure assertion. The accepted candidate adds a fixed inline error, proves the item remains intact, and separately proves success from a normal user-home scope |
 | `20260831-224131` | green | clean repository candidate `54973b8`, installed as snapshot `fe65d927d937`: loaded `v0500` identities, exact 32-pixel square close geometry, real pointer dismissal and bar reopening, one first-use scan action, hidden entries shown, inline folder browser, typed scope, explicit refresh, cached Back without a scanner process, agent hand-off, filters, themes, one activity indicator, cancellation, hostile paths, partial/long/empty states, same-path update, and full lifecycle cleanup |
 | `20260831-223912` | rejected | the first square-only close candidate passed geometry and focus assertions, but the real pointer dismissal failed; its screenshot exposed a second missing header gap that placed part of the control outside the available row width, which the accepted candidate corrects and guards with an exact content-width assertion |
 | `20260831-221223` | rejected | native `QtQuick.Dialogs` folder-picker experiment reproducibly aborted Quickshell; coredump and logs located the abort in the GLib/GIO GTK/GVFS directory-monitor path despite available memory, so the candidate was replaced by the accepted inline browser |
@@ -57,6 +59,8 @@ Run artifacts remain under the Plugin Lab evidence root. Selected synthetic scre
 - Drill in measured a new scope. Back restored the preceding bounded cache entry with its original `scannedAt` value and did not launch a scanner process. Refresh remained the explicit remeasurement action.
 - Treemap selection, ranked-list switching, typed search, and clear controls updated one canonical model.
 - Normal and hostile scanner-derived paths passed through the selected-directory agent boundary without becoming shell source or standalone injected prompt instructions; the inert guest agent opened and fixtures remained unchanged.
+- The rendered Trash action snapshotted one exact current entry, showed its path and measured allocation, selected Cancel by default, and left the fixture unchanged when cancelled.
+- Explicit keyboard confirmation on an unsupported internal mount produced a fixed visible failure and retained the item. The same guarded action moved a user-home directory through `gio trash`, cleared stale cached scopes, remeasured to an empty result, retained the Trash entry through plugin removal, and never exposed permanent-delete or empty-Trash behavior.
 - A live scan exposed exactly one machine-visible activity indicator around the bar gauge. Static status and Cancel remained usable; cancellation preserved the last completed result and left no scanner process.
 - Permission denial yielded an explicit usable partial result; long, empty, and hostile scopes remained distinct and recoverable.
 - Maintained light and dark themes preserved state without compositor errors.
@@ -71,9 +75,9 @@ On the development host, the same synthetic 600-entry fixture improved from appr
 
 ## Visual and media review
 
-Fourteen Disk Lens checkpoints from the final 18-capture run were reviewed, including first use, inline browsing, typed scope, active scan, ready treemap, cached Back, filtered list, selected-folder agent action, maintained light/dark themes, cancelled, partial, long, empty, hostile-path, update, and removed states. All visible filesystem data was synthetic.
+Eighteen Disk Lens checkpoints from the final 22-capture run were reviewed, including first use, inline browsing, typed scope, active scan, ready treemap, cached Back, filtered list, selected-folder agent action, Trash confirmation, unsupported Trash, successful Trash, maintained light/dark themes, cancelled, partial, long, empty, hostile-path, update, and removed states. All visible filesystem data was synthetic.
 
-The README product tour was built twice from the current six captures. Both builds produced the recorded 161-frame hash. The opening frame and marketplace preview were inspected at original `1000x563` resolution; hierarchy, screenshot crops, progress markers, browser scene, native filter finale, and agent action remained legible without implying automatic scanning, cleanup, privilege, package installation, or hard agent sandboxing.
+The README product tour was built twice from the current seven captures. Both builds produced the recorded 184-frame hash. The opening frame and marketplace preview were inspected at original `1000x563` resolution; hierarchy, screenshot crops, progress markers, browser scene, Cancel-first Trash confirmation, native filter finale, and agent action remained legible without implying automatic scanning, permanent deletion, empty-Trash cleanup, privilege, package installation, or hard agent sandboxing.
 
 ## Deliberate limitations
 
@@ -82,6 +86,7 @@ The README product tour was built twice from the current six captures. Both buil
 - Marketplace review state is external and is not asserted by this repository evidence record.
 - Automated activation, update, visual, and lifecycle work stays inside disposable guests.
 - The agent prompt is an instruction boundary, not a hard sandbox. Provider, network behavior, approvals, and sandbox policy belong to the configured agent.
+- Desktop Trash availability depends on GLib/GIO and the selected filesystem or mount. Disk Lens reports refusal without changing the item, never falls back to permanent deletion, and does not empty Trash; moving an item to Trash does not itself reclaim capacity.
 - Scan state and navigation cache are bounded and in memory; a shell reload requires a new scan.
 - Representative cold-disk, dense-model, cancellation-latency, and end-to-end performance budgets are not quantified.
 - Pressure-state fixtures, narrow and 5,000-entry layouts, complete keyboard navigation, contrast measurement, screen-reader announcements, and composed reduced-motion acceptance remain unverified.
