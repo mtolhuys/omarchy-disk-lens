@@ -342,6 +342,8 @@ BarWidget {
       closeButtonWidth: closeButton.width,
       closeButtonHeight: closeButton.height,
       closeButtonFocused: closeButton.activeFocus,
+      headerAvailableWidth: panelHeaderRow.width,
+      headerContentWidth: headerGauge.width + headerCopy.width + closeButton.width + panelHeaderRow.spacing * 2,
       scanIndicatorRunning: scanRunning,
       activityIndicatorCount: scanRunning ? 1 : 0
     }
@@ -464,10 +466,12 @@ BarWidget {
         spacing: Style.space(9)
 
         Row {
+          id: panelHeaderRow
           width: parent.width
           spacing: Style.space(10)
 
           BorderSurface {
+            id: headerGauge
             width: Style.space(36)
             height: width
             color: Style.selectedFillFor(root.stateColor(), Color.accent)
@@ -488,7 +492,8 @@ BarWidget {
           }
 
           Column {
-            width: parent.width - Style.space(36) - Style.space(10) - closeButton.width
+            id: headerCopy
+            width: parent.width - headerGauge.width - closeButton.width - panelHeaderRow.spacing * 2
             anchors.verticalCenter: parent.verticalCenter
             spacing: Style.space(2)
 

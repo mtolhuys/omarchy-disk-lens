@@ -84,7 +84,7 @@ omarchy_host_test() {
   folder_picker_x=$((screen_width - 36))
   scope_field_x=$((screen_width - 290))
   drill_x=$((screen_width - 451))
-  close_button_x=$((screen_width - 27))
+  close_button_x=$((screen_width - 37))
   close_button_y=64
 
   qmp_pointer_tap "$screen_width" "$screen_height" "$icon_x" "$icon_y" left
@@ -92,7 +92,7 @@ omarchy_host_test() {
     "omarchy-shell disk-lens state | jq -e \
       '.opened == true and .scanState == \"idle\" and .capacityPercent >= 0 and .includeHidden == true \
        and .scanActionCount == 1 and .closeButtonWidth == 32 and .closeButtonHeight == 32 \
-       and .closeButtonFocused == false'" || return 1
+       and .closeButtonFocused == false and .headerContentWidth == .headerAvailableWidth'" || return 1
   capture_console "success-disk-lens-01-first-use"
 
   qmp_pointer_tap "$screen_width" "$screen_height" "$close_button_x" "$close_button_y" left
