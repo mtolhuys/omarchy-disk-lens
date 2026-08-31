@@ -1,0 +1,92 @@
+#!/bin/bash
+
+set -uo pipefail
+
+scope_path=""
+target_path=""
+gio_pid=""
+error_file=""
+
+fail() {
+  printf '%s\n' "$1" >&2
+  exit "${2:-1}"
+}
+
+# shellcheck disable=SC2329 # Invoked by EXIT.
+cleanup() {
+  if [[ -n $error_file && -f $error_file ]]; then
+    rm -f -- "$error_file"
+  fi
+}
+
+# shellcheck disable=SC2329 # Invoked by INT and TERM traps.
+stop_trash() {
+  trap - INT TERM
+  if [[ -n $gio_pid ]] && kill -0 "$gio_pid" 2>/dev/null; then
+    kill -TERM "$gio_pid" 2>/dev/null || true
+    wait "$gio_pid" 2>/dev/null || true
+  fi
+  exit 130
+}
+
+if (( EUID == 0 )); then
+  fail "Moving items to Trash must run as the desktop user." 77
+fi
+
+if (( $# != 4 )) || [[ $1 != "--scope" || $3 != "--path" ]]; then
+  fail "Expected exactly --scope DIRECTORY --path ITEM." 64
+fi
+
+if [[ $2 != /* || $4 != /* ]]; then
+  fail "The scope and selected item must use absolute paths." 64
+fi
+
+[[ -d $2 ]] || fail "The scanned scope is no longer available." 66
+scope_path=$(realpath -e -- "$2") \
+  || fail "The scanned scope could not be resolved." 66
+target_path=$4
+
+if ! printf '%s\0%s' "$scope_path" "$target_path" | iconv -f UTF-8 -t UTF-8 >/dev/null 2>&1; then
+  fail "The selected item is not valid UTF-8." 66
+fi
+
+[[ $target_path != "$scope_path" ]] \
+  || fail "Disk Lens will not move the scanned scope itself to Trash." 65
+if [[ -n ${HOME:-} && -d $HOME ]]; then
+  home_path=$(realpath -e -- "$HOME") \
+    || fail "The Home directory could not be resolved safely." 66
+  [[ $target_path != "$home_path" ]] \
+    || fail "Disk Lens will not move the Home directory itself to Trash." 65
+fi
+[[ -e $target_path || -L $target_path ]] \
+  || fail "The selected item no longer exists." 66
+
+target_parent=${target_path%/*}
+[[ -n $target_parent ]] || target_parent="/"
+resolved_parent=$(realpath -e -- "$target_parent") \
+  || fail "The selected item's parent could not be resolved." 66
+[[ $resolved_parent == "$scope_path" ]] \
+  || fail "Only a direct entry from the current scan can be moved to Trash." 65
+
+command -v gio >/dev/null 2>&1 \
+  || fail "The desktop Trash command is unavailable." 69
+
+error_file=$(mktemp -t omarchy-disk-lens-trash.XXXXXX) \
+  || fail "Disk Lens could not create temporary Trash state." 73
+trap cleanup EXIT
+trap stop_trash INT TERM
+gio trash -- "$target_path" 2>"$error_file" &
+gio_pid=$!
+if wait "$gio_pid"; then
+  gio_status=0
+else
+  gio_status=$?
+fi
+gio_pid=""
+
+if (( gio_status != 0 )); then
+  if grep -F 'Trashing on system internal mounts is not supported' "$error_file" >/dev/null 2>&1; then
+    fail "This location does not support desktop Trash. The selected item was not changed." 74
+  fi
+  fail "The desktop could not move the selected item to Trash. The selected item was not changed." 74
+fi

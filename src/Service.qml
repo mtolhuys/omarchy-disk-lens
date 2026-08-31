@@ -16,6 +16,7 @@ Item {
   readonly property string homePath: Quickshell.env("HOME")
   readonly property string sourceDir: manifest ? String(manifest.__sourceDir || "") : ""
   readonly property string scannerPath: sourceDir ? sourceDir + "/scripts/disk-lens-scan" : ""
+  readonly property string trashHelperPath: sourceDir ? sourceDir + "/scripts/disk-lens-trash" : ""
 
   property var capacity: Model.parseCapacity("")
   property string capacityState: "loading"
@@ -38,6 +39,17 @@ Item {
   property int cacheHitCount: 0
   property bool resultFromCache: false
 
+  property string trashState: "idle"
+  property string trashTargetPath: ""
+  property string trashTargetName: ""
+  property string trashTargetScope: ""
+  property string trashCompletedPath: ""
+  property string trashCompletedName: ""
+  property string trashError: ""
+  property int trashMoveCount: 0
+  property bool expectedTrashStop: false
+  property string trashRescanScope: ""
+
   readonly property int maxCachedScopes: 8
   readonly property int maxCachedEntries: 12000
 
@@ -56,7 +68,7 @@ Item {
 
   function startScan(path) {
     var selectedPath = String(path || scanPath || homePath)
-    if (scanProcess.running || !validScanPath(selectedPath) || !scannerPath) return false
+    if (scanProcess.running || trashProcess.running || !validScanPath(selectedPath) || !scannerPath) return false
 
     scanPath = selectedPath
     scanError = ""
@@ -101,7 +113,7 @@ Item {
 
   function restoreCachedScan(path) {
     var selectedPath = String(path || "")
-    if (scanProcess.running || !validScanPath(selectedPath)) return false
+    if (scanProcess.running || trashProcess.running || !validScanPath(selectedPath)) return false
 
     for (var index = 0; index < scanCache.length; index++) {
       var snapshot = scanCache[index]
@@ -134,6 +146,54 @@ Item {
     expectedStop = true
     scanState = "cancelling"
     scanProcess.running = false
+    return true
+  }
+
+  function trashEntry(scope, path) {
+    var selectedScope = String(scope || "")
+    var selectedPath = String(path || "")
+    if (scanProcess.running || trashProcess.running || !trashHelperPath
+        || selectedScope !== lastScanPath || !validScanPath(selectedScope)
+        || !validScanPath(selectedPath) || !Model.isImmediateChild(selectedPath, selectedScope))
+      return null
+
+    for (var index = 0; index < entries.length; index++) {
+      var entry = entries[index]
+      if (entry && entry.path === selectedPath && entry.actionable === true) return entry
+    }
+    return null
+  }
+
+  function moveToTrash(scope, path) {
+    var entry = trashEntry(scope, path)
+    if (!entry) {
+      trashState = "failed"
+      trashError = "The selected item is no longer an actionable entry in this scan."
+      return false
+    }
+
+    trashTargetPath = String(entry.path)
+    trashTargetName = String(entry.name)
+    trashTargetScope = String(scope)
+    trashCompletedPath = ""
+    trashCompletedName = ""
+    trashError = ""
+    trashState = "moving"
+    expectedTrashStop = false
+    trashProcess.command = [trashHelperPath, "--scope", trashTargetScope, "--path", trashTargetPath]
+    trashProcess.running = true
+    return true
+  }
+
+  function clearTrashStatus() {
+    if (trashProcess.running) return false
+    trashState = "idle"
+    trashError = ""
+    trashCompletedPath = ""
+    trashCompletedName = ""
+    trashTargetPath = ""
+    trashTargetName = ""
+    trashTargetScope = ""
     return true
   }
 
@@ -182,7 +242,13 @@ Item {
       scannedAt: scannedAt,
       cacheCount: scanCache.length,
       cacheHitCount: cacheHitCount,
-      resultFromCache: resultFromCache
+      resultFromCache: resultFromCache,
+      trashState: trashState,
+      trashTargetPath: trashTargetPath,
+      trashCompletedPath: trashCompletedPath,
+      trashCompletedName: trashCompletedName,
+      trashError: trashError,
+      trashMoveCount: trashMoveCount
     }
   }
 
@@ -209,6 +275,48 @@ Item {
       root.capacityState = parsed.available ? "ready" : "failed"
       root.capacityError = parsed.error
       root.capacityUpdatedAt = Date.now()
+    }
+  }
+
+  Process {
+    id: trashProcess
+    command: []
+    stdout: StdioCollector {
+      id: trashStdout
+      waitForEnd: true
+    }
+    stderr: StdioCollector {
+      id: trashStderr
+      waitForEnd: true
+    }
+    onExited: function(exitCode) {
+      if (root.expectedTrashStop) {
+        root.expectedTrashStop = false
+        root.trashState = "idle"
+        root.trashError = ""
+        return
+      }
+
+      if (exitCode !== 0) {
+        root.trashState = "failed"
+        root.trashError = String(trashStderr.text || "The selected item could not be moved to Trash")
+          .replace(/[\u0000-\u001f\u007f]/g, " ").trim().slice(0, 8192)
+        return
+      }
+
+      var completedScope = root.trashTargetScope
+      root.trashCompletedPath = root.trashTargetPath
+      root.trashCompletedName = root.trashTargetName
+      root.trashMoveCount += 1
+      root.trashState = "moved"
+      root.trashError = ""
+      root.scanCache = []
+      root.trashTargetPath = ""
+      root.trashTargetName = ""
+      root.trashTargetScope = ""
+      root.refreshCapacity()
+      root.trashRescanScope = completedScope
+      trashRescanTimer.restart()
     }
   }
 
@@ -244,6 +352,17 @@ Item {
   }
 
   Timer {
+    id: trashRescanTimer
+    interval: 0
+    repeat: false
+    onTriggered: {
+      var scope = root.trashRescanScope
+      root.trashRescanScope = ""
+      if (scope) root.startScan(scope)
+    }
+  }
+
+  Timer {
     interval: 60000
     repeat: true
     running: true
@@ -258,6 +377,7 @@ Item {
     function scan(path: string): string { return root.startScan(path) ? "started" : "rejected" }
     function restore(path: string): string { return root.restoreCachedScan(path) ? "restored" : "missing" }
     function cancel(): string { return root.cancelScan() ? "cancelling" : "idle" }
+    function clearTrashStatus(): string { return root.clearTrashStatus() ? "cleared" : "busy" }
   }
 
   Component.onCompleted: {
@@ -268,6 +388,10 @@ Item {
     if (scanProcess.running) {
       expectedStop = true
       scanProcess.running = false
+    }
+    if (trashProcess.running) {
+      expectedTrashStop = true
+      trashProcess.running = false
     }
   }
 }

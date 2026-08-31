@@ -22,7 +22,7 @@ The compact panel has five stable zones. Its header ends in one centered 32-pixe
 2. condensed Home-filesystem capacity rail with exact values;
 3. editable scope, inline folder browser, Back, refresh/cancel, search, view, and filter controls;
 4. first-use/status surface or the analysis canvas;
-5. a focused selection inspector with **Drill in**, **Open**, and **Ask Omarchy**.
+5. a focused selection inspector with **Drill in**, **Open**, **Ask Omarchy**, and **Trash**.
 
 The ordinary scope row contains a history Back control, an editable absolute or `~/` path, a compact folder-browser trigger, and one contextual Open/Refresh/Cancel action. First use exposes only one scan action. The inline folder browser lists immediate subdirectories without measuring them, includes hidden folders, accepts an editable path, and keeps the user inside the themed panel.
 
@@ -35,6 +35,8 @@ Both views are projections of one model. Treemap area represents allocated bytes
 The ranked list shows name, proportional bar, exact allocated size, and directory/file treatment. The 80-entry render bound is stated in the UI; filters expose a narrower result without changing stored scan totals. Control characters are repaired for display and invalid UTF-8 paths are not actionable.
 
 For an actionable selected directory, **Ask Omarchy** is visually primary without displacing **Drill in** or **Open**. Activating it closes the panel and opens the configured default agent with a read-only diagnostic question. Drilling pushes the prior scope into bounded history; Back restores its original scan timestamp and model when cached rather than silently remeasuring it.
+
+**Trash** is deliberately urgent but secondary. It opens a modal containing the selected path and allocated size, with keyboard focus reset to **Cancel**. Confirmation moves only that current immediate child through desktop Trash. Success clears selection, invalidates cached views, remeasures the scope, and states that Trash must be emptied before space is reclaimed. A platform refusal becomes a dismissible inline error while the entry remains visible.
 
 ## Filters
 
@@ -54,6 +56,9 @@ Current controls provide case-insensitive name search; files, directories, or al
 | Empty | Complete scope has no immediate entries | Go Back or edit the scope |
 | Filtered empty | No stored entry matches the current projection | Clear filters |
 | Agent dispatched | Panel closes and the configured agent terminal owns focus | Continue there or close it |
+| Trash confirmation | Exact selected path and measured allocation; Cancel is selected | Cancel or explicitly select Move |
+| Trash unavailable | Inline error and unchanged selected entry | Dismiss, use the file manager, or choose another scope |
+| Moved to Trash | Success notice plus an automatic fresh scan | Empty Trash outside Disk Lens to reclaim capacity |
 
 ## Accessibility boundary
 
@@ -63,4 +68,4 @@ Only an active scan uses custom looping motion. The same state is always communi
 
 ## Proven visual matrix and gaps
 
-The disposable lab matrix includes synthetic first-use, inline folder browser, typed scope, cache-restored Back navigation, active scanning, compact ready treemap, selected-folder agent action, filtered list, cancelled, partial, long-scope, empty, and removed states in maintained dark and light themes. Warning/critical/unknown capacity fixtures, narrow panels, a dense 5,000-entry model, and complete assistive-technology behavior remain explicit release gaps.
+The disposable lab matrix includes synthetic first-use, inline folder browser, typed scope, cache-restored Back navigation, active scanning, compact ready treemap, selected-folder agent action, Trash confirmation, unsupported Trash, successful Trash plus remeasurement, filtered list, cancelled, partial, long-scope, empty, and removed states in maintained dark and light themes. Warning/critical/unknown capacity fixtures, narrow panels, a dense 5,000-entry model, and complete assistive-technology behavior remain explicit release gaps.

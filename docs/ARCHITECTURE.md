@@ -5,6 +5,7 @@ Omarchy shell
   ├─ Disk Lens service (kept loaded)
   │    ├─ findmnt capacity process, every 60 seconds
   │    ├─ one disk-lens-scan process
+  │    ├─ at most one guarded disk-lens-trash process
   │    └─ bounded in-memory result cache with Home retention
   └─ Disk Lens bar widget + KeyboardPanel
        ├─ pie gauge, one activity ring, capacity rail, and editable scope controls
@@ -20,6 +21,10 @@ disk-lens-scan
 disk-lens-folders
   └─ GNU find -mindepth 1 -maxdepth 1 with NUL output
        └─ strict shallow-folder NDJSON protocol version 1
+
+disk-lens-trash
+  └─ gio trash -- EXACT_CURRENT_CHILD
+       └─ same-user, exact-scope, recoverable removal boundary
 ```
 
 ## Plugin contract
@@ -62,12 +67,20 @@ Drilling into an actionable directory pushes the prior scope into a 16-step widg
 
 The selected-directory action constructs one explanatory prompt containing a control-free, 4,096-character-bounded path value, allocated byte count, and a fixed non-destructive investigation contract. Read-only and untrusted-data instructions precede the explicitly delimited filesystem path. QML launches `omarchy agent prompt` as four process arguments; neither the path nor the complete prompt becomes shell source. The maintained Omarchy launcher starts the user's default agent. Disk Lens neither selects a provider nor overrides authentication, network, approval, or sandbox policy.
 
+## Trash adapter
+
+The widget snapshots one actionable selected entry and its current scope, then opens the shell-native confirmation with **Cancel** selected. The service revalidates that the snapshot is still an exact entry in the current scan and a lexical immediate child of that scope before it starts `scripts/disk-lens-trash`. No destructive IPC method exists.
+
+The helper refuses UID `0`, relative or unresolved scopes, the scope itself, the Home directory itself, missing targets, non-UTF-8 values, and targets whose resolved parent differs from the current scope. It launches `gio trash -- "$target_path"` with the path as one argument, forwards termination to its owned child, and emits only fixed control-free failures. It does not call `rm`, empty Trash, or fall back to permanent deletion.
+
+After success, the service clears its navigation cache, refreshes capacity, and starts one explicit remeasurement of the affected scope. The selection disappears only when that fresh model no longer contains the entry. If the platform refuses Trash—for example on an internal system mount—the old model and item remain intact and the UI exposes a dismissible error. Moving within one filesystem does not itself reclaim capacity; the confirmation and success notice both say that Trash must be emptied separately.
+
 ## Btrfs accounting
 
 Filesystem free space and per-path allocation answer different questions. Snapshots, compression, and shared extents can explain a gap. Version `0.5.0` does not calculate exclusive/shared extents, snapshot ownership, or reclaimable bytes.
 
 ## Lifecycle and development snapshots
 
-Disablement unloads both entry points and stops their processes and timers. Removal uses Omarchy's normal lifecycle and does not remove user data.
+Disablement unloads both entry points and stops their processes and timers. Plugin removal uses Omarchy's normal lifecycle and does not remove scanned data or empty desktop Trash. A selected filesystem entry changes only through its own confirmed Trash action.
 
 `make update` validates the current checkout, copies its exact committed and uncommitted working tree into a dedicated Git snapshot under XDG cache, and removes only an existing Disk Lens plugin. Add, asynchronous catalog discovery, and enable are separate bounded phases. The installer preserves the previous bar position when available and verifies the installed snapshot commit plus both source-derived loaded identities. `make dev-install` and `make install` are equivalent aliases.

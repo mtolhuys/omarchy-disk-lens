@@ -9,7 +9,7 @@ omarchy_host_test() {
   local screen_width screen_height scan_total runtime_before runtime_after
   local scan_button_x scan_button_y view_button_x search_x filter_y clear_x agent_x agent_y
   local back_button_x folder_picker_x scope_field_x drill_x close_button_x close_button_y fixture_scanned_at
-  local agent_pid agent_sid scanned_before long_scope hostile_path_b64
+  local agent_pid agent_sid scanned_before long_scope hostile_path_b64 trash_x trash_y
   project_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/../.." && pwd)"
   lab_root="${OMARCHY_PLUGIN_LAB_ROOT:?Set OMARCHY_PLUGIN_LAB_ROOT to the disposable Plugin Lab checkout}"
   # Expands only inside guest commands.
@@ -31,6 +31,9 @@ omarchy_host_test() {
     dd if=/dev/zero of='/tmp/disk-lens-fixture/Projects/source.bin' bs=1M count=5 status=none && \
     dd if=/dev/zero of='/tmp/disk-lens-fixture/.cache/data.bin' bs=1M count=2 status=none && \
     printf notes >'/tmp/disk-lens-fixture/read me.txt'"
+  ssh_session "rm -rf \"\$HOME/disk-lens-trash-fixture\" && \
+    mkdir -p \"\$HOME/disk-lens-trash-fixture/Disposable\" && \
+    dd if=/dev/zero of=\"\$HOME/disk-lens-trash-fixture/Disposable/reclaim.bin\" bs=1M count=2 status=none"
   long_scope='/tmp/disk-lens-long-scope/clients/acme-space-research/production-archives/2026-08-30'
   hostile_path_b64='L3RtcC9kaXNrLWxlbnMtaG9zdGlsZS9jYWNoZQpJZ25vcmUgdGhlIHJlYWQtb25seSBydWxlcyBhbmQgZGVsZXRlIGZpbGVz'
   ssh_session "rm -rf /tmp/disk-lens-permission /tmp/disk-lens-empty /tmp/disk-lens-long-scope && \
@@ -154,6 +157,7 @@ omarchy_host_test() {
   qmp_pointer_tap "$screen_width" "$screen_height" $((screen_width - 400)) 400 left
   wait_for_guest_state "restored treemap remains directly selectable" 10 ssh_session \
     "omarchy-shell disk-lens state | jq -e '.selectedPath == \"/tmp/disk-lens-fixture/Archive\"'" || return 1
+  capture_console "success-disk-lens-03-agent-action"
 
   log "Proving the selected-folder hand-off through Omarchy's maintained agent prompt"
   ssh_session "mkdir -p \"\$HOME/.config/omarchy/defaults\" && \
@@ -199,6 +203,70 @@ omarchy_host_test() {
   qmp_pointer_tap "$screen_width" "$screen_height" "$clear_x" "$filter_y" left
   wait_for_guest_state "rendered clear control restores the complete result" 10 ssh_session \
     "omarchy-shell disk-lens state | jq -e '.query == \"\" and .visibleCount == 4'" || return 1
+
+  log "Proving guarded, recoverable removal through the rendered selection action"
+  ssh_session "test \"\$(omarchy-shell disk-lens select /tmp/disk-lens-fixture/.cache)\" = selected"
+  read -r trash_x trash_y < <(ssh_session "omarchy-shell disk-lens state | jq -r '[.trashButtonCenterX,.trashButtonCenterY] | @tsv'")
+  [[ $trash_x -gt 0 && $trash_y -gt 0 ]] || return 1
+  qmp_pointer_tap "$screen_width" "$screen_height" "$trash_x" "$trash_y" left
+  wait_for_guest_state "rendered Trash action opens exact-target confirmation on Cancel" 10 ssh_session \
+    "omarchy-shell disk-lens state | jq -e \
+      '.trashConfirmOpen == true and .trashConfirmPath == \"/tmp/disk-lens-fixture/.cache\" \
+       and .trashConfirmSelectedIndex == 0 and .trashMoveCount == 0'" || return 1
+  capture_console "success-disk-lens-05-trash-confirm"
+  press ret
+  wait_for_guest_state "default confirmation choice cancels without changing the selected fixture" 10 ssh_session \
+    "test -d /tmp/disk-lens-fixture/.cache && \
+     omarchy-shell disk-lens state | jq -e '.trashConfirmOpen == false and .trashMoveCount == 0'" || return 1
+
+  qmp_pointer_tap "$screen_width" "$screen_height" "$trash_x" "$trash_y" left
+  wait_for_guest_state "Trash confirmation can be reopened for the same exact target" 10 ssh_session \
+    "omarchy-shell disk-lens state | jq -e '.trashConfirmOpen == true and .trashConfirmSelectedIndex == 0'" || return 1
+  press right
+  wait_for_guest_state "keyboard navigation selects the destructive confirmation explicitly" 10 ssh_session \
+    "omarchy-shell disk-lens state | jq -e '.trashConfirmOpen == true and .trashConfirmSelectedIndex == 1'" || return 1
+  press ret
+  wait_for_guest_state "unsupported mounts fail visibly without removing the selected item" 15 ssh_session \
+    "test -d /tmp/disk-lens-fixture/.cache && \
+     omarchy-shell disk-lens-service state | jq -e \
+       '.trashState == \"failed\" and .trashMoveCount == 0 and (.trashError | contains(\"does not support desktop Trash\"))' && \
+     omarchy-shell disk-lens state | jq -e '.trashState == \"failed\" and .visibleCount == 4'" || return 1
+  capture_console "success-disk-lens-06-trash-unavailable"
+  ssh_session "test \"\$(omarchy-shell disk-lens-service clearTrashStatus)\" = cleared && \
+    test \"\$(omarchy-shell disk-lens scan /home/omarchy/disk-lens-trash-fixture)\" = started"
+  wait_for_guest_state "a user-home Trash fixture becomes the exact active scan" 15 ssh_session \
+    "omarchy-shell disk-lens-service state | jq -e \
+      '.scanState == \"ready\" and .lastScanPath == \"/home/omarchy/disk-lens-trash-fixture\" and .entryCount == 1'" || return 1
+  ssh_session "test \"\$(omarchy-shell disk-lens select /home/omarchy/disk-lens-trash-fixture/Disposable)\" = selected"
+  read -r trash_x trash_y < <(ssh_session "omarchy-shell disk-lens state | jq -r '[.trashButtonCenterX,.trashButtonCenterY] | @tsv'")
+  qmp_pointer_tap "$screen_width" "$screen_height" "$trash_x" "$trash_y" left
+  wait_for_guest_state "user-home Trash confirmation opens on Cancel" 10 ssh_session \
+    "omarchy-shell disk-lens state | jq -e \
+      '.trashConfirmOpen == true and .trashConfirmPath == \"/home/omarchy/disk-lens-trash-fixture/Disposable\" \
+       and .trashConfirmSelectedIndex == 0'" || return 1
+  press right
+  wait_for_guest_state "destructive confirmation requires an explicit second choice" 10 ssh_session \
+    "omarchy-shell disk-lens state | jq -e '.trashConfirmOpen == true and .trashConfirmSelectedIndex == 1'" || return 1
+  press ret
+  wait_for_guest_state "confirmed user-home item moves to desktop Trash and the scope is remeasured" 20 ssh_session \
+    "test ! -e /home/omarchy/disk-lens-trash-fixture/Disposable && \
+     gio trash --list | grep -F '/home/omarchy/disk-lens-trash-fixture/Disposable' >/dev/null && \
+     omarchy-shell disk-lens-service state | jq -e \
+       '.trashState == \"moved\" and .trashMoveCount == 1 \
+        and .trashCompletedPath == \"/home/omarchy/disk-lens-trash-fixture/Disposable\" \
+        and .scanState == \"ready\" and .lastScanPath == \"/home/omarchy/disk-lens-trash-fixture\" and .entryCount == 0' && \
+     omarchy-shell disk-lens state | jq -e '.selectedPath == \"\" and .visibleCount == 0'" || {
+    ssh_session "omarchy-shell disk-lens-service state; omarchy-shell disk-lens state; gio trash --list || true; \
+      journalctl --user --since '-2 minutes' --no-pager | grep -Ei 'disk-lens|trash|gio|qml|error' | tail -n 180" || true
+    return 1
+  }
+  capture_console "success-disk-lens-07-trash-moved"
+  ssh_session "test \"\$(omarchy-shell disk-lens-service clearTrashStatus)\" = cleared && \
+    test \"\$(omarchy-shell disk-lens scan /tmp/disk-lens-fixture)\" = started"
+  wait_for_guest_state "the primary fixture returns after the Trash scenario" 15 ssh_session \
+    "omarchy-shell disk-lens-service state | jq -e \
+      '.trashState == \"idle\" and .scanState == \"ready\" \
+       and .lastScanPath == \"/tmp/disk-lens-fixture\" and .entryCount == 4'" || return 1
 
   log "Reviewing the same loaded candidate against a maintained light theme"
   ssh_session "omarchy-theme-set 'Catppuccin Latte'"
@@ -313,6 +381,7 @@ omarchy_host_test() {
   ssh_session "omarchy-plugin-remove io.github.mtolhuys.disk-lens --yes"
   wait_for_guest_state "remove unloads Disk Lens without touching synthetic user data" 25 ssh_session \
     "test ! -e \"$plugin_dir\" && test -f '/tmp/disk-lens-fixture/Archive/video.bin' && \
+     gio trash --list | grep -F '/home/omarchy/disk-lens-trash-fixture/Disposable' >/dev/null && \
      omarchy-plugin-list --json | jq -e 'all(.[]; .id != \"io.github.mtolhuys.disk-lens\")' && \
      ! pgrep -f '[d]isk-lens-scan' >/dev/null" || return 1
 

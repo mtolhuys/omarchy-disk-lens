@@ -18,6 +18,8 @@ BarWidget {
   readonly property bool capacityReady: capacity && capacity.available === true
   readonly property bool scanRunning: diskService
     && (diskService.scanState === "scanning" || diskService.scanState === "cancelling")
+  readonly property bool trashRunning: diskService && diskService.trashState === "moving"
+  readonly property bool actionBusy: scanRunning || trashRunning
   readonly property string currentScope: diskService
     ? String(diskService.lastScanPath || diskService.scanPath || Quickshell.env("HOME"))
     : Quickshell.env("HOME")
@@ -64,6 +66,8 @@ BarWidget {
   property var folderPickerEntries: []
   property string folderPickerError: ""
   property string folderPickerWarning: ""
+  property bool trashConfirmOpen: false
+  property var trashConfirmEntry: null
 
   function entryForPath(path) {
     var value = String(path || "")
@@ -96,6 +100,7 @@ BarWidget {
 
   function scanStateLabel() {
     if (!diskService) return "Service unavailable"
+    if (trashRunning) return "Moving to Trash…"
     if (diskService.scanState === "scanning") return "Scanning…"
     if (diskService.scanState === "cancelling") return "Cancelling…"
     if (diskService.scanState === "partial") return "Partial result"
@@ -115,12 +120,15 @@ BarWidget {
     if (diskService) diskService.refreshCapacity()
   }
 
-  function close() { popupOpen = false }
+  function close() {
+    cancelTrashSelected()
+    popupOpen = false
+  }
   function closeForPopoutSwitch() { close() }
   function toggle() { popupOpen ? close() : open() }
 
   function requestScan(path) {
-    if (!diskService) return false
+    if (!diskService || trashRunning) return false
     var target = Model.normalizeScopeInput(String(path || currentScope), Quickshell.env("HOME"))
     if (!target) return false
     selectedPath = ""
@@ -139,7 +147,7 @@ BarWidget {
   }
 
   function navigateTo(path) {
-    if (!diskService || scanRunning) return false
+    if (!diskService || actionBusy) return false
     var target = Model.normalizeScopeInput(path, Quickshell.env("HOME"))
     if (!target) {
       scopeInputError = "Enter an absolute folder path, or start with ~/."
@@ -168,7 +176,7 @@ BarWidget {
   }
 
   function goBack() {
-    if (!diskService || scanRunning || navigationHistory.length === 0) return false
+    if (!diskService || actionBusy || navigationHistory.length === 0) return false
     var next = navigationHistory.slice()
     var target = next.pop()
     navigationHistory = next
@@ -195,7 +203,7 @@ BarWidget {
   }
 
   function chooseFolder() {
-    if (scanRunning || folderListProcess.running) return false
+    if (actionBusy || folderListProcess.running) return false
     folderPickerOpen = true
     return browseFolder(scopeDraftPath || currentScope)
   }
@@ -233,14 +241,14 @@ BarWidget {
   }
 
   function scanOrCancel() {
-    if (!diskService) return
+    if (!diskService || trashRunning) return
     if (scanRunning) diskService.cancelScan()
     else if (scopeDraftChanged) navigateTo(scopeDraftPath)
     else requestScan(currentScope)
   }
 
   function drillInto(entry) {
-    if (!entry || entry.kind !== "directory" || entry.actionable !== true || scanRunning) return
+    if (!entry || entry.kind !== "directory" || entry.actionable !== true || actionBusy) return
     navigateTo(entry.path)
   }
 
@@ -250,11 +258,12 @@ BarWidget {
   }
 
   function openInFileManager() {
+    if (trashRunning) return
     Quickshell.execDetached(["uwsm-app", "--", "xdg-open", selectedActionPath()])
   }
 
   function askOmarchyAboutSelected() {
-    if (!selectedEntry || selectedEntry.actionable !== true || selectedEntry.kind !== "directory") return false
+    if (!selectedEntry || selectedEntry.actionable !== true || selectedEntry.kind !== "directory" || actionBusy) return false
 
     var path = String(selectedEntry.path)
     var allocatedBytes = Number(selectedEntry.allocatedBytes || 0)
@@ -265,6 +274,34 @@ BarWidget {
     lastAgentPath = path
     close()
     return true
+  }
+
+  function requestTrashSelected() {
+    if (!diskService || actionBusy || !selectedEntry || selectedEntry.actionable !== true) return false
+    trashConfirmEntry = {
+      path: String(selectedEntry.path),
+      name: String(selectedEntry.name),
+      kind: String(selectedEntry.kind),
+      allocatedBytes: Number(selectedEntry.allocatedBytes || 0),
+      scope: currentScope
+    }
+    trashConfirmOpen = true
+    trashConfirm.selectedIndex = 0
+    panelScroll.forceActiveFocus()
+    return true
+  }
+
+  function cancelTrashSelected() {
+    trashConfirmOpen = false
+    trashConfirmEntry = null
+  }
+
+  function confirmTrashSelected() {
+    var pending = trashConfirmEntry
+    trashConfirmOpen = false
+    trashConfirmEntry = null
+    if (!pending || !diskService) return false
+    return diskService.moveToTrash(pending.scope, pending.path)
   }
 
   function cycleKindFilter() {
@@ -315,6 +352,7 @@ BarWidget {
   }
 
   function stateSnapshot() {
+    var trashCenter = trashButton.mapToGlobal(trashButton.width / 2, trashButton.height / 2)
     return {
       buildIdentity: buildIdentity,
       opened: opened,
@@ -345,7 +383,14 @@ BarWidget {
       headerAvailableWidth: panelHeaderRow.width,
       headerContentWidth: headerGauge.width + headerCopy.width + closeButton.width + panelHeaderRow.spacing * 2,
       scanIndicatorRunning: scanRunning,
-      activityIndicatorCount: scanRunning ? 1 : 0
+      activityIndicatorCount: scanRunning ? 1 : 0,
+      trashState: diskService ? diskService.trashState : "unavailable",
+      trashConfirmOpen: trashConfirmOpen,
+      trashConfirmPath: trashConfirmEntry ? trashConfirmEntry.path : "",
+      trashConfirmSelectedIndex: trashConfirm.selectedIndex,
+      trashMoveCount: diskService ? diskService.trashMoveCount : 0,
+      trashButtonCenterX: Math.round(trashCenter.x),
+      trashButtonCenterY: Math.round(trashCenter.y)
     }
   }
 
@@ -358,6 +403,14 @@ BarWidget {
 
   onCurrentScopeChanged: {
     if (!scopeField.activeFocus) scopeDraft = currentScope
+  }
+
+  Connections {
+    target: root.diskService
+    function onTrashCompletedPathChanged() {
+      if (root.diskService && root.selectedPath === root.diskService.trashCompletedPath)
+        root.selectedPath = ""
+    }
   }
 
   Process {
@@ -453,11 +506,18 @@ BarWidget {
       boundsBehavior: Flickable.StopAtBounds
       interactive: contentHeight > height
       QQC.ScrollBar.vertical: QQC.ScrollBar { policy: QQC.ScrollBar.AsNeeded }
+      Keys.onPressed: function(event) {
+        if (root.trashConfirmOpen && trashConfirm.handleKey(event)) event.accepted = true
+      }
 
       Shortcut {
         sequence: "Escape"
         context: Qt.WindowShortcut
-        onActivated: root.folderPickerOpen ? root.closeFolderPicker() : root.close()
+        onActivated: {
+          if (root.trashConfirmOpen) root.cancelTrashSelected()
+          else if (root.folderPickerOpen) root.closeFolderPicker()
+          else root.close()
+        }
       }
 
       Column {
@@ -815,7 +875,7 @@ BarWidget {
               iconText: "‹"
               tooltipText: "Go back without rescanning"
               focusable: true
-              enabled: !root.scanRunning && root.navigationHistory.length > 0
+              enabled: !root.actionBusy && root.navigationHistory.length > 0
               opacity: enabled ? 1 : 0.35
               onClicked: root.goBack()
             }
@@ -828,7 +888,7 @@ BarWidget {
               text: root.scopeDraft
               placeholderText: "/home/you or ~/Projects"
               selectByMouse: true
-              enabled: !root.scanRunning
+              enabled: !root.actionBusy
               Accessible.name: "Folder path to inspect"
               onTextEdited: {
                 root.scopeDraft = text
@@ -844,7 +904,7 @@ BarWidget {
               iconText: "…"
               tooltipText: "Choose a folder"
               focusable: true
-              enabled: !root.scanRunning
+              enabled: !root.actionBusy
               opacity: enabled ? 1 : 0.35
               Accessible.name: "Choose a folder"
               onClicked: root.chooseFolder()
@@ -944,6 +1004,61 @@ BarWidget {
               selected: root.maximumAgeSeconds > 0
               focusable: true
               onClicked: root.cycleAge()
+            }
+          }
+        }
+
+        BorderSurface {
+          visible: !root.folderPickerOpen && root.diskService
+            && (root.diskService.trashState === "moved" || root.diskService.trashState === "failed")
+          width: parent.width
+          implicitHeight: trashStatusRow.implicitHeight + Style.space(18)
+          color: root.diskService && root.diskService.trashState === "failed"
+            ? Util.alpha(Color.urgent, 0.09) : Util.alpha(Color.accent, 0.08)
+          borderSpec: Border.controlSpec("normal",
+            root.diskService && root.diskService.trashState === "failed" ? Color.urgent : Color.accent,
+            root.diskService && root.diskService.trashState === "failed" ? Color.urgent : Color.accent)
+          radius: Style.cornerRadius
+
+          Row {
+            id: trashStatusRow
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.verticalCenter: parent.verticalCenter
+            anchors.margins: Style.space(9)
+            spacing: Style.space(8)
+
+            Text {
+              text: root.diskService && root.diskService.trashState === "failed" ? "!" : "✓"
+              color: root.diskService && root.diskService.trashState === "failed" ? Color.urgent : Color.accent
+              font.family: Style.font.family
+              font.pixelSize: Style.font.body
+              font.bold: true
+              textFormat: Text.PlainText
+            }
+
+            Text {
+              width: parent.width - parent.children[0].width - trashStatusDismiss.width - Style.space(16)
+              text: root.diskService && root.diskService.trashState === "failed"
+                ? root.diskService.trashError
+                : "Moved " + Model.safeLabel(root.diskService ? root.diskService.trashCompletedName : "")
+                  + " to Trash · empty Trash to reclaim space."
+              color: root.diskService && root.diskService.trashState === "failed" ? Color.urgent : Color.popups.text
+              font.family: Style.font.family
+              font.pixelSize: Style.font.caption
+              wrapMode: Text.WordWrap
+              textFormat: Text.PlainText
+            }
+
+            Button {
+              id: trashStatusDismiss
+              iconText: "×"
+              horizontalPadding: Style.space(6)
+              verticalPadding: Style.space(4)
+              focusable: true
+              tooltipText: "Dismiss Trash status"
+              Accessible.name: "Dismiss Trash status"
+              onClicked: if (root.diskService) root.diskService.clearTrashStatus()
             }
           }
         }
@@ -1540,9 +1655,47 @@ BarWidget {
                 onClicked: root.askOmarchyAboutSelected()
               }
 
+              Button {
+                id: trashButton
+                text: "Trash"
+                iconText: "⌫"
+                bordered: true
+                focusable: true
+                foreground: Color.urgent
+                accent: Color.urgent
+                enabled: root.selectedEntry && root.selectedEntry.actionable && !root.actionBusy
+                opacity: enabled ? 1 : 0.35
+                tooltipText: "Move the selected item to Trash"
+                Accessible.name: "Move the selected item to Trash"
+                onClicked: root.requestTrashSelected()
+              }
+
             }
           }
         }
+      }
+
+      ConfirmDialog {
+        id: trashConfirm
+
+        anchors.fill: parent
+        opened: root.trashConfirmOpen
+        z: 20
+        selectedIndex: 0
+        message: root.trashConfirmEntry
+          ? "Move this " + (root.trashConfirmEntry.kind === "directory" ? "folder" : "item")
+            + " to Trash?\n\n" + Model.safeMarkupLabel(root.trashConfirmEntry.path)
+            + "\n" + Model.formatBytes(root.trashConfirmEntry.allocatedBytes)
+            + "\n\nSpace is reclaimed only after Trash is emptied."
+          : "Move the selected item to Trash?"
+        confirmText: "Move"
+        background: Color.popups.background
+        foreground: Color.popups.text
+        selectedText: Color.accent
+        fontFamily: Style.font.family
+        cornerRadius: Style.cornerRadius
+        onCanceled: root.cancelTrashSelected()
+        onConfirmed: root.confirmTrashSelected()
       }
     }
   }

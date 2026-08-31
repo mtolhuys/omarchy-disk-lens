@@ -2,7 +2,7 @@
 
 > A calm, visual answer to “what is eating my disk?” for Omarchy.
 
-![Omarchy Disk Lens product tour: capacity, active scan, treemap, agent guidance, and focused filtering](docs/media/disk-lens-showcase.gif)
+![Omarchy Disk Lens product tour: capacity, active scan, treemap, safe Trash confirmation, agent guidance, and focused filtering](docs/media/disk-lens-showcase.gif)
 
 Disk Lens puts storage pressure in one quiet Omarchy bar slot. Open it for exact Home-filesystem capacity, type or browse to a scope, explicitly scan it, and use the ranked list or proportional treemap to find the branch worth investigating.
 
@@ -18,9 +18,10 @@ Version **0.5.0** is the current development candidate. Its complete native jour
 - **Move without waiting** — Drill in measures a new scope; Back restores a recent validated result and its original timestamp without silently rescanning.
 - **Narrow the answer** — search by name and filter by type, hidden status, allocated size, or modification age.
 - **Ask before changing** — send one selected directory and its measured allocation to the configured Omarchy agent with a read-only investigation prompt, an explicit untrusted-filesystem-data boundary, and confirmation before change.
+- **Remove deliberately** — move one exact selected entry to desktop Trash through a confirmation that starts on Cancel; the current scope is remeasured after success and unsupported mounts leave the item untouched.
 - **Stay native** — the complete analysis journey lives in one compact Omarchy panel with no extra graphical analyzer or package workflow.
 
-Disk Lens never scans merely because the panel opened, never silently installs software, never runs a privileged GUI, and exposes no delete or cleanup action. Btrfs capacity, per-path allocated bytes, filtered totals, and partial traversal are deliberately labelled as different facts.
+Disk Lens never scans merely because the panel opened, never silently installs software, never runs a privileged GUI, and exposes no permanent delete, empty-Trash, bulk cleanup, or privileged removal action. A confirmed removal uses the desktop Trash only, and the panel states that space is reclaimed after Trash is emptied. Btrfs capacity, per-path allocated bytes, filtered totals, and partial traversal are deliberately labelled as different facts.
 
 ## Current requirements
 
@@ -28,7 +29,7 @@ Disk Lens never scans merely because the panel opened, never silently installs s
 - the normal Omarchy/Arch runtime commands listed in [the dependency contract](docs/DEPENDENCIES.md);
 - optionally, a default Omarchy coding agent for **Ask Omarchy**.
 
-Capacity, scope editing, folder browsing, scanning, treemap, list, filters, cached navigation, and file-manager actions are self-contained. Only the explicitly activated agent guidance depends on a configured agent.
+Capacity, scope editing, folder browsing, scanning, treemap, list, filters, cached navigation, file-manager actions, and recoverable Trash moves are self-contained. Only the explicitly activated agent guidance depends on a configured agent.
 
 ## Install, update, or remove
 
@@ -95,6 +96,6 @@ Start with [CONTRIBUTING.md](CONTRIBUTING.md), [the product contract](docs/PRODU
 
 ## Status
 
-The `0.5.0` development candidate has source, real-shell, inline-folder, typed-scope, cache-restored Back, single-indicator, visual, hostile-path agent-prompt, update, and lifecycle evidence in disposable guests. Scanner post-processing now has a source-enforced process budget. Public clean-clone proof for the unpublished candidate, end-to-end performance budgets, dense/narrow layouts, pressure fixtures, complete assistive-technology review, and composed reduced-motion acceptance remain explicit pre-1.0 hardening work.
+The `0.5.0` development candidate has source, real-shell, inline-folder, typed-scope, cache-restored Back, single-indicator, guarded Trash, visual, hostile-path agent-prompt, update, and lifecycle evidence in disposable guests. Scanner post-processing now has a source-enforced process budget. Public clean-clone proof for the unpublished candidate, end-to-end performance budgets, dense/narrow layouts, pressure fixtures, complete assistive-technology review, and composed reduced-motion acceptance remain explicit pre-1.0 hardening work.
 
 MIT licensed. See [LICENSE](LICENSE).

@@ -22,7 +22,7 @@ The complete visual analysis journey stays inside Disk Lens. Secondary analyzer 
 
 ## M5 — Release hardening — in progress
 
-Completed work includes exact Plugin Lab evidence, same-path runtime updates, full enable/disable/re-enable/remove lifecycle, exact-working-tree development installation, synthetic screenshots, light/dark review, one scan activity ring with static status equivalents, deterministic README media, strict shallow-folder and scan protocols, cache-restored navigation, and bounded scanner post-processing.
+Completed work includes exact Plugin Lab evidence, same-path runtime updates, full enable/disable/re-enable/remove lifecycle, exact-working-tree development installation, synthetic screenshots, light/dark review, one scan activity ring with static status equivalents, deterministic README media, strict shallow-folder and scan protocols, cache-restored navigation, bounded scanner post-processing, and exact selected-item moves through a guarded desktop Trash boundary.
 
 Still required before 1.0: a reproducible distribution artifact and SHA-256, clean-clone installation on a declared minimum Omarchy version, quantified performance and accessibility gates, and final stable-release notes.
 
@@ -31,5 +31,6 @@ Still required before 1.0: a reproducible distribution artifact and SHA-256, cle
 - Btrfs-specific allocation and snapshot explanations.
 - Saved scan scopes or a persistent cache across shell reloads.
 - Purpose-built native views for package-owned or unpackaged files.
+- Permanent deletion, empty-Trash controls, or bulk cleanup without a separately proven recovery and safety model.
 
 These are not version `0.5.0` promises.

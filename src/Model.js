@@ -33,6 +33,10 @@ function immediateChild(path, parent) {
     && path.indexOf("/", prefix.length) < 0
 }
 
+function isImmediateChild(path, parent) {
+  return immediateChild(String(path || ""), String(parent || ""))
+}
+
 function emptyCapacity(error) {
   return {
     available: false,
@@ -300,6 +304,13 @@ function safeLabel(value) {
   return String(value || "").replace(/[\u0000-\u001f\u007f]/g, "�")
 }
 
+function safeMarkupLabel(value) {
+  return safeLabel(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+}
+
 function normalizeScopeInput(value, homePath) {
   var path = String(value || "")
   var home = String(homePath || "")
@@ -486,6 +497,8 @@ if (typeof module !== "undefined") {
     parseFolderList: parseFolderList,
     formatBytes: formatBytes,
     safeLabel: safeLabel,
+    safeMarkupLabel: safeMarkupLabel,
+    isImmediateChild: isImmediateChild,
     normalizeScopeInput: normalizeScopeInput,
     parentPath: parentPath,
     safeAgentPath: safeAgentPath,

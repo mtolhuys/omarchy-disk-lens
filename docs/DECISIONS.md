@@ -8,13 +8,13 @@
 
 **Consequence:** Runtime code contains no package installation or secondary analyzer adapter. Specialist integrations require a new product case and acceptance plan.
 
-## D002 — No destructive native actions
+## D002 — Recoverable selected-item removal only
 
-**Decision:** The panel can navigate, inspect, open, refresh, and request read-only guidance, but cannot delete or clean.
+**Decision:** The panel may move one exact actionable child from the current scan to desktop Trash after a modal confirmation that starts on Cancel. It cannot permanently delete, empty Trash, or perform bulk cleanup.
 
-**Why:** A compact system panel is a poor place for ambiguous, high-impact cleanup.
+**Why:** The analysis should lead to a useful next step, but a compact system panel remains a poor place for ambiguous or irreversible cleanup. Desktop Trash provides the narrow recoverability boundary needed for an explicit selected-item action.
 
-**Consequence:** Any future cleanup feature needs a new product contract, threat model, undo/recovery design, and acceptance suite.
+**Consequence:** The service and helper both validate the current scope and entry, no destructive IPC method exists, confirmation defaults to Cancel, unsupported mounts keep the item intact, and the UI never promises reclaimed capacity before Trash is emptied. Any permanent or bulk cleanup still requires a new product contract, threat model, recovery design, and acceptance suite.
 
 ## D003 — Capacity polling is separate from recursive scanning
 

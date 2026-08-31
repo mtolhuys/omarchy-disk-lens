@@ -1,0 +1,9 @@
+#!/bin/bash
+
+set -euo pipefail
+
+: "${DISK_LENS_TEST_TRASH:?Set DISK_LENS_TEST_TRASH to a private fixture directory}"
+
+[[ $# == 3 && $1 == "trash" && $2 == "--" ]]
+mv -- "$3" "$DISK_LENS_TEST_TRASH/"
+

@@ -30,7 +30,8 @@ Record one clean Git commit and tag, manifest version and loaded identities, dis
 - Scanner protocol handles hostile filenames, malformed output, disappearing files, permissions, overflow, cancellation, and cleanup.
 - No recursive scan starts from bar polling, plugin enablement, or panel opening.
 - Paths are passed structurally; no shell evaluation, package manager, generic command runner, or privileged GUI exists.
-- Disable/remove terminates owned work and removes only plugin-owned state.
+- Trash confirmation defaults to Cancel; the exact current child is revalidated, unsupported mounts retain data, and no permanent-delete or empty-Trash fallback exists.
+- Disable/remove terminates owned work and removes only plugin-owned state without emptying desktop Trash.
 
 ### Evidence and publication
 

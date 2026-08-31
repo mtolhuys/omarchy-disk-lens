@@ -9,6 +9,9 @@ All notable changes to Omarchy Disk Lens are documented here. The format follows
 - Added direct absolute and `~/` scope editing plus a theme-native inline folder browser that lists hidden directories without measuring them.
 - Added bounded in-memory scan snapshots and 16-step history so the visible Back control restores recent scopes with their original timestamps instead of silently rescanning.
 - Added strict shallow-folder protocol tests and a 1,024-entry scanner process-budget regression.
+- Added a selected-entry **Trash** action with an exact-path and allocated-size confirmation that starts on Cancel.
+- Added a non-root helper that accepts only a current immediate child, passes it to `gio trash` as one literal argument, forwards termination, and never falls back to permanent deletion.
+- Added source and disposable-guest coverage for cancellation, unsupported mounts, user-home Trash moves, automatic remeasurement, symlinks, hostile filenames, and lifecycle preservation.
 
 ### Changed
 
@@ -17,12 +20,17 @@ All notable changes to Omarchy Disk Lens are documented here. The format follows
 - Removed the duplicate first-use toolbar scan action, leaving one contextual scan action.
 - Batched scanner UTF-8 classification, metadata lookup, and JSON emission. A 600-entry synthetic fixture improved from approximately 2.2 seconds to 0.14 seconds on the development host without changing the `du` traversal or accounting model.
 - Bumped the manifest and loaded service/widget identities to the `0.5.0` development candidate.
+- Successful Trash moves now invalidate stale navigation snapshots, refresh capacity, and remeasure the active scope; unsupported locations show an inline error and retain the selected item.
 
 ### Fixed
 
 - Fixed the header close control to a centered 32-pixel square and kept initial keyboard focus on the useful scope/search control instead of painting the close action as a tall focused tile.
 - Back navigation no longer starts a new scan when the prior validated result remains in the bounded cache.
 - Replaced the evaluated native `QtQuick.Dialogs` picker after disposable-lab coredump evidence showed it could abort Quickshell in the GTK/GVFS directory-monitor path.
+
+### Security
+
+- Kept removal recoverable and same-user: the UI exposes no `rm`, empty-Trash, bulk cleanup, privilege escalation, shell evaluation, or destructive IPC entry point.
 
 ## 0.4.1 — 2026-08-31
 

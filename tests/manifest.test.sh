@@ -25,6 +25,7 @@ done < <(jq -r '.entryPoints[]' "$manifest")
 
 rg -F 'disk-lens-service-v0500' "$project_root/src/Service.qml" >/dev/null
 rg -F 'disk-lens-widget-v0500' "$project_root/src/BarWidget.qml" >/dev/null
+[[ -x $project_root/scripts/disk-lens-trash ]]
 
 if find "$project_root" -path "$project_root/.git" -prune -o -type l -print -quit | grep -q .; then
   echo "plugin tree contains a symbolic link" >&2
@@ -47,6 +48,16 @@ rg -F 'var prompt = Model.buildAgentPrompt(path, allocatedBytes)' \
   "$project_root/src/BarWidget.qml" >/dev/null
 if rg -F '"Path: " + path' "$project_root/src/BarWidget.qml" >/dev/null; then
   echo "selected path bypasses the bounded agent prompt adapter" >&2
+  exit 1
+fi
+
+rg -F 'trashProcess.command = [trashHelperPath, "--scope", trashTargetScope, "--path", trashTargetPath]' \
+  "$project_root/src/Service.qml" >/dev/null
+rg -F 'gio trash -- "$target_path"' "$project_root/scripts/disk-lens-trash" >/dev/null
+rg -F 'selectedIndex: 0' "$project_root/src/BarWidget.qml" >/dev/null
+if rg -n '(^|[^A-Za-z])(rm|unlink)[[:space:]].*target_path' \
+    "$project_root/src" "$project_root/scripts/disk-lens-trash"; then
+  echo "selected items must move through the desktop Trash boundary" >&2
   exit 1
 fi
 
