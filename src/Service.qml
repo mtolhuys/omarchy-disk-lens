@@ -12,7 +12,7 @@ Item {
   property var barWidgetRegistry: null
   property string omarchyPath: ""
 
-  readonly property string buildIdentity: "disk-lens-service-v0300"
+  readonly property string buildIdentity: "disk-lens-service-v0400"
   readonly property string homePath: Quickshell.env("HOME")
   readonly property string sourceDir: manifest ? String(manifest.__sourceDir || "") : ""
   readonly property string scannerPath: sourceDir ? sourceDir + "/scripts/disk-lens-scan" : ""
@@ -21,9 +21,6 @@ Item {
   property string capacityState: "loading"
   property string capacityError: ""
   property double capacityUpdatedAt: 0
-
-  property bool qdirStatAvailable: false
-  property bool qdirStatChecked: false
 
   property string scanState: "idle"
   property string scanPath: homePath
@@ -43,12 +40,6 @@ Item {
     capacityState = capacity.available ? "ready" : "loading"
     capacityError = ""
     capacityProcess.running = true
-    return true
-  }
-
-  function refreshQDirStat() {
-    if (qdirStatProcess.running) return false
-    qdirStatProcess.running = true
     return true
   }
 
@@ -106,8 +97,6 @@ Item {
       buildIdentity: buildIdentity,
       capacityState: capacityState,
       capacity: capacity,
-      qdirStatAvailable: qdirStatAvailable,
-      qdirStatChecked: qdirStatChecked,
       scanState: scanState,
       scanPath: scanPath,
       lastScanPath: lastScanPath,
@@ -143,15 +132,6 @@ Item {
       root.capacityState = parsed.available ? "ready" : "failed"
       root.capacityError = parsed.error
       root.capacityUpdatedAt = Date.now()
-    }
-  }
-
-  Process {
-    id: qdirStatProcess
-    command: ["omarchy-cmd-present", "qdirstat"]
-    onExited: function(exitCode) {
-      root.qdirStatAvailable = exitCode === 0
-      root.qdirStatChecked = true
     }
   }
 
@@ -198,14 +178,12 @@ Item {
 
     function state(): string { return JSON.stringify(root.stateSnapshot()) }
     function refreshCapacity(): string { return root.refreshCapacity() ? "started" : "busy" }
-    function refreshQDirStat(): string { return root.refreshQDirStat() ? "started" : "busy" }
     function scan(path: string): string { return root.startScan(path) ? "started" : "rejected" }
     function cancel(): string { return root.cancelScan() ? "cancelling" : "idle" }
   }
 
   Component.onCompleted: {
     refreshCapacity()
-    refreshQDirStat()
   }
 
   Component.onDestruction: {

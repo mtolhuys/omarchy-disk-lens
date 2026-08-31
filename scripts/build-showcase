@@ -28,7 +28,7 @@ for source_image in \
   disk-lens-scanning.png \
   disk-lens-treemap.png \
   disk-lens-agent.png \
-  disk-lens-qdirstat.png; do
+  disk-lens-filtered-list.png; do
   [[ -f $media_dir/$source_image ]] || fail "missing current-product capture: $source_image"
 done
 
@@ -69,7 +69,7 @@ scene_svg() {
     <circle cx="19" cy="19" r="11" fill="#ffffff" fill-opacity="0.1" stroke="#f7f4fb" stroke-opacity="0.88"/>
     <path d="M19 19V8A11 11 0 0 1 28.5 24.5Z" fill="$accent"/>
     <text x="52" y="15" fill="#ffffff" font-family="JetBrainsMono Nerd Font" font-size="11" font-weight="700" letter-spacing="2.8">DISK LENS</text>
-    <text x="52" y="33" fill="#9da1ad" font-family="JetBrainsMono Nerd Font" font-size="9" font-weight="700" letter-spacing="1.5">FOR OMARCHY · 0.3.0</text>
+    <text x="52" y="33" fill="#9da1ad" font-family="JetBrainsMono Nerd Font" font-size="9" font-weight="700" letter-spacing="1.5">FOR OMARCHY · 0.4.0</text>
   </g>
 
   <g transform="translate(52 158)">
@@ -137,10 +137,10 @@ scene_svg 3 '#63d8c6' 'READ-ONLY GUIDANCE' 'ASK BEFORE' 'YOU DELETE.' \
 cp "$work_dir/scene-3-base.png" "$work_dir/scene-3.png"
 panel_capture disk-lens-agent.png '520x585+755+28' '+520+12' '#63d8c6' "$work_dir/scene-3.png"
 
-scene_svg 4 '#ff7f91' 'OPTIONAL DEEP DIVE' 'GO DEEPER IN' 'QDIRSTAT.' \
-  'Disk Lens stays fast and native.' 'QDirStat remains the specialist desktop analyzer.' 'STRUCTURED PATH' 'DESKTOP USER'
+scene_svg 4 '#ff7f91' 'FAST, FOCUSED ANSWERS' 'NARROW THE' 'ANSWER.' \
+  'Search and filters reshape one canonical result.' 'Exact sizes stay one click away.' 'SHARED MODEL' 'NO EXTRA APP'
 cp "$work_dir/scene-4-base.png" "$work_dir/scene-4.png"
-panel_capture disk-lens-qdirstat.png '1240x760+20+28' '+442+118' '#ff7f91' "$work_dir/scene-4.png"
+panel_capture disk-lens-filtered-list.png '520x585+755+28' '+520+12' '#ff7f91' "$work_dir/scene-4.png"
 
 ffmpeg -hide_banner -loglevel error -y \
   -loop 1 -t 2.8 -i "$work_dir/scene-0.png" \

@@ -14,7 +14,7 @@ Disk Lens feels precise, calm, and tactile: an instrument panel rather than a ge
 
 ## Bar widget and panel
 
-Every bar orientation uses one square slot containing a proportional pie gauge. The percentage is intentionally absent from the bar and remains available in the tooltip, accessibility name, and panel. Gauge fill changes semantically at the same pressure thresholds as the panel. While a scan runs, a thin activity ring orbits the gauge without changing its capacity meaning. Middle-click refreshes capacity; ordinary click opens the host-owned `KeyboardPanel` through the live bar pointer route.
+Every bar orientation uses one square slot containing a proportional pie gauge. The percentage is absent from the bar and remains available in the tooltip, accessibility name, and panel. While a scan runs, a thin activity ring orbits the gauge without changing its capacity meaning. Middle-click refreshes capacity; ordinary click opens the host-owned `KeyboardPanel` through the live bar pointer route.
 
 The compact panel has five stable zones:
 
@@ -22,55 +22,42 @@ The compact panel has five stable zones:
 2. condensed Home-filesystem capacity rail with exact values;
 3. scope, refresh/cancel, search, view, and filter controls;
 4. first-use/status surface or the analysis canvas;
-5. selection inspector with **Ask Omarchy**, plus a QDirStat scope action or compact missing-dependency row.
+5. a focused selection inspector with **Drill in**, **Open**, and **Ask Omarchy**.
 
-The panel scrolls when content exceeds its fitted height, keeping small displays usable.
+The panel scrolls when content exceeds its fitted height, keeping small displays usable. No dependency or package-install row competes with the analysis result.
 
 ## Treemap and ranked list
 
-Both views are projections of one model. Treemap area represents allocated bytes and only renders a label when its rectangle is large enough. Pointer selection updates the shared inspector; an explicit **Drill in** action changes scope, so navigation never depends on double-click.
+Both views are projections of one model. Treemap area represents allocated bytes and only renders a label when its rectangle is large enough. Pointer selection updates the shared inspector; an explicit **Drill in** action changes scope.
 
 The ranked list shows name, proportional bar, exact allocated size, and directory/file treatment. The 80-entry render bound is stated in the UI; filters expose a narrower result without changing stored scan totals. Control characters are repaired for display and invalid UTF-8 paths are not actionable.
 
-For an actionable selected directory, **Ask Omarchy** is visually primary without displacing **Drill in** or **Open**. Activating it closes the panel and opens the configured default agent with a read-only diagnostic question. QDirStat availability is represented once: a compact install row when absent and a small scope/selection action when present, instead of a second full status card.
+For an actionable selected directory, **Ask Omarchy** is visually primary without displacing **Drill in** or **Open**. Activating it closes the panel and opens the configured default agent with a read-only diagnostic question.
 
 ## Filters
 
-Current controls provide:
-
-- case-insensitive name search;
-- files, directories, or all types;
-- hidden entries off or shown;
-- any size, at least 100 MiB, or at least 1 GiB;
-- any age, modified within 7 days, 30 days, or 1 year.
-
-Active controls have selected styling, **Clear filters** becomes available when needed, and the result header labels visible bytes plus visible/total entry counts.
+Current controls provide case-insensitive name search; files, directories, or all types; hidden entries off or shown; any size, at least 100 MiB, or at least 1 GiB; and any age, modified within 7 days, 30 days, or 1 year. Active controls have selected styling, **Clear filters** becomes available when needed, and the result header labels visible bytes plus visible/total entry counts.
 
 ## State model
 
 | State | Visible behavior | Recovery |
 | --- | --- | --- |
 | First use | Capacity plus an explanation that no scan has run | Scan Home |
-| Scanning | Activity rings, status text, and the spinning cancel affordance identify the live job while the last completed result remains intact | Cancel or wait |
+| Scanning | Activity rings, status text, and spinning cancel affordance while the last completed result remains intact | Cancel or wait |
 | Ready | Timestamp, shared analysis model, and filtered totals | Refresh or drill in |
 | Partial | Warning count and first warning remain above usable results | Scan a narrower scope |
 | Cancelled | Last completed result remains when one exists | Refresh |
 | Failed | Scoped parser/process error while capacity remains available | Retry or choose parent |
 | Empty | Complete scope has no immediate entries | Scan parent |
 | Filtered empty | No stored entry matches the current projection | Clear filters |
-| QDirStat missing | Optional value and AUR provenance are explicit | Install or keep using Disk Lens |
-| Installation launched | Availability is polled without claiming success | Finish/cancel in terminal |
-| QDirStat available | The current or selected directory can be opened | Open |
 | Agent dispatched | Panel closes and the configured agent terminal owns focus | Continue there or close it |
 
 ## Accessibility boundary
 
 The bar has a semantic button role and descriptive name. Panel controls are keyboard-focusable, the search field is the initial focus target, Escape closes the panel, and list/treemap information is duplicated in exact text and the inspector. The filtered-list keyboard input and clear action have passed real-session QMP acceptance.
 
-Only an active scan uses custom looping motion: a restrained activity ring that starts and stops with the owned job. The same state is always communicated through literal status text, control labels, and accessibility metadata, so progress does not depend on perceiving motion. This is not yet a complete accessibility claim: before public release, prove full keyboard traversal and visible focus for every item/action, treemap keyboard selection, screen-reader announcements, WCAG contrast across supported themes, minimum pointer targets, and the composed panel's behavior under the platform's reduced-motion configuration.
+Only an active scan uses custom looping motion. The same state is always communicated through literal status text, control labels, and accessibility metadata. Full keyboard traversal, treemap keyboard selection, screen-reader announcements, WCAG contrast, pointer targets, and composed reduced-motion behavior remain public-release gates.
 
 ## Proven visual matrix and gaps
 
-The disposable lab matrix includes synthetic first-use, active scanning, compact ready treemap, selected-folder agent action, filtered list, cancelled, partial, long-scope, empty, missing-QDirStat, visible install terminal, available-QDirStat, and removed states in maintained dark and light themes.
-
-Warning/critical/unknown capacity fixtures, narrow panels, a dense 5,000-entry model, and complete assistive-technology behavior remain explicit release gaps.
+The disposable lab matrix includes synthetic first-use, active scanning, compact ready treemap, selected-folder agent action, filtered list, cancelled, partial, long-scope, empty, and removed states in maintained dark and light themes. Warning/critical/unknown capacity fixtures, narrow panels, a dense 5,000-entry model, and complete assistive-technology behavior remain explicit release gaps.

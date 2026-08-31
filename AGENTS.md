@@ -1,6 +1,6 @@
 # Omarchy Disk Lens engineering contract
 
-Omarchy Disk Lens is a native Omarchy disk-usage dashboard with an optional QDirStat deep-dive path. Beauty, speed, and legibility are co-equal product requirements; a visually polished control that hides state, blocks the shell, or makes storage claims it cannot prove is not complete.
+Omarchy Disk Lens is a self-contained native Omarchy disk-usage dashboard. Beauty, speed, and legibility are co-equal product requirements; a visually polished control that hides state, blocks the shell, or makes storage claims it cannot prove is not complete.
 
 Read these files before changing product behavior:
 
@@ -20,11 +20,10 @@ For Omarchy integration work, also read the maintained Omarchy Plugin Lab `AGENT
 - The bar indicator remains cheap: it may refresh filesystem capacity periodically, but it never starts a recursive directory scan by itself.
 - Recursive work is explicit, cancellable, same-user, and asynchronous. Closing the panel must not leave an accidental scan farm behind.
 - Distinguish filesystem capacity from directory totals. Never imply that `du`-style totals explain snapshots, reserved blocks, compression, deleted-open files, or every Btrfs allocation difference.
-- QDirStat is optional. The native overview must remain useful without it.
-- Installing QDirStat is always an explicit, visible user action in a terminal using `omarchy pkg aur add qdirstat`. Never install it from an enable hook or hidden background process.
-- Never run QDirStat as root. Never add destructive cleanup actions to the native panel without a new product and threat review.
+- The complete native overview remains useful without installing another graphical analyzer.
+- Never add destructive cleanup actions to the native panel without a new product and threat review.
 - Treat paths as data. Pass arguments structurally and never interpolate a selected path into shell code.
-- Every state must have visible feedback and a deterministic recovery action: idle, scanning, ready, partial, cancelled, failed, dependency missing, installation launched, and dependency available.
+- Every state must have visible feedback and a deterministic recovery action: idle, scanning, ready, partial, cancelled, and failed.
 - Theme colors, spacing, type, and motion come from current Omarchy contracts. The UI must work in both light and dark themes and under reduced motion.
 
 ## Repository rules
@@ -37,4 +36,4 @@ For Omarchy integration work, also read the maintained Omarchy Plugin Lab `AGENT
 
 ## Release gates
 
-A release candidate requires source tests, manifest validation, light/dark visual review, cancellation and error recovery tests, and a disposable Plugin Lab scenario that drives the rendered bar control and panel through QMP pointer input. QDirStat installation and launch claims require a separate disposable-guest proof of the exact public command and resulting mapped window.
+A release candidate requires source tests, manifest validation, light/dark visual review, cancellation and error recovery tests, and a disposable Plugin Lab scenario that drives the rendered bar control and panel through QMP pointer input.

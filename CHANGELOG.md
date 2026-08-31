@@ -6,6 +6,20 @@ All notable changes to Omarchy Disk Lens are documented here. The format follows
 
 No unreleased changes yet.
 
+## 0.4.0 — 2026-08-31
+
+### Changed
+
+- Consolidated the complete storage-analysis journey into the native Disk Lens panel.
+- Removed the secondary graphical-analyzer detection, package-install surface, launch actions, polling state, and dedicated lifecycle scenario.
+- Reclaimed the bottom panel row and scope action for a smaller, quieter interface focused on scan, filter, inspect, and Ask Omarchy.
+- Replaced the product tour's external hand-off scene with a native filtered-list finale.
+- Updated every product, engineering, support, testing, and release contract to the self-contained product boundary.
+
+### Security
+
+- The runtime no longer contains a package-manager launch path or secondary graphical process adapter.
+
 ## 0.3.0 — 2026-08-31
 
 ### Added
@@ -39,8 +53,7 @@ No unreleased changes yet.
 ### Changed
 
 - Replaced the horizontal disk glyph and percentage label with one compact proportional pie gauge in every bar orientation.
-- Reduced the panel from 620 to 520 layout units, condensed the capacity card and partial warning, shortened the treemap, tightened list/inspector spacing, and removed the duplicate available-QDirStat card.
-- Moved available QDirStat access into compact scope and selected-directory actions; the missing dependency remains a single explicit install row.
+- Reduced the panel from 620 to 520 layout units, condensed the capacity card and partial warning, shortened the treemap, and tightened list/inspector spacing.
 - Bumped loaded service and widget identities to `v0200` and updated the exact-working-tree development installer accordingly.
 
 ### Security
@@ -56,8 +69,7 @@ No unreleased changes yet.
 - Home-filesystem capacity polling independent from recursive scans.
 - A same-user, one-filesystem, NUL-safe immediate-child scanner with a strict NDJSON protocol, hostile-path handling, partial-result warnings, a 5,000-entry bound, and cancellation.
 - Theme-native Disk Lens panel with treemap and ranked-list views, shared selection, search, filters, exact values, drill-down, file-manager launch, and explicit recovery states.
-- Optional QDirStat detection, visible AUR installation terminal, live re-detection, and structured selected-directory launch.
-- Source tests plus disposable Plugin Lab scenarios for pointer routing, visual states, themes, scanning, cancellation, partial traversal, same-path runtime update, lifecycle cleanup, and the real QDirStat bridge.
+- Source tests plus disposable Plugin Lab scenarios for pointer routing, visual states, themes, scanning, cancellation, partial traversal, same-path runtime update, and lifecycle cleanup.
 - `make dev-install`, which validates and installs an exact snapshot of the current working tree into an explicitly selected active Omarchy development session.
 - Product, UX, architecture, security, dependency, testing, decision, roadmap, release, contribution, support, and implementation contracts.
 

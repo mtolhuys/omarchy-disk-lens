@@ -47,8 +47,8 @@ omarchy_host_test() {
 
   wait_for_guest_state "service and widget load with matching candidate identity" 25 ssh_session \
     "omarchy-plugin-list --json | jq -e 'any(.[]; .id == \"io.github.mtolhuys.disk-lens\" and .enabled == true)' && \
-     omarchy-shell disk-lens-service state | jq -e '.buildIdentity == \"disk-lens-service-v0300\" and (.capacityState == \"ready\" or .capacityState == \"loading\")' && \
-     omarchy-shell disk-lens state | jq -e '.buildIdentity == \"disk-lens-widget-v0300\" and .opened == false'" || {
+     omarchy-shell disk-lens-service state | jq -e '.buildIdentity == \"disk-lens-service-v0400\" and (.capacityState == \"ready\" or .capacityState == \"loading\")' && \
+     omarchy-shell disk-lens state | jq -e '.buildIdentity == \"disk-lens-widget-v0400\" and .opened == false'" || {
     ssh_session "omarchy-shell shell listPlugins; journalctl --user --since '-3 minutes' --no-pager | tail -n 220" || true
     return 1
   }
@@ -189,21 +189,18 @@ omarchy_host_test() {
       '.scanState == \"ready\" and .scope == \"/tmp/disk-lens-empty\" and .entryCount == 0'" || return 1
   capture_console "success-disk-lens-10-empty"
 
-  wait_for_guest_state "missing QDirStat remains an explicit optional state" 10 ssh_session \
-    "omarchy-shell disk-lens-service state | jq -e '.qdirStatChecked == true and .qdirStatAvailable == false'" || return 1
-
   log "Applying a same-path runtime edit through the public update flow"
-  ssh_guest "sed -i 's/disk-lens-service-v0300/disk-lens-service-v0300-labupdate/' \
+  ssh_guest "sed -i 's/disk-lens-service-v0400/disk-lens-service-v0400-labupdate/' \
       /home/omarchy/.cache/omarchy-disk-lens/development-source/src/Service.qml && \
-    sed -i 's/disk-lens-widget-v0300/disk-lens-widget-v0300-labupdate/' \
+    sed -i 's/disk-lens-widget-v0400/disk-lens-widget-v0400-labupdate/' \
       /home/omarchy/.cache/omarchy-disk-lens/development-source/src/BarWidget.qml && \
     git -C /home/omarchy/.cache/omarchy-disk-lens/development-source add src/Service.qml src/BarWidget.qml && \
     git -C /home/omarchy/.cache/omarchy-disk-lens/development-source \
       -c user.name=DiskLensLab -c user.email=lab@invalid commit -qm runtime-update"
   ssh_session "omarchy-plugin-update io.github.mtolhuys.disk-lens --yes"
   wait_for_guest_state "same-path update replaces service and widget runtime identities" 30 ssh_session \
-    "omarchy-shell disk-lens-service state | jq -e '.buildIdentity == \"disk-lens-service-v0300-labupdate\"' && \
-     omarchy-shell disk-lens state | jq -e '.buildIdentity == \"disk-lens-widget-v0300-labupdate\"'" || {
+    "omarchy-shell disk-lens-service state | jq -e '.buildIdentity == \"disk-lens-service-v0400-labupdate\"' && \
+     omarchy-shell disk-lens state | jq -e '.buildIdentity == \"disk-lens-widget-v0400-labupdate\"'" || {
     ssh_session "omarchy-shell disk-lens-service state; omarchy-shell disk-lens state; journalctl --user --since '-3 minutes' --no-pager | tail -n 220" || true
     return 1
   }
@@ -217,11 +214,11 @@ omarchy_host_test() {
 
   ssh_session "omarchy-plugin-enable io.github.mtolhuys.disk-lens"
   wait_for_guest_state "re-enable restores one service and one widget" 25 ssh_session \
-    "omarchy-shell disk-lens-service state | jq -e '.buildIdentity == \"disk-lens-service-v0300-labupdate\"' && \
-     omarchy-shell disk-lens state | jq -e '.buildIdentity == \"disk-lens-widget-v0300-labupdate\"'" || return 1
+    "omarchy-shell disk-lens-service state | jq -e '.buildIdentity == \"disk-lens-service-v0400-labupdate\"' && \
+     omarchy-shell disk-lens state | jq -e '.buildIdentity == \"disk-lens-widget-v0400-labupdate\"'" || return 1
 
   ssh_session "omarchy-plugin-remove io.github.mtolhuys.disk-lens --yes"
-  wait_for_guest_state "remove unloads Disk Lens without touching user data or QDirStat" 25 ssh_session \
+  wait_for_guest_state "remove unloads Disk Lens without touching synthetic user data" 25 ssh_session \
     "test ! -e \"$plugin_dir\" && test -f '/tmp/disk-lens-fixture/Archive/video.bin' && \
      omarchy-plugin-list --json | jq -e 'all(.[]; .id != \"io.github.mtolhuys.disk-lens\")' && \
      ! pgrep -f '[d]isk-lens-scan' >/dev/null" || return 1

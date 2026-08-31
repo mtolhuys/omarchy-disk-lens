@@ -10,7 +10,7 @@ Read [`AGENTS.md`](AGENTS.md) and the product contracts under [`docs/`](docs/). 
 
 - Preserve the distinction between cheap filesystem capacity and explicit recursive scanning.
 - Prefer exact, inspectable data and calm hierarchy over decorative complexity.
-- Keep QDirStat optional and installation user-driven.
+- Keep the complete analysis experience native and self-contained.
 - Treat every path as hostile data and every long-running process as cancellable state.
 - Add no destructive action without an approved product/security decision.
 - Keep public documentation and fixtures in English and free of private machine data.

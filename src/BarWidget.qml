@@ -11,7 +11,7 @@ BarWidget {
 
   moduleName: "io.github.mtolhuys.disk-lens"
 
-  readonly property string buildIdentity: "disk-lens-widget-v0300"
+  readonly property string buildIdentity: "disk-lens-widget-v0400"
   readonly property var diskService: bar && bar.shell
     ? bar.shell.serviceFor("io.github.mtolhuys.disk-lens") : null
   readonly property var capacity: diskService ? diskService.capacity : Model.parseCapacity("")
@@ -49,7 +49,6 @@ BarWidget {
   property double maximumAgeSeconds: 0
   property string viewMode: "treemap"
   property string selectedPath: ""
-  property bool installLaunched: false
   property int agentLaunchCount: 0
   property string lastAgentPath: ""
 
@@ -100,10 +99,7 @@ BarWidget {
 
   function open() {
     popupOpen = true
-    if (diskService) {
-      diskService.refreshCapacity()
-      diskService.refreshQDirStat()
-    }
+    if (diskService) diskService.refreshCapacity()
   }
 
   function close() { popupOpen = false }
@@ -139,32 +135,8 @@ BarWidget {
       ? selectedEntry.path : currentScope
   }
 
-  function selectedDirectoryPath() {
-    return selectedEntry && selectedEntry.actionable === true && selectedEntry.kind === "directory"
-      ? selectedEntry.path : currentScope
-  }
-
   function openInFileManager() {
     Quickshell.execDetached(["uwsm-app", "--", "xdg-open", selectedActionPath()])
-  }
-
-  function openInQDirStat() {
-    if (!diskService || !diskService.qdirStatAvailable) return
-    Quickshell.execDetached(["uwsm-app", "--", "qdirstat", selectedDirectoryPath()])
-  }
-
-  function openScopeInQDirStat() {
-    if (!diskService || !diskService.qdirStatAvailable) return
-    Quickshell.execDetached(["uwsm-app", "--", "qdirstat", currentScope])
-  }
-
-  function installQDirStat() {
-    installLaunched = true
-    Quickshell.execDetached([
-      "omarchy-launch-floating-terminal-with-presentation",
-      "omarchy pkg aur add qdirstat"
-    ])
-    qdirDetectionTimer.restart()
   }
 
   function askOmarchyAboutSelected() {
@@ -256,8 +228,6 @@ BarWidget {
       query: query,
       includeHidden: includeHidden,
       kindFilter: kindFilter,
-      qdirStatAvailable: diskService ? diskService.qdirStatAvailable : false,
-      installLaunched: installLaunched,
       agentLaunchCount: agentLaunchCount,
       lastAgentPath: lastAgentPath,
       scanIndicatorRunning: scanRunning && popupOpen
@@ -505,8 +475,7 @@ BarWidget {
             }
 
             BorderSurface {
-              width: parent.width - parentButton.width - scanButton.width
-                - (qdirScopeButton.visible ? qdirScopeButton.width + Style.space(8) : 0) - Style.space(16)
+              width: parent.width - parentButton.width - scanButton.width - Style.space(16)
               height: scanButton.height
               color: Style.normalFillFor(Color.popups.text, Color.accent)
               borderSpec: Border.controlSpec("normal", Color.popups.text, Color.accent)
@@ -539,14 +508,6 @@ BarWidget {
               onClicked: root.scanOrCancel()
             }
 
-            Button {
-              id: qdirScopeButton
-              visible: root.diskService && root.diskService.qdirStatAvailable
-              iconText: "▦"
-              tooltipText: "Open this scope in QDirStat"
-              focusable: true
-              onClicked: root.openScopeInQDirStat()
-            }
           }
 
           Row {
@@ -1229,75 +1190,11 @@ BarWidget {
                 onClicked: root.askOmarchyAboutSelected()
               }
 
-              Button {
-                visible: root.diskService && root.diskService.qdirStatAvailable
-                  && root.selectedEntry && root.selectedEntry.kind === "directory"
-                text: "QDirStat"
-                iconText: "▦"
-                focusable: true
-                onClicked: root.openInQDirStat()
-              }
-            }
-          }
-        }
-
-        BorderSurface {
-          visible: root.diskService && !root.diskService.qdirStatAvailable
-          width: parent.width
-          implicitHeight: qdirRow.implicitHeight + Style.space(16)
-          color: Style.normalFillFor(Color.popups.text, Color.accent)
-          borderSpec: Border.controlSpec("normal", Color.popups.text, Color.accent)
-          radius: Style.cornerRadius
-
-          Row {
-            id: qdirRow
-            anchors.left: parent.left
-            anchors.right: parent.right
-            anchors.verticalCenter: parent.verticalCenter
-            anchors.margins: Style.space(8)
-            spacing: Style.space(9)
-
-            Text {
-              text: "▦"
-              color: Color.muted
-              font.family: Style.font.family
-              font.pixelSize: Style.font.icon
-            }
-
-            Text {
-              width: parent.width - parent.children[0].width - qdirAction.width - Style.space(18)
-              anchors.verticalCenter: parent.verticalCenter
-              text: root.installLaunched
-                ? "QDirStat installation opened · finish or cancel in the terminal"
-                : "QDirStat deep inspection · optional AUR package"
-              color: root.installLaunched ? Color.accent : Color.muted
-              font.family: Style.font.family
-              font.pixelSize: Style.font.caption
-              elide: Text.ElideRight
-              textFormat: Text.PlainText
-            }
-
-            Button {
-              id: qdirAction
-              text: "Install"
-              iconText: "+"
-              bordered: true
-              focusable: true
-              onClicked: root.installQDirStat()
             }
           }
         }
       }
     }
-  }
-
-  Timer {
-    id: qdirDetectionTimer
-    interval: 3000
-    repeat: true
-    running: root.popupOpen && root.installLaunched
-      && root.diskService && !root.diskService.qdirStatAvailable
-    onTriggered: if (root.diskService) root.diskService.refreshQDirStat()
   }
 
   IpcHandler {

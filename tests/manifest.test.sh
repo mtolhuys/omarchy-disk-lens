@@ -9,7 +9,7 @@ readonly manifest="$project_root/manifest.json"
 jq -e '
   .schemaVersion == 1
   and .id == "io.github.mtolhuys.disk-lens"
-  and .version == "0.3.0"
+  and .version == "0.4.0"
   and (.kinds | sort == ["bar-widget", "service"])
   and .entryPoints.service == "src/Service.qml"
   and .entryPoints.barWidget == "src/BarWidget.qml"
@@ -23,8 +23,8 @@ while IFS= read -r entry_point; do
   [[ -f $project_root/$entry_point ]]
 done < <(jq -r '.entryPoints[]' "$manifest")
 
-rg -F 'disk-lens-service-v0300' "$project_root/src/Service.qml" >/dev/null
-rg -F 'disk-lens-widget-v0300' "$project_root/src/BarWidget.qml" >/dev/null
+rg -F 'disk-lens-service-v0400' "$project_root/src/Service.qml" >/dev/null
+rg -F 'disk-lens-widget-v0400' "$project_root/src/BarWidget.qml" >/dev/null
 
 if find "$project_root" -path "$project_root/.git" -prune -o -type l -print -quit | grep -q .; then
   echo "plugin tree contains a symbolic link" >&2
@@ -34,6 +34,12 @@ fi
 if rg -n '(^|[^A-Za-z])(sudo|pkexec|eval)([^A-Za-z]|$)|bash[[:space:]]+-c.*selected' \
     "$project_root/src" "$project_root/scripts"; then
   echo "forbidden runtime primitive found" >&2
+  exit 1
+fi
+
+if rg -n 'omarchy pkg aur add|omarchy-launch-floating-terminal-with-presentation' \
+    "$project_root/src" "$project_root/scripts"; then
+  echo "runtime must not install or launch optional desktop analyzers" >&2
   exit 1
 fi
 

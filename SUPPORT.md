@@ -1,6 +1,6 @@
 # Support
 
-Omarchy Disk Lens `0.3.0` is a working development preview, not a published or supported release. Development installation is documented for contributors, while public installation and compatibility guarantees wait for release hardening.
+Omarchy Disk Lens `0.4.0` is a working development preview, not a published or supported release. Development installation is documented for contributors, while public installation and compatibility guarantees wait for release hardening.
 
 Development feedback should include:
 
@@ -8,10 +8,9 @@ Development feedback should include:
 - Omarchy version and shell revision if known;
 - filesystem type and whether the affected scope crosses a mount point;
 - the visible Disk Lens state and literal error text;
-- whether QDirStat is installed and its version;
 - whether **Ask Omarchy** opened the configured default agent, without attaching the private prompt or agent transcript;
 - steps using a synthetic directory fixture where possible.
 
-Do not attach real directory listings, private paths, usernames, screenshots of personal files, or full home-directory scan output. Avoid running the plugin or QDirStat as root to gather diagnostics.
+Do not attach real directory listings, private paths, usernames, screenshots of personal files, or full home-directory scan output. Avoid running the plugin as root to gather diagnostics.
 
 Security-sensitive reports belong through the private route described in [`SECURITY.md`](SECURITY.md). Product ideas and ordinary reproducible defects may use the repository issue tracker after publication.
