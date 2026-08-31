@@ -7,7 +7,7 @@ This record describes the strongest verified `0.4.0` pre-1.0 release milestone a
 - Manifest: `io.github.mtolhuys.disk-lens` version `0.4.0`
 - Service identity: `disk-lens-service-v0400`
 - Widget identity: `disk-lens-widget-v0400`
-- Accepted repository candidate: `dfabca91e702d01c51bd5c009e52ce6606548b40`
+- Accepted repository candidate: `d0737689b795e1d7c6db819cd01cb13e961121a3`
 - Omarchy base revision: `83881e979b35468c3e7d60b171e319ede61a88fd`
 - Plugin Lab base revision: `259ef26e9909bd74323177d2d29e2007cf8c73db`
 - Omarchy ISO harness revision: `268bac16d351a21d867e37565738f458b11cb06c`
@@ -31,7 +31,8 @@ cd "$OMARCHY_PLUGIN_LAB_ROOT"
 
 | Run id | Result | Scope |
 | --- | --- | --- |
-| `20260831-084135` | green | exact clean candidate `dfabca9`: public `make update`, interrupted-add recovery, loaded `v0400` identities, real pointer-opened compact UI, synthetic scanning and filtering, visible activity indicator, agent hand-off, light/dark themes, cancellation, partial/long/empty states, same-path update, disable/re-enable/remove, preserved fixture, and clean teardown |
+| `20260831-085530` | green | exact clean publication candidate `d073768`: public `make update` through `bin/dev-sync`, interrupted-add recovery, loaded `v0400` identities, real pointer-opened compact UI, synthetic scanning and filtering, visible activity indicator, agent hand-off, light/dark themes, cancellation, partial/long/empty states, same-path update, disable/re-enable/remove, preserved fixture, and clean teardown |
+| `20260831-084135` | green | preceding native-only runtime candidate `dfabca9`; superseded by the publication-candidate run above |
 
 Run artifacts remain under the Plugin Lab evidence root. Selected synthetic screenshots were copied into `docs/media` under [`SCREENSHOTS.md`](SCREENSHOTS.md).
 
