@@ -2,7 +2,7 @@
 
 All notable changes to Omarchy Disk Lens are documented here. The format follows Keep a Changelog and the project uses Semantic Versioning.
 
-## Unreleased
+## 0.5.0 — 2026-08-31
 
 ### Added
 
@@ -19,7 +19,7 @@ All notable changes to Omarchy Disk Lens are documented here. The format follows
 - Reduced scan motion to one activity ring around the bar gauge; panel status and Cancel remain literal and static.
 - Removed the duplicate first-use toolbar scan action, leaving one contextual scan action.
 - Batched scanner UTF-8 classification, metadata lookup, and JSON emission. A 600-entry synthetic fixture improved from approximately 2.2 seconds to 0.14 seconds on the development host without changing the `du` traversal or accounting model.
-- Bumped the manifest and loaded service/widget identities to the `0.5.0` development candidate.
+- Bumped the manifest and loaded service/widget identities for the `0.5.0` release.
 - Successful Trash moves now invalidate stale navigation snapshots, refresh capacity, and remeasure the active scope; unsupported locations show an inline error and retain the selected item.
 
 ### Fixed
