@@ -38,7 +38,7 @@ omarchy_host_test() {
 
   log "Staging a checkout left behind by an interrupted add"
   ssh_session "mkdir -p \"\$HOME/.config/omarchy/plugins\" && \
-    rm -rf '$plugin_dir' && git clone -q /tmp/disk-lens-candidate '$plugin_dir'"
+    rm -rf \"$plugin_dir\" && git clone -q /tmp/disk-lens-candidate \"$plugin_dir\""
 
   ssh_session "cd /tmp/disk-lens-candidate && make update"
 
