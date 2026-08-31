@@ -16,7 +16,7 @@ The GIF presents five truthful native scenes: capacity at a glance, explicit sca
 
 ## Current provenance
 
-All five source captures come from green `0.4.0` Plugin Lab run `20260831-084135`, which exercised repository candidate `dfabca91e702d01c51bd5c009e52ce6606548b40`. Source captures are `1280×800`; the showcase is `1000×563`, 147 frames, 2,167,480 bytes, with SHA-256 `b3a67e0283e6ba46f9565307ae334911665814e20865d76add55d8bb335b8089`. Two consecutive final builds produced that exact hash.
+All five source captures come from green `0.4.0` Plugin Lab run `20260831-084135`, which exercised repository candidate `dfabca91e702d01c51bd5c009e52ce6606548b40`. The `0.4.1` security patch changes only the non-visible agent prompt boundary, so those `1280×800` visual sources remain current. The regenerated showcase is `1000×563`, 147 frames, 2,167,422 bytes, with SHA-256 `dbe8cc97764dd57dbb23d70bbcacc5906cb9050e6bf440b98f36af0edf49ed5c`; the `152,640`-byte marketplace preview has SHA-256 `f8597f1a64abff7f55822100a855eead90b949ad639a51a63c533eb359e848e0`. Two consecutive `0.4.1` builds produced those exact hashes.
 
 Rebuild both deterministic derivatives with:
 

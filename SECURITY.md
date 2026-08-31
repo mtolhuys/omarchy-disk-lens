@@ -8,7 +8,10 @@ Include the affected version, expected and observed behavior, a minimal syntheti
 
 ## Supported versions
 
-The project has not published its first runtime release. A supported-version table will be added with the first public release candidate.
+| Version | Supported |
+| --- | --- |
+| `0.4.1` | Yes |
+| `0.4.0` and earlier | No |
 
 ## Security boundary
 

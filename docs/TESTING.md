@@ -28,14 +28,14 @@ cd "$OMARCHY_PLUGIN_LAB_ROOT"
 2. real bar geometry and QMP pointer routing into the real panel;
 3. exact synthetic scan scope, count, total, and explicit refresh;
 4. treemap selection plus rendered list, search, and clear interaction;
-5. visible **Ask Omarchy** closing the panel and launching an `org.omarchy.agent` terminal with the exact path, size, read-only constraint, and confirmation boundary captured by a guest-only shim;
+5. visible **Ask Omarchy** closing the panel and launching an `org.omarchy.agent` terminal with the bounded path value, size, read-only constraint, untrusted-data boundary, and confirmation boundary captured by a guest-only shim, including a scanner-derived newline-injection fixture;
 6. maintained light and dark themes without state loss or compositor errors;
 7. a machine-visible activity indicator, cancellation with the last result preserved, and no scanner left behind;
 8. explicit partial, long-scope, and empty states;
 9. a same-path public plugin update replacing both loaded identities;
 10. disable, re-enable, removal, user-data preservation, and clean logs.
 
-`public-install.sh` separately proves that the README's public GitHub URL clones the expected repository commit, passes Omarchy validation, enables and loads both `v0400` entry points, and removes cleanly through the documented plugin id.
+`public-install.sh` separately proves that the README's public GitHub URL clones the expected repository commit, passes Omarchy validation, enables and loads both `v0401` entry points, and removes cleanly through the documented plugin id.
 
 ## Visual review boundary
 

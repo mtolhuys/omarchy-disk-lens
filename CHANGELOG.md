@@ -6,6 +6,18 @@ All notable changes to Omarchy Disk Lens are documented here. The format follows
 
 No unreleased changes yet.
 
+## 0.4.1 — 2026-08-31
+
+### Security
+
+- Removed C0 and DEL control characters from selected paths before they enter the Ask Omarchy prompt and capped the resulting value at 4,096 characters.
+- Moved the fixed read-only guardrails ahead of filesystem-derived data and enclosed the path in an explicitly labelled untrusted-data block.
+- Added unit and disposable-guest regressions for a scanner-derived directory name containing a newline and injected agent instructions.
+
+### Changed
+
+- Bumped the manifest and loaded service/widget identities for the security patch release.
+
 ## 0.4.0 — 2026-08-31
 
 ### Changed

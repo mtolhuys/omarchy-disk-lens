@@ -41,17 +41,17 @@ The QML process collector promotes a complete parsed result atomically. Permissi
 
 One in-memory entry array drives both projections. Filters are pure projections over name, kind, hidden status, minimum allocated bytes, and maximum modification age. Filtered bytes are labelled independently from scanned totals. Treemap geometry is bounded to the 48 largest visible entries; the ranked view renders at most 80 and directs the user to filters for further narrowing.
 
-Drilling into an actionable directory starts a new immediate-child scan. Parent navigation derives one structural absolute path. Version `0.4.0` does not persist scopes or results, so a shell reload returns to Home and first-use state.
+Drilling into an actionable directory starts a new immediate-child scan. Parent navigation derives one structural absolute path. Version `0.4.1` does not persist scopes or results, so a shell reload returns to Home and first-use state.
 
 `src/ActivityRing.qml` is the shared scan-ring primitive. It paints a theme-derived bounded arc, exists visually only while its `running` property is true, and exposes progress semantics. Scan status remains available as text when motion cannot be perceived.
 
 ## Omarchy agent adapter
 
-The selected-directory action constructs one explanatory prompt containing the exact path, allocated byte count, and a fixed non-destructive investigation contract. QML launches `omarchy agent prompt` as four process arguments; the path never becomes shell source. The maintained Omarchy launcher starts the user's default agent. Disk Lens neither selects a provider nor overrides authentication, network, approval, or sandbox policy.
+The selected-directory action constructs one explanatory prompt containing a control-free, 4,096-character-bounded path value, allocated byte count, and a fixed non-destructive investigation contract. Read-only and untrusted-data instructions precede the explicitly delimited filesystem path. QML launches `omarchy agent prompt` as four process arguments; neither the path nor the complete prompt becomes shell source. The maintained Omarchy launcher starts the user's default agent. Disk Lens neither selects a provider nor overrides authentication, network, approval, or sandbox policy.
 
 ## Btrfs accounting
 
-Filesystem free space and per-path allocation answer different questions. Snapshots, compression, and shared extents can explain a gap. Version `0.4.0` does not calculate exclusive/shared extents, snapshot ownership, or reclaimable bytes.
+Filesystem free space and per-path allocation answer different questions. Snapshots, compression, and shared extents can explain a gap. Version `0.4.1` does not calculate exclusive/shared extents, snapshot ownership, or reclaimable bytes.
 
 ## Lifecycle and development snapshots
 

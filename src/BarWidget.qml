@@ -11,7 +11,7 @@ BarWidget {
 
   moduleName: "io.github.mtolhuys.disk-lens"
 
-  readonly property string buildIdentity: "disk-lens-widget-v0400"
+  readonly property string buildIdentity: "disk-lens-widget-v0401"
   readonly property var diskService: bar && bar.shell
     ? bar.shell.serviceFor("io.github.mtolhuys.disk-lens") : null
   readonly property var capacity: diskService ? diskService.capacity : Model.parseCapacity("")
@@ -144,20 +144,7 @@ BarWidget {
 
     var path = String(selectedEntry.path)
     var allocatedBytes = Number(selectedEntry.allocatedBytes || 0)
-    var prompt = [
-      "Investigate this local directory for me:",
-      "",
-      "Path: " + path,
-      "Allocated size reported by Omarchy Disk Lens: " + Model.formatBytes(allocatedBytes)
-        + " (" + allocatedBytes + " bytes)",
-      "",
-      "Please answer: Why is this directory this large? Is it necessary? Is it safe to delete?",
-      "",
-      "Begin with read-only inspection. Do not delete, move, modify, install, or change permissions.",
-      "Explain what normally creates this directory, what appears to be using the space, whether it is required,",
-      "which parts may be safely reclaimable, and the safest next step. Clearly separate verified findings from guesses.",
-      "Ask for explicit confirmation before proposing any command that would change the filesystem."
-    ].join("\n")
+    var prompt = Model.buildAgentPrompt(path, allocatedBytes)
 
     Quickshell.execDetached(["omarchy", "agent", "prompt", prompt])
     agentLaunchCount += 1

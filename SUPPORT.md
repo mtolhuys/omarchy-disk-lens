@@ -1,6 +1,6 @@
 # Support
 
-Omarchy Disk Lens `0.4.0` is a working development preview, not a published or supported release. Development installation is documented for contributors, while public installation and compatibility guarantees wait for release hardening.
+Omarchy Disk Lens `0.4.1` is the current public pre-1.0 release. Interfaces may still evolve, and formal compatibility guarantees remain release-hardening work.
 
 Development feedback should include:
 

@@ -18,19 +18,19 @@ Disk Lens inspects filenames, metadata, and allocated sizes on local filesystems
 - The helper forwards `TERM` to its owned `du` child, waits for it, removes its private temporary directory, and exits `130`.
 - The last completed result is not replaced by a cancelled or protocol-invalid attempt.
 - The file manager receives selected paths as individual process arguments.
-- `omarchy agent prompt` receives the complete fixed-format question as one process argument. Selected paths never become shell source.
+- `omarchy agent prompt` receives the complete fixed-format question as one process argument. Before a selected path enters that question, C0 and DEL control characters are removed and the value is capped at 4,096 characters. Selected paths never become shell source.
 - Disk Lens does not expose deletion, cleanup, permission changes, package management, snapshot actions, or a generic command runner.
 - Capacity and scan data remain local unless the user explicitly activates **Ask Omarchy**.
 
 ## Agent boundary
 
-**Ask Omarchy** is available only for an actionable selected directory. The prompt includes the exact path, allocated bytes and formatted size, the user's necessity and deletion-safety questions, and explicit instructions to inspect read-only, distinguish findings from guesses, and ask for confirmation before proposing any change.
+**Ask Omarchy** is available only for an actionable selected directory. The prompt places its read-only rules first, explicitly classifies filesystem-derived text as untrusted data, and then encloses the sanitized path in a labelled data block. It also includes allocated bytes and formatted size, the user's necessity and deletion-safety questions, instructions to distinguish findings from guesses, and a confirmation requirement before proposing any change.
 
 This is an instruction boundary, not a hard sandbox. The maintained Omarchy launcher may start agents with their configured approval behavior, and the selected agent may contact a network provider. Disk Lens does not choose the agent, capture credentials, inspect responses, or claim that its prompt can override runtime policy.
 
 ## State and lifecycle
 
-Version `0.4.0` keeps capacity, scan results, filters, selection, and agent-dispatch bookkeeping in memory. It writes no scan-result cache or plugin settings. Disablement and removal unload the service and widget; scanned user files stay untouched. The opt-in development installer uses a dedicated XDG-cache snapshot and replaces only plugin id `io.github.mtolhuys.disk-lens`.
+Version `0.4.1` keeps capacity, scan results, filters, selection, and agent-dispatch bookkeeping in memory. It writes no scan-result cache or plugin settings. Disablement and removal unload the service and widget; scanned user files stay untouched. The opt-in development installer uses a dedicated XDG-cache snapshot and replaces only plugin id `io.github.mtolhuys.disk-lens`.
 
 ## Vulnerability reporting
 

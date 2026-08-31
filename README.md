@@ -6,7 +6,7 @@
 
 Disk Lens puts storage pressure in one quiet Omarchy bar slot. Open it for exact Home-filesystem capacity, explicitly scan one directory, follow the live activity ring, and use the ranked list or proportional treemap to find the branch worth investigating.
 
-Version **0.4.0** is the first public pre-1.0 release. Its complete native journey is verified in a disposable Omarchy desktop; interfaces may still evolve before 1.0.
+Version **0.4.1** is the current public pre-1.0 release. Its complete native journey is verified in a disposable Omarchy desktop; interfaces may still evolve before 1.0.
 
 ## The useful path from full disk to a clear next step
 
@@ -14,7 +14,7 @@ Version **0.4.0** is the first public pre-1.0 release. Its complete native journ
 - **Scan deliberately** — immediate children, one filesystem, one same-user process, visible progress, safe cancellation, and the last complete result kept intact.
 - **See proportion** — one canonical model powers both the squarified treemap and exact ranked list.
 - **Narrow the answer** — search by name and filter by type, hidden status, allocated size, or modification age.
-- **Ask before changing** — send one selected directory and its measured allocation to the configured Omarchy agent with a read-only investigation prompt and an explicit confirmation boundary.
+- **Ask before changing** — send one selected directory and its measured allocation to the configured Omarchy agent with a read-only investigation prompt, an explicit untrusted-filesystem-data boundary, and confirmation before change.
 - **Stay native** — the complete analysis journey lives in one compact Omarchy panel with no extra graphical analyzer or package workflow.
 
 Disk Lens never scans merely because the panel opened, never silently installs software, never runs a privileged GUI, and exposes no delete or cleanup action. Btrfs capacity, per-path allocated bytes, filtered totals, and partial traversal are deliberately labelled as different facts.
@@ -92,6 +92,6 @@ Start with [CONTRIBUTING.md](CONTRIBUTING.md), [the product contract](docs/PRODU
 
 ## Status
 
-The `0.4.0` release has source, real-shell, visual, agent-prompt, update, and lifecycle evidence in disposable guests. Quantified performance budgets, dense/narrow layouts, pressure fixtures, complete assistive-technology review, and composed reduced-motion acceptance remain explicit pre-1.0 hardening work.
+The `0.4.1` release has source, real-shell, visual, hostile-path agent-prompt, update, and lifecycle evidence in disposable guests. Quantified performance budgets, dense/narrow layouts, pressure fixtures, complete assistive-technology review, and composed reduced-motion acceptance remain explicit pre-1.0 hardening work.
 
 MIT licensed. See [LICENSE](LICENSE).
