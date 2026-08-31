@@ -63,7 +63,7 @@ This is the one command that always moves the local Omarchy installation to the 
 4. waits for catalog discovery before enabling, so rerunning also repairs an interrupted or discovery-raced install;
 5. verifies the installed commit and both loaded runtime identities.
 
-Do not use `sudo`. `make dev-install` and `make install` are equivalent aliases. This is an explicit host-mutating maintainer workflow; automated installation, visual, update, and lifecycle tests stay inside the disposable Plugin Lab.
+Run this as your normal desktop user. `make dev-install` and `make install` are equivalent aliases. This is an explicit host-mutating maintainer workflow; automated installation, visual, update, and lifecycle tests stay inside the disposable Plugin Lab.
 
 Remove the development copy with:
 
