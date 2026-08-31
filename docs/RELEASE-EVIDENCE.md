@@ -1,6 +1,6 @@
 # Development milestone evidence
 
-This record describes the strongest verified `0.4.0` development milestone. It is not a public release record and does not authorize a push, tag, release, or marketplace submission.
+This record describes the strongest verified `0.4.0` pre-1.0 release milestone and its disposable desktop evidence.
 
 ## Candidate identity
 
@@ -13,6 +13,7 @@ This record describes the strongest verified `0.4.0` development milestone. It i
 - Omarchy ISO harness revision: `268bac16d351a21d867e37565738f458b11cb06c`
 - ISO/base identity: `omarchy-2026.08.27-x86_64-local`, verified official ISO checksum, reusable clean base plus a fresh per-run overlay
 - README showcase: `1000×563`, 147 frames, 2,167,480 bytes, SHA-256 `b3a67e0283e6ba46f9565307ae334911665814e20865d76add55d8bb335b8089`
+- Marketplace preview: `1000×563`, 152,685 bytes, SHA-256 `fa7f53692eca1f79690c89f05eef271f3b42d9c71b7f5b65b9ea46e5f0ddf5de`
 
 ## Required commands
 
@@ -57,7 +58,8 @@ The README product tour was built twice from the current five captures. Both bui
 
 ## Deliberate limitations
 
-- No tag, release artifact, artifact SHA-256, public install URL, marketplace entry, or minimum supported Omarchy release exists yet.
+- The supported runtime contract is current Omarchy Quattro; no older minimum Omarchy release is claimed.
+- Marketplace listing approval is external to this repository and may still be pending.
 - Automated activation, update, visual, and lifecycle work stays inside disposable guests.
 - The agent prompt is an instruction boundary, not a hard sandbox. Provider, network behavior, approvals, and sandbox policy belong to the configured agent.
 - Scan state is in memory and returns to Home after a shell reload.

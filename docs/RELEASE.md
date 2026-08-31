@@ -1,6 +1,6 @@
 # Release contract
 
-The current development milestone is recorded in [`RELEASE-EVIDENCE.md`](RELEASE-EVIDENCE.md). A green vertical slice is not, by itself, a public release.
+The current pre-1.0 milestone is recorded in [`RELEASE-EVIDENCE.md`](RELEASE-EVIDENCE.md). Marketplace publication does not turn automated validation into a security review or remove the remaining 1.0 hardening gates.
 
 ## Candidate identity
 

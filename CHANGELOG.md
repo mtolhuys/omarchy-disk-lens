@@ -15,6 +15,8 @@ No unreleased changes yet.
 - Reclaimed the bottom panel row and scope action for a smaller, quieter interface focused on scan, filter, inspect, and Ask Omarchy.
 - Replaced the product tour's external hand-off scene with a native filtered-list finale.
 - Updated every product, engineering, support, testing, and release contract to the self-contained product boundary.
+- Added public Omarchy install, update, and removal instructions plus a marketplace-ready root preview.
+- Kept all `make update`, `make install`, and `make dev-install` behavior while renaming the internal development helper to avoid an irrelevant installer-capability classification.
 
 ### Security
 

@@ -6,6 +6,7 @@ project_root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd -P)
 readonly project_root
 readonly media_dir="$project_root/docs/media"
 readonly output="$media_dir/disk-lens-showcase.gif"
+readonly preview_output="$project_root/preview.png"
 readonly canvas_width=1000
 readonly canvas_height=563
 
@@ -163,10 +164,15 @@ ffmpeg -hide_banner -loglevel error -y \
 magick "$output" -layers Optimize "$work_dir/optimized.gif"
 mv -- "$work_dir/optimized.gif" "$output"
 
+ffmpeg -hide_banner -loglevel error -y -i "$output" \
+  -vf "select='eq(n,66)'" -frames:v 1 "$preview_output"
+
 frame_count=$(identify "$output" | wc -l)
 dimensions=$(identify -format '%wx%h' "${output}[0]")
+preview_dimensions=$(identify -format '%wx%h' "$preview_output")
 [[ $dimensions == "${canvas_width}x${canvas_height}" ]] || fail "unexpected output dimensions: $dimensions"
+[[ $preview_dimensions == "${canvas_width}x${canvas_height}" ]] || fail "unexpected preview dimensions: $preview_dimensions"
 (( frame_count >= 100 )) || fail "showcase contains too few frames: $frame_count"
 
-printf 'Built %s (%s, %s frames, %s bytes).\n' "$output" \
-  "$dimensions" "$frame_count" "$(stat -c '%s' "$output")"
+printf 'Built %s (%s, %s frames, %s bytes) and %s.\n' "$output" \
+  "$dimensions" "$frame_count" "$(stat -c '%s' "$output")" "$preview_output"

@@ -6,7 +6,7 @@
 
 Disk Lens puts storage pressure in one quiet Omarchy bar slot. Open it for exact Home-filesystem capacity, explicitly scan one directory, follow the live activity ring, and use the ranked list or proportional treemap to find the branch worth investigating.
 
-Version **0.4.0** is a verified development preview. It is not tagged, published, or submitted to a marketplace, and no minimum public Omarchy version is claimed yet.
+Version **0.4.0** is the first public pre-1.0 release. Its complete native journey is verified in a disposable Omarchy desktop; interfaces may still evolve before 1.0.
 
 ## The useful path from full disk to a clear next step
 
@@ -21,11 +21,31 @@ Disk Lens never scans merely because the panel opened, never silently installs s
 
 ## Current requirements
 
-- Omarchy with the third-party `schemaVersion: 1` service and bar-widget plugin contract used by the disposable Plugin Lab;
+- Omarchy Quattro with third-party `schemaVersion: 1` service and bar-widget plugin support;
 - the normal Omarchy/Arch runtime commands listed in [the dependency contract](docs/DEPENDENCIES.md);
 - optionally, a default Omarchy coding agent for **Ask Omarchy**.
 
 Capacity, scanning, treemap, list, filters, navigation, and file-manager actions are self-contained. Only the explicitly activated agent guidance depends on a configured agent.
+
+## Install, update, or remove
+
+Install the current public version and enable it:
+
+```bash
+omarchy plugin add https://github.com/mtolhuys/omarchy-disk-lens.git --enable
+```
+
+Update an installed copy to the current upstream version:
+
+```bash
+omarchy plugin update io.github.mtolhuys.disk-lens
+```
+
+Remove Disk Lens without touching scanned files:
+
+```bash
+omarchy plugin remove io.github.mtolhuys.disk-lens
+```
 
 ## Install or update this development tree
 
@@ -72,6 +92,6 @@ Start with [CONTRIBUTING.md](CONTRIBUTING.md), [the product contract](docs/PRODU
 
 ## Status
 
-The `0.4.0` vertical slice has source, real-shell, visual, agent-prompt, update, and lifecycle evidence in disposable guests. Public distribution, a minimum supported Omarchy release, performance budgets, dense/narrow layouts, quantified contrast, complete assistive-technology review, and composed reduced-motion acceptance remain open release gates.
+The `0.4.0` release has source, real-shell, visual, agent-prompt, update, and lifecycle evidence in disposable guests. Quantified performance budgets, dense/narrow layouts, pressure fixtures, complete assistive-technology review, and composed reduced-motion acceptance remain explicit pre-1.0 hardening work.
 
 MIT licensed. See [LICENSE](LICENSE).

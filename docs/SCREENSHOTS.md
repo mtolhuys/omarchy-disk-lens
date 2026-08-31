@@ -10,6 +10,7 @@ Repository media must come from the current Disk Lens runtime in a disposable Om
 - `disk-lens-agent.png`: selected synthetic directory with visible **Ask Omarchy** in the maintained light theme;
 - `disk-lens-filtered-list.png`: one-result ranked list after rendered search and view controls;
 - `disk-lens-showcase.gif`: deterministic widescreen product tour built from the captures above.
+- `preview.png`: deterministic marketplace preview extracted from the visual-analysis scene.
 
 The GIF presents five truthful native scenes: capacity at a glance, explicit scanning, visual analysis, read-only agent guidance, and focused filtering. It stays legible at GitHub README width and does not imply automatic scans, cleanup, deletion, privileged analysis, package installation, or a sandboxed agent.
 
@@ -17,7 +18,7 @@ The GIF presents five truthful native scenes: capacity at a glance, explicit sca
 
 All five source captures come from green `0.4.0` Plugin Lab run `20260831-084135`, which exercised repository candidate `dfabca91e702d01c51bd5c009e52ce6606548b40`. Source captures are `1280×800`; the showcase is `1000×563`, 147 frames, 2,167,480 bytes, with SHA-256 `b3a67e0283e6ba46f9565307ae334911665814e20865d76add55d8bb335b8089`. Two consecutive final builds produced that exact hash.
 
-Rebuild the deterministic derivative with:
+Rebuild both deterministic derivatives with:
 
 ```bash
 make showcase

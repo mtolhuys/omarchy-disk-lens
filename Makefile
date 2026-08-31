@@ -29,4 +29,4 @@ update: dev-install
 install: dev-install
 
 dev-install:
-	./bin/dev-install
+	./bin/dev-sync
