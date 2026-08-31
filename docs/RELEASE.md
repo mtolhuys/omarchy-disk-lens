@@ -35,6 +35,7 @@ Record one clean Git commit and tag, manifest version and loaded identities, dis
 ### Evidence and publication
 
 - Source/component, lifecycle, product scenario, performance, and accessibility gates are green.
+- Public clean-clone installation and removal instructions are proven against the shared repository commit.
 - Shell logs contain no entry-point, binding, or protocol errors after the reload boundary.
 - Version, changelog, manifest, README, artifact, screenshots, and release notes agree.
 - License review is complete and the repository contains no VM state, caches, generated evidence, machine-local paths, or real Home metadata.

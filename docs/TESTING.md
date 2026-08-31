@@ -19,6 +19,7 @@ make validate
 cd "$OMARCHY_PLUGIN_LAB_ROOT"
 ./bin/lab doctor
 ./bin/lab plugin /absolute/path/to/omarchy-disk-lens/tests/lab/acceptance.sh
+./bin/lab plugin /absolute/path/to/omarchy-disk-lens/tests/lab/public-install.sh
 ```
 
 `acceptance.sh` installs through public `make update` inside the guest and proves:
@@ -33,6 +34,8 @@ cd "$OMARCHY_PLUGIN_LAB_ROOT"
 8. explicit partial, long-scope, and empty states;
 9. a same-path public plugin update replacing both loaded identities;
 10. disable, re-enable, removal, user-data preservation, and clean logs.
+
+`public-install.sh` separately proves that the README's public GitHub URL clones the expected repository commit, passes Omarchy validation, enables and loads both `v0400` entry points, and removes cleanly through the documented plugin id.
 
 ## Visual review boundary
 
