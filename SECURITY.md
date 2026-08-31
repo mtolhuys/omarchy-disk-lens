@@ -10,6 +10,7 @@ Include the affected version, expected and observed behavior, a minimal syntheti
 
 | Version | Supported |
 | --- | --- |
+| `0.5.0` development candidate | Yes |
 | `0.4.1` | Yes |
 | `0.4.0` and earlier | No |
 

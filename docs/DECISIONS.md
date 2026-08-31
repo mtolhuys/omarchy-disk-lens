@@ -26,7 +26,7 @@
 
 ## D004 — Immediate-child scans enable progressive drill-down
 
-**Decision:** Scan and visualize the immediate children of one scope, then rescan on drill-down.
+**Decision:** Scan and visualize the immediate children of one scope, then measure a drilled scope only when it has no completed in-memory snapshot.
 
 **Why:** This bounds the UI model and makes cancellation and partial results tractable.
 
@@ -71,3 +71,27 @@
 **Why:** A recursive traversal otherwise looks stalled, while perpetual decorative motion adds noise.
 
 **Consequence:** Motion stops immediately when scanning completes, fails, or is cancelled. Composed reduced-motion behavior remains a release gate.
+
+## D010 — Back restores bounded results; Refresh remeasures
+
+**Decision:** Keep a bounded service-lifetime LRU of validated completed scopes, retain Home when it fits, and use it for Back navigation. Only explicit Refresh promises a new measurement.
+
+**Why:** Navigation should be immediate and predictable, while silently rescanning on Back destroys context, burns I/O, and changes results without the user asking.
+
+**Consequence:** Restored scopes keep their original timestamp. The cache is capped at eight scopes and 12,000 total entries, is never persisted, and may fall back to a scan after eviction.
+
+## D011 — Browse folders inside the panel
+
+**Decision:** Use a shallow, NUL-safe helper and a theme-native inline browser instead of a native `QtQuick.Dialogs` folder dialog.
+
+**Why:** The native dialog reproducibly aborted Quickshell in the disposable lab inside the GTK/GVFS directory-monitor path. The inline browser avoids toolkit lifecycle mixing and can share the panel's path validation and styling.
+
+**Consequence:** Browsing never measures disk usage, hidden directories are present, 5,000 entries are accepted, and at most 80 rows are rendered. A different external picker requires crash-free disposable-shell evidence.
+
+## D012 — Batch scanner post-processing
+
+**Decision:** Keep one GNU `du` traversal and batch common-case UTF-8 validation, metadata lookup, and JSON emission instead of spawning helper processes per entry.
+
+**Why:** Per-entry process startup dominated small and dense scopes without improving measurement accuracy.
+
+**Consequence:** A source regression enforces bounded process counts for 1,024 entries; invalid UTF-8 retains its isolated slower path so hostile-name safety is not traded for speed.

@@ -9,9 +9,11 @@ Read [`AGENTS.md`](AGENTS.md) and the product contracts under [`docs/`](docs/). 
 ## Development principles
 
 - Preserve the distinction between cheap filesystem capacity and explicit recursive scanning.
+- Preserve the distinction between navigation through bounded validated snapshots and explicit remeasurement through Scan, Drill in, or Refresh.
 - Prefer exact, inspectable data and calm hierarchy over decorative complexity.
 - Keep the complete analysis experience native and self-contained.
 - Treat every path as hostile data and every long-running process as cancellable state.
+- Keep scanner post-processing bounded and batched; do not reintroduce a process per directory entry.
 - Add no destructive action without an approved product/security decision.
 - Keep public documentation and fixtures in English and free of private machine data.
 

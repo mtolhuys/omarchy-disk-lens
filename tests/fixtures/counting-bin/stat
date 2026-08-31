@@ -1,0 +1,8 @@
+#!/bin/bash
+
+set -euo pipefail
+
+readonly tool=${0##*/}
+: "${DISK_LENS_PROCESS_COUNTER:?Set DISK_LENS_PROCESS_COUNTER for scanner efficiency tests}"
+mkdir "$DISK_LENS_PROCESS_COUNTER/$tool.$BASHPID"
+exec "/usr/bin/$tool" "$@"

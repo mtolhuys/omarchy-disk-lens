@@ -4,7 +4,24 @@ All notable changes to Omarchy Disk Lens are documented here. The format follows
 
 ## Unreleased
 
-No unreleased changes yet.
+### Added
+
+- Added direct absolute and `~/` scope editing plus a theme-native inline folder browser that lists hidden directories without measuring them.
+- Added bounded in-memory scan snapshots and 16-step history so the visible Back control restores recent scopes with their original timestamps instead of silently rescanning.
+- Added strict shallow-folder protocol tests and a 1,024-entry scanner process-budget regression.
+
+### Changed
+
+- Hidden entries are now shown by default, making Steam and other dot-directory storage visible in the first result.
+- Reduced scan motion to one activity ring around the bar gauge; panel status and Cancel remain literal and static.
+- Removed the duplicate first-use toolbar scan action, leaving one contextual scan action.
+- Batched scanner UTF-8 classification, metadata lookup, and JSON emission. A 600-entry synthetic fixture improved from approximately 2.2 seconds to 0.14 seconds on the development host without changing the `du` traversal or accounting model.
+- Bumped the manifest and loaded service/widget identities to the `0.5.0` development candidate.
+
+### Fixed
+
+- Back navigation no longer starts a new scan when the prior validated result remains in the bounded cache.
+- Replaced the evaluated native `QtQuick.Dialogs` picker after disposable-lab coredump evidence showed it could abort Quickshell in the GTK/GVFS directory-monitor path.
 
 ## 0.4.1 — 2026-08-31
 

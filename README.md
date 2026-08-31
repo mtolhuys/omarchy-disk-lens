@@ -4,15 +4,18 @@
 
 ![Omarchy Disk Lens product tour: capacity, active scan, treemap, agent guidance, and focused filtering](docs/media/disk-lens-showcase.gif)
 
-Disk Lens puts storage pressure in one quiet Omarchy bar slot. Open it for exact Home-filesystem capacity, explicitly scan one directory, follow the live activity ring, and use the ranked list or proportional treemap to find the branch worth investigating.
+Disk Lens puts storage pressure in one quiet Omarchy bar slot. Open it for exact Home-filesystem capacity, type or browse to a scope, explicitly scan it, and use the ranked list or proportional treemap to find the branch worth investigating.
 
-Version **0.4.1** is the current public pre-1.0 release. Its complete native journey is verified in a disposable Omarchy desktop; interfaces may still evolve before 1.0.
+Version **0.5.0** is the current development candidate. Its complete native journey is verified in a disposable Omarchy desktop; public clean-clone evidence must be refreshed after this candidate is published.
 
 ## The useful path from full disk to a clear next step
 
 - **Glance** — one proportional pie in the bar; no percentage label consuming width and no recursive background scan.
-- **Scan deliberately** — immediate children, one filesystem, one same-user process, visible progress, safe cancellation, and the last complete result kept intact.
+- **Choose naturally** — type an absolute or `~/` path, or browse folders in place without starting a size traversal.
+- **Scan deliberately** — immediate children, one filesystem, one recursive process, one bar activity ring, safe cancellation, and the last complete result kept intact.
 - **See proportion** — one canonical model powers both the squarified treemap and exact ranked list.
+- **Keep the big things visible** — hidden entries are shown by default, so Steam and other dot-directory storage cannot disappear from the first answer.
+- **Move without waiting** — Drill in measures a new scope; Back restores a recent validated result and its original timestamp without silently rescanning.
 - **Narrow the answer** — search by name and filter by type, hidden status, allocated size, or modification age.
 - **Ask before changing** — send one selected directory and its measured allocation to the configured Omarchy agent with a read-only investigation prompt, an explicit untrusted-filesystem-data boundary, and confirmation before change.
 - **Stay native** — the complete analysis journey lives in one compact Omarchy panel with no extra graphical analyzer or package workflow.
@@ -25,7 +28,7 @@ Disk Lens never scans merely because the panel opened, never silently installs s
 - the normal Omarchy/Arch runtime commands listed in [the dependency contract](docs/DEPENDENCIES.md);
 - optionally, a default Omarchy coding agent for **Ask Omarchy**.
 
-Capacity, scanning, treemap, list, filters, navigation, and file-manager actions are self-contained. Only the explicitly activated agent guidance depends on a configured agent.
+Capacity, scope editing, folder browsing, scanning, treemap, list, filters, cached navigation, and file-manager actions are self-contained. Only the explicitly activated agent guidance depends on a configured agent.
 
 ## Install, update, or remove
 
@@ -92,6 +95,6 @@ Start with [CONTRIBUTING.md](CONTRIBUTING.md), [the product contract](docs/PRODU
 
 ## Status
 
-The `0.4.1` release has source, real-shell, visual, hostile-path agent-prompt, update, and lifecycle evidence in disposable guests. Quantified performance budgets, dense/narrow layouts, pressure fixtures, complete assistive-technology review, and composed reduced-motion acceptance remain explicit pre-1.0 hardening work.
+The `0.5.0` development candidate has source, real-shell, inline-folder, typed-scope, cache-restored Back, single-indicator, visual, hostile-path agent-prompt, update, and lifecycle evidence in disposable guests. Scanner post-processing now has a source-enforced process budget. Public clean-clone proof for the unpublished candidate, end-to-end performance budgets, dense/narrow layouts, pressure fixtures, complete assistive-technology review, and composed reduced-motion acceptance remain explicit pre-1.0 hardening work.
 
 MIT licensed. See [LICENSE](LICENSE).

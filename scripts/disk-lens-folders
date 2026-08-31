@@ -1,0 +1,174 @@
+#!/bin/bash
+
+set -uo pipefail
+
+readonly protocol=1
+readonly max_entries=5000
+readonly batch_size=128
+folder_path=""
+work_dir=""
+find_pid=""
+declare -a json_batch=()
+
+emit_error() {
+  local code=$1
+  local message=$2
+  jq -cn \
+    --argjson protocol "$protocol" \
+    --arg code "$code" \
+    --arg message "$message" \
+    '{protocol: $protocol, type: "error", code: $code, message: $message}'
+}
+
+# shellcheck disable=SC2329 # Invoked by EXIT.
+cleanup() {
+  if [[ -n $work_dir && -d $work_dir ]]; then
+    rm -rf -- "$work_dir"
+  fi
+}
+
+# shellcheck disable=SC2329 # Invoked by INT and TERM traps.
+stop_browser() {
+  trap - INT TERM
+  if [[ -n $find_pid ]] && kill -0 "$find_pid" 2>/dev/null; then
+    kill -TERM "$find_pid" 2>/dev/null || true
+    wait "$find_pid" 2>/dev/null || true
+  fi
+  cleanup
+  exit 130
+}
+
+flush_batch() {
+  (( ${#json_batch[@]} > 0 )) || return 0
+  jq -cn \
+    --argjson protocol "$protocol" \
+    --args \
+    '$ARGS.positional as $values
+      | range(0; $values | length; 2) as $index
+      | {
+          protocol: $protocol,
+          type: "folder",
+          path: $values[$index],
+          name: $values[$index + 1],
+          validUtf8: true,
+          actionable: true
+        }' \
+    -- "${json_batch[@]}"
+  json_batch=()
+}
+
+if (( EUID == 0 )); then
+  emit_error "root-refused" "Folder browsing must run as the desktop user."
+  exit 77
+fi
+
+if (( $# != 2 )) || [[ $1 != "--path" ]]; then
+  emit_error "invalid-arguments" "Expected exactly --path and one directory."
+  exit 64
+fi
+
+if [[ $2 != /* || ! -d $2 ]]; then
+  emit_error "not-a-directory" "The folder browser needs an absolute directory."
+  exit 66
+fi
+
+folder_path=$(realpath -e -- "$2") || {
+  emit_error "unresolvable-path" "The selected folder could not be resolved."
+  exit 66
+}
+
+if ! printf '%s' "$folder_path" | iconv -f UTF-8 -t UTF-8 >/dev/null 2>&1; then
+  emit_error "invalid-path-encoding" "The selected folder is not valid UTF-8."
+  exit 66
+fi
+
+work_dir=$(mktemp -d -t omarchy-disk-lens-folders.XXXXXX) || {
+  emit_error "temporary-storage" "Disk Lens could not create temporary folder storage."
+  exit 73
+}
+trap cleanup EXIT
+trap stop_browser INT TERM
+
+jq -cn \
+  --argjson protocol "$protocol" \
+  --arg path "$folder_path" \
+  '{protocol: $protocol, type: "folder-start", path: $path}'
+
+find -P "$folder_path" -mindepth 1 -maxdepth 1 \( -type d -o -xtype d \) -print0 \
+  >"$work_dir/records" 2>"$work_dir/errors" &
+find_pid=$!
+if wait "$find_pid"; then
+  find_status=0
+else
+  find_status=$?
+fi
+find_pid=""
+
+records_are_utf8=true
+if ! iconv -f UTF-8 -t UTF-8 "$work_dir/records" >/dev/null 2>&1; then
+  records_are_utf8=false
+fi
+
+entry_count=0
+truncated=false
+while IFS= read -r -d '' entry_path; do
+  if (( entry_count >= max_entries )); then
+    truncated=true
+    continue
+  fi
+
+  valid_utf8=$records_are_utf8
+  if [[ $records_are_utf8 == false ]] \
+      && printf '%s' "$entry_path" | iconv -f UTF-8 -t UTF-8 >/dev/null 2>&1; then
+    valid_utf8=true
+  fi
+
+  if [[ $valid_utf8 == true ]]; then
+    json_batch+=("$entry_path" "${entry_path##*/}")
+    if (( ${#json_batch[@]} >= batch_size * 2 )); then
+      flush_batch
+    fi
+  else
+    flush_batch
+    jq -cn \
+      --argjson protocol "$protocol" \
+      --arg path "$entry_path" \
+      '{
+        protocol: $protocol,
+        type: "folder",
+        path: $path,
+        name: "[name is not valid UTF-8]",
+        validUtf8: false,
+        actionable: false
+      }'
+  fi
+  (( entry_count += 1 ))
+done <"$work_dir/records"
+flush_batch
+
+partial=false
+warning=""
+if (( find_status != 0 )); then
+  partial=true
+  IFS= read -r warning <"$work_dir/errors" || true
+fi
+if [[ $truncated == true ]]; then
+  partial=true
+  warning="Only the first $max_entries folders are shown."
+fi
+warning=${warning:0:8192}
+
+jq -cn \
+  --argjson protocol "$protocol" \
+  --arg path "$folder_path" \
+  --argjson entries "$entry_count" \
+  --argjson partial "$partial" \
+  --arg warning "$warning" \
+  '{
+    protocol: $protocol,
+    type: "folder-complete",
+    path: $path,
+    entries: $entries,
+    partial: $partial,
+    warning: $warning
+  }'

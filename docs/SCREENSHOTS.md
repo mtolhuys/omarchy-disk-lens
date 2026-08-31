@@ -4,24 +4,27 @@ Repository media must come from the current Disk Lens runtime in a disposable Om
 
 ## Required captures
 
-- `disk-lens-first-use.png`: compact first-use panel in the maintained dark theme;
-- `disk-lens-scanning.png`: active scan with running activity ring and cancellable state;
-- `disk-lens-treemap.png`: completed synthetic scan with proportional treemap;
+- `disk-lens-first-use.png`: compact first-use panel with one contextual scan action;
+- `disk-lens-folder-picker.png`: theme-native inline browser listing folders without measuring them;
+- `disk-lens-scanning.png`: active scan with the single bar activity ring and cancellable panel state;
+- `disk-lens-treemap.png`: completed synthetic scan with hidden entries visible and proportional treemap;
 - `disk-lens-agent.png`: selected synthetic directory with visible **Ask Omarchy** in the maintained light theme;
 - `disk-lens-filtered-list.png`: one-result ranked list after rendered search and view controls;
-- `disk-lens-showcase.gif`: deterministic widescreen product tour built from the captures above.
+- `disk-lens-showcase.gif`: deterministic widescreen product tour built from the captures above;
 - `preview.png`: deterministic marketplace preview extracted from the visual-analysis scene.
 
-The GIF presents five truthful native scenes: capacity at a glance, explicit scanning, visual analysis, read-only agent guidance, and focused filtering. It stays legible at GitHub README width and does not imply automatic scans, cleanup, deletion, privileged analysis, package installation, or a sandboxed agent.
+The GIF presents six truthful native scenes: one clear starting action, in-place folder choice, explicit scanning, visual analysis, read-only agent guidance, and focused filtering. It stays legible at GitHub README width and does not imply automatic scans, cleanup, deletion, privileged analysis, package installation, or a sandboxed agent.
 
 ## Current provenance
 
-All five source captures come from green `0.4.0` Plugin Lab run `20260831-084135`, which exercised repository candidate `dfabca91e702d01c51bd5c009e52ce6606548b40`. The `0.4.1` security patch changes only the non-visible agent prompt boundary, so those `1280×800` visual sources remain current. The regenerated showcase is `1000×563`, 147 frames, 2,167,422 bytes, with SHA-256 `dbe8cc97764dd57dbb23d70bbcacc5906cb9050e6bf440b98f36af0edf49ed5c`; the `152,640`-byte marketplace preview has SHA-256 `f8597f1a64abff7f55822100a855eead90b949ad639a51a63c533eb359e848e0`. Two consecutive `0.4.1` builds produced those exact hashes.
+All six source captures come from green `0.5.0` Plugin Lab run `20260831-221753`, which exercised exact worktree snapshot `7a69c5c7892d` based on repository revision `93fe75e5e60e950a2cfaf9043c54144669abadc8`. The synthetic `1280x800` captures cover first use, the inline browser, the single-indicator scan state, hidden-by-default storage visibility, the selected-folder agent action, and filtering.
 
-Rebuild both deterministic derivatives with:
+The regenerated showcase is `1000x563`, 161 frames, 2,370,393 bytes, with SHA-256 `3dcb9f139ce13c86d8329483b9086a49505f237de5a0446feebe95854829db44`. The 165,961-byte marketplace preview has SHA-256 `9f4640dca8fdf6cf9e135fc2ac4e7bc4f6eb72635dcd63b5892a5d37f51c63fd`. Two consecutive deterministic builds produced those exact hashes.
+
+Rebuild both derivatives with:
 
 ```bash
 make showcase
 ```
 
-Screenshots prove visual composition only. Scanner, prompt, path, runtime-identity, and lifecycle claims require the machine assertions in [`TESTING.md`](TESTING.md).
+Screenshots prove visual composition only. Scanner, prompt, path, runtime-identity, cache, and lifecycle claims require the machine assertions in [`TESTING.md`](TESTING.md).

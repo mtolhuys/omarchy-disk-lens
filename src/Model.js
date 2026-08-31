@@ -201,6 +201,86 @@ function parseScan(raw) {
   }
 }
 
+function parseFolderList(raw) {
+  var lines = String(raw || "").split("\n")
+  var started = null
+  var completed = null
+  var entries = []
+  var errorMessage = ""
+
+  for (var index = 0; index < lines.length; index++) {
+    var line = lines[index].trim()
+    if (!line) continue
+    var record
+    try {
+      record = JSON.parse(line)
+    } catch (error) {
+      errorMessage = "Folder browser output contained malformed JSON"
+      break
+    }
+
+    if (!plainObject(record) || record.protocol !== PROTOCOL_VERSION || completed) {
+      errorMessage = "Folder browser output used an invalid protocol"
+      break
+    }
+    if (record.type === "error") {
+      errorMessage = typeof record.message === "string" && record.message.length <= MAX_WARNING_LENGTH
+        ? record.message : "Folder browsing failed"
+      break
+    }
+    if (record.type === "folder-start") {
+      if (started || typeof record.path !== "string"
+          || record.path.length > MAX_PATH_LENGTH || record.path.charAt(0) !== "/"
+          || record.path.indexOf("\u0000") >= 0) {
+        errorMessage = "Folder browser start record was invalid"
+        break
+      }
+      started = record
+    } else if (record.type === "folder") {
+      if (!started || entries.length >= MAX_ENTRIES
+          || typeof record.path !== "string" || typeof record.name !== "string"
+          || record.path.length > MAX_PATH_LENGTH || record.name.length > 1024
+          || record.path.indexOf("\u0000") >= 0 || record.name.indexOf("\u0000") >= 0
+          || !immediateChild(record.path, started.path)
+          || typeof record.validUtf8 !== "boolean" || typeof record.actionable !== "boolean"
+          || (record.actionable && !record.validUtf8)) {
+        errorMessage = "Folder browser entry record was invalid"
+        break
+      }
+      entries.push({
+        path: record.path,
+        name: record.name,
+        validUtf8: record.validUtf8,
+        actionable: record.actionable
+      })
+    } else if (record.type === "folder-complete") {
+      if (!started || record.path !== started.path || !protocolInteger(record.entries)
+          || record.entries !== entries.length || typeof record.partial !== "boolean"
+          || typeof record.warning !== "string" || record.warning.length > MAX_WARNING_LENGTH) {
+        errorMessage = "Folder browser completion record was invalid"
+        break
+      }
+      completed = record
+    } else {
+      errorMessage = "Folder browser output contained an unknown record type"
+      break
+    }
+  }
+
+  if (!errorMessage && (!started || !completed)) errorMessage = "Folder browser output ended before completion"
+  if (errorMessage) return { ok: false, error: errorMessage, path: "", entries: [], partial: false, warning: "" }
+
+  entries.sort(function(left, right) { return left.name.localeCompare(right.name) })
+  return {
+    ok: true,
+    error: "",
+    path: completed.path,
+    entries: entries,
+    partial: completed.partial,
+    warning: completed.warning
+  }
+}
+
 function formatBytes(value) {
   var bytes = Number(value)
   if (!isFinite(bytes) || bytes < 0) return "—"
@@ -218,6 +298,24 @@ function formatBytes(value) {
 
 function safeLabel(value) {
   return String(value || "").replace(/[\u0000-\u001f\u007f]/g, "�")
+}
+
+function normalizeScopeInput(value, homePath) {
+  var path = String(value || "")
+  var home = String(homePath || "")
+  if (path === "~") path = home
+  else if (path.indexOf("~/") === 0 && home.charAt(0) === "/") path = home + path.slice(1)
+  if (!path || path.length > MAX_PATH_LENGTH || path.charAt(0) !== "/" || path.indexOf("\u0000") >= 0)
+    return ""
+  if (path !== "/") path = path.replace(/\/+$/, "")
+  return path || "/"
+}
+
+function parentPath(path) {
+  var value = normalizeScopeInput(path, "")
+  if (!value || value === "/") return "/"
+  var slash = value.lastIndexOf("/")
+  return slash <= 0 ? "/" : value.slice(0, slash)
 }
 
 function safeAgentPath(value) {
@@ -385,8 +483,11 @@ if (typeof module !== "undefined") {
     MAX_AGENT_PATH_LENGTH: MAX_AGENT_PATH_LENGTH,
     parseCapacity: parseCapacity,
     parseScan: parseScan,
+    parseFolderList: parseFolderList,
     formatBytes: formatBytes,
     safeLabel: safeLabel,
+    normalizeScopeInput: normalizeScopeInput,
+    parentPath: parentPath,
     safeAgentPath: safeAgentPath,
     buildAgentPrompt: buildAgentPrompt,
     filterEntries: filterEntries,

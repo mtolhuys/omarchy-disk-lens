@@ -1,0 +1,8 @@
+#!/bin/bash
+
+# Deterministic stand-in used only to hold the folder browser at its
+# cancellation boundary. Production browsing always resolves GNU find.
+sleep 30 &
+sleep_pid=$!
+trap 'kill -TERM "$sleep_pid" 2>/dev/null || true; wait "$sleep_pid" 2>/dev/null || true; exit 143' INT TERM
+wait "$sleep_pid"

@@ -11,7 +11,7 @@ A public minimum supported Omarchy release has not yet been declared; clean-clon
 Runtime code uses commands supplied by the tested Omarchy/Arch environment:
 
 - `findmnt` from util-linux for byte-oriented Home-filesystem capacity;
-- GNU `du`, `stat`, `realpath`, `base64`, and `mktemp` for the bundled scanner;
+- GNU `du`, `find`, `stat`, `realpath`, `base64`, and `mktemp` for the bundled scan and folder-browser helpers;
 - `jq` and `iconv` for strict NDJSON records and UTF-8 classification;
 - `uwsm-app`, `xdg-open`, and `omarchy agent prompt` for desktop integration.
 

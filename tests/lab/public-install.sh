@@ -23,8 +23,8 @@ omarchy_host_test() {
      test \"\$(git -C \"$plugin_dir\" rev-parse HEAD)\" = '$expected_commit' && \
      omarchy-plugin-list --json | jq -e --arg id '$plugin_id' \
        'any(.[]; .id == \$id and .enabled == true)' && \
-     omarchy-shell disk-lens-service state | jq -e '.buildIdentity == \"disk-lens-service-v0401\"' && \
-     omarchy-shell disk-lens state | jq -e '.buildIdentity == \"disk-lens-widget-v0401\"'" || {
+     omarchy-shell disk-lens-service state | jq -e '.buildIdentity == \"disk-lens-service-v0500\"' && \
+     omarchy-shell disk-lens state | jq -e '.buildIdentity == \"disk-lens-widget-v0500\"'" || {
     ssh_session "omarchy-plugin-list --json; omarchy-shell shell listPlugins; \
       journalctl --user --since '-3 minutes' --no-pager | tail -n 220" || true
     return 1

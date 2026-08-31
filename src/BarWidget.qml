@@ -11,7 +11,7 @@ BarWidget {
 
   moduleName: "io.github.mtolhuys.disk-lens"
 
-  readonly property string buildIdentity: "disk-lens-widget-v0401"
+  readonly property string buildIdentity: "disk-lens-widget-v0500"
   readonly property var diskService: bar && bar.shell
     ? bar.shell.serviceFor("io.github.mtolhuys.disk-lens") : null
   readonly property var capacity: diskService ? diskService.capacity : Model.parseCapacity("")
@@ -40,9 +40,13 @@ BarWidget {
   readonly property bool opened: popupOpen
   readonly property bool popoutSwitchClosing: false
   readonly property real openPanelIndicatorWidth: button.labelWidth
+  readonly property string scopeDraftPath: Model.normalizeScopeInput(scopeDraft, Quickshell.env("HOME"))
+  readonly property bool scopeDraftChanged: scopeDraftPath !== "" && scopeDraftPath !== currentScope
+  readonly property string folderListerPath: diskService && diskService.sourceDir
+    ? diskService.sourceDir + "/scripts/disk-lens-folders" : ""
 
   property bool popupOpen: false
-  property bool includeHidden: false
+  property bool includeHidden: true
   property string kindFilter: "all"
   property string query: ""
   property double minimumBytes: 0
@@ -51,6 +55,15 @@ BarWidget {
   property string selectedPath: ""
   property int agentLaunchCount: 0
   property string lastAgentPath: ""
+  property string scopeDraft: Quickshell.env("HOME")
+  property string scopeInputError: ""
+  property var navigationHistory: []
+  property bool folderPickerOpen: false
+  property string folderPickerPath: Quickshell.env("HOME")
+  property string folderPickerState: "idle"
+  property var folderPickerEntries: []
+  property string folderPickerError: ""
+  property string folderPickerWarning: ""
 
   function entryForPath(path) {
     var value = String(path || "")
@@ -108,26 +121,127 @@ BarWidget {
 
   function requestScan(path) {
     if (!diskService) return false
+    var target = Model.normalizeScopeInput(String(path || currentScope), Quickshell.env("HOME"))
+    if (!target) return false
     selectedPath = ""
-    return diskService.startScan(String(path || currentScope))
+    scopeDraft = target
+    scopeInputError = ""
+    return diskService.startScan(target)
+  }
+
+  function pushHistory(path) {
+    var value = String(path || "")
+    if (!value) return
+    var next = navigationHistory.slice()
+    if (next.length === 0 || next[next.length - 1] !== value) next.push(value)
+    while (next.length > 16) next.shift()
+    navigationHistory = next
+  }
+
+  function navigateTo(path) {
+    if (!diskService || scanRunning) return false
+    var target = Model.normalizeScopeInput(path, Quickshell.env("HOME"))
+    if (!target) {
+      scopeInputError = "Enter an absolute folder path, or start with ~/."
+      return false
+    }
+    if (target === currentScope && diskService.lastScanPath) {
+      scopeDraft = target
+      scopeInputError = ""
+      return true
+    }
+
+    var previous = diskService.lastScanPath ? currentScope : ""
+    if (previous && previous !== target) pushHistory(previous)
+    selectedPath = ""
+    scopeDraft = target
+    scopeInputError = ""
+    if (diskService.restoreCachedScan(target)) return true
+    if (diskService.startScan(target)) return true
+
+    if (previous && navigationHistory.length > 0) {
+      var rollback = navigationHistory.slice()
+      rollback.pop()
+      navigationHistory = rollback
+    }
+    return false
+  }
+
+  function goBack() {
+    if (!diskService || scanRunning || navigationHistory.length === 0) return false
+    var next = navigationHistory.slice()
+    var target = next.pop()
+    navigationHistory = next
+    selectedPath = ""
+    scopeDraft = target
+    scopeInputError = ""
+    if (diskService.restoreCachedScan(target)) return true
+    if (diskService.startScan(target)) return true
+    next.push(target)
+    navigationHistory = next
+    return false
+  }
+
+  function submitScopeInput() {
+    var target = Model.normalizeScopeInput(scopeDraft, Quickshell.env("HOME"))
+    if (!target) {
+      scopeInputError = "Enter an absolute folder path, or start with ~/."
+      return false
+    }
+    scopeField.focus = false
+    if (!diskService || !diskService.lastScanPath) return requestScan(target)
+    if (target !== currentScope) return navigateTo(target)
+    return requestScan(target)
+  }
+
+  function chooseFolder() {
+    if (scanRunning || folderListProcess.running) return false
+    folderPickerOpen = true
+    return browseFolder(scopeDraftPath || currentScope)
+  }
+
+  function browseFolder(path) {
+    if (!folderListerPath || folderListProcess.running) return false
+    var target = Model.normalizeScopeInput(path, Quickshell.env("HOME"))
+    if (!target) {
+      folderPickerError = "Enter an absolute folder path, or start with ~/."
+      return false
+    }
+    folderPickerPath = target
+    folderPickerEntries = []
+    folderPickerError = ""
+    folderPickerWarning = ""
+    folderPickerState = "loading"
+    folderListProcess.command = [folderListerPath, "--path", target]
+    folderListProcess.running = true
+    return true
+  }
+
+  function closeFolderPicker() {
+    if (folderListProcess.running) folderListProcess.running = false
+    folderPickerOpen = false
+    folderPickerState = "idle"
+    folderPickerError = ""
+  }
+
+  function acceptFolderPicker() {
+    if (folderPickerState !== "ready" && folderPickerState !== "partial") return false
+    var target = folderPickerPath
+    folderPickerOpen = false
+    scopeDraft = target
+    return navigateTo(target)
   }
 
   function scanOrCancel() {
     if (!diskService) return
     if (scanRunning) diskService.cancelScan()
+    else if (scopeDraftChanged) navigateTo(scopeDraftPath)
     else requestScan(currentScope)
-  }
-
-  function parentPath(path) {
-    var value = String(path || "/").replace(/\/+$/, "")
-    if (!value || value === "/") return "/"
-    var slash = value.lastIndexOf("/")
-    return slash <= 0 ? "/" : value.slice(0, slash)
   }
 
   function drillInto(entry) {
     if (!entry || entry.kind !== "directory" || entry.actionable !== true || scanRunning) return
-    requestScan(entry.path)
+    navigateTo(entry.path)
   }
 
   function selectedActionPath() {
@@ -189,14 +303,14 @@ BarWidget {
 
   function clearFilters() {
     query = ""
-    includeHidden = false
+    includeHidden = true
     kindFilter = "all"
     minimumBytes = 0
     maximumAgeSeconds = 0
   }
 
   function hasFilters() {
-    return query !== "" || includeHidden || kindFilter !== "all"
+    return query !== "" || !includeHidden || kindFilter !== "all"
       || minimumBytes > 0 || maximumAgeSeconds > 0
   }
 
@@ -217,7 +331,16 @@ BarWidget {
       kindFilter: kindFilter,
       agentLaunchCount: agentLaunchCount,
       lastAgentPath: lastAgentPath,
-      scanIndicatorRunning: scanRunning && popupOpen
+      scopeDraft: scopeDraft,
+      scopeInputError: scopeInputError,
+      historyDepth: navigationHistory.length,
+      folderPickerOpen: folderPickerOpen,
+      folderPickerPath: folderPickerPath,
+      folderPickerState: folderPickerState,
+      folderPickerCount: folderPickerEntries.length,
+      scanActionCount: (scanButton.visible ? 1 : 0) + (firstUseSurface.visible ? 1 : 0),
+      scanIndicatorRunning: scanRunning,
+      activityIndicatorCount: scanRunning ? 1 : 0
     }
   }
 
@@ -226,6 +349,42 @@ BarWidget {
 
   onVisibleEntriesChanged: {
     if (selectedPath && !entryForPath(selectedPath)) selectedPath = ""
+  }
+
+  onCurrentScopeChanged: {
+    if (!scopeField.activeFocus) scopeDraft = currentScope
+  }
+
+  Process {
+    id: folderListProcess
+    command: []
+    stdout: StdioCollector {
+      id: folderListStdout
+      waitForEnd: true
+    }
+    stderr: StdioCollector {
+      id: folderListStderr
+      waitForEnd: true
+    }
+    onExited: function(exitCode) {
+      if (!root.folderPickerOpen) return
+      var output = String(folderListStdout.text || "")
+      if (exitCode !== 0 && !output) {
+        root.folderPickerState = "failed"
+        root.folderPickerError = String(folderListStderr.text || "Folder browsing failed").trim()
+        return
+      }
+      var result = Model.parseFolderList(output)
+      if (!result.ok) {
+        root.folderPickerState = "failed"
+        root.folderPickerError = result.error
+        return
+      }
+      root.folderPickerPath = result.path
+      root.folderPickerEntries = result.entries
+      root.folderPickerWarning = result.warning
+      root.folderPickerState = result.partial ? "partial" : "ready"
+    }
   }
 
   WidgetButton {
@@ -275,7 +434,8 @@ BarWidget {
     bar: root.bar
     owner: root
     open: root.popupOpen
-    focusTarget: searchField.enabled ? searchField : closeButton
+    focusTarget: root.folderPickerOpen ? folderPickerField
+      : (searchField.enabled ? searchField : scopeField)
     contentWidth: popup.fittedContentWidth(Style.space(520))
     contentHeight: popup.fittedContentHeight(Math.min(panelColumn.implicitHeight, Style.space(640)))
 
@@ -292,7 +452,7 @@ BarWidget {
       Shortcut {
         sequence: "Escape"
         context: Qt.WindowShortcut
-        onActivated: root.close()
+        onActivated: root.folderPickerOpen ? root.closeFolderPicker() : root.close()
       }
 
       Column {
@@ -322,15 +482,6 @@ BarWidget {
               outlineColor: root.stateColor()
             }
 
-            ActivityRing {
-              width: parent.width * 0.72
-              height: width
-              anchors.centerIn: parent
-              running: root.popupOpen && root.scanRunning
-              foreground: root.stateColor()
-              track: Util.alpha(Color.popups.text, 0.12)
-              strokeWidth: Math.max(1, width * 0.075)
-            }
           }
 
           Column {
@@ -443,7 +594,199 @@ BarWidget {
           }
         }
 
+        BorderSurface {
+          visible: root.folderPickerOpen
+          width: parent.width
+          height: Style.space(300)
+          color: Style.normalFillFor(Color.popups.text, Color.accent)
+          borderSpec: Border.controlSpec("normal", Color.popups.text, Color.accent)
+          radius: Style.cornerRadius
+
+          Column {
+            anchors.fill: parent
+            anchors.margins: Style.space(10)
+            spacing: Style.space(8)
+
+            Row {
+              width: parent.width
+
+              Column {
+                width: parent.width - folderPickerCancel.width
+                spacing: Style.space(2)
+
+                Text {
+                  width: parent.width
+                  text: "Choose a folder"
+                  color: Color.popups.text
+                  font.family: Style.font.family
+                  font.pixelSize: Style.font.subtitle
+                  font.bold: true
+                  textFormat: Text.PlainText
+                }
+
+                Text {
+                  width: parent.width
+                  text: "Browse without measuring disk usage, then open the selected scope."
+                  color: Color.muted
+                  font.family: Style.font.family
+                  font.pixelSize: Style.font.caption
+                  elide: Text.ElideRight
+                  textFormat: Text.PlainText
+                }
+              }
+
+              Button {
+                id: folderPickerCancel
+                text: "Cancel"
+                focusable: true
+                onClicked: root.closeFolderPicker()
+              }
+            }
+
+            Row {
+              width: parent.width
+              spacing: Style.space(8)
+
+              Button {
+                iconText: "‹"
+                tooltipText: "Browse parent folder"
+                focusable: true
+                enabled: !folderListProcess.running && root.folderPickerPath !== "/"
+                opacity: enabled ? 1 : 0.35
+                onClicked: root.browseFolder(Model.parentPath(root.folderPickerPath))
+              }
+
+              TextField {
+                id: folderPickerField
+                width: parent.width - parent.children[0].width - useFolderButton.width - Style.space(16)
+                text: root.folderPickerPath
+                selectByMouse: true
+                enabled: !folderListProcess.running
+                Accessible.name: "Folder browser path"
+                onAccepted: root.browseFolder(text)
+
+                TapHandler { onTapped: folderPickerField.forceActiveFocus() }
+              }
+
+              Button {
+                id: useFolderButton
+                text: "Use folder"
+                iconText: "→"
+                bordered: true
+                selected: true
+                focusable: true
+                enabled: root.folderPickerState === "ready" || root.folderPickerState === "partial"
+                opacity: enabled ? 1 : 0.35
+                onClicked: root.acceptFolderPicker()
+              }
+            }
+
+            Text {
+              visible: root.folderPickerState === "loading" || root.folderPickerError !== "" || root.folderPickerWarning !== ""
+              width: parent.width
+              text: root.folderPickerState === "loading" ? "Opening folder…"
+                : (root.folderPickerError || root.folderPickerWarning)
+              color: root.folderPickerError ? Color.urgent : Color.muted
+              font.family: Style.font.family
+              font.pixelSize: Style.font.caption
+              elide: Text.ElideMiddle
+              textFormat: Text.PlainText
+            }
+
+            Flickable {
+              width: parent.width
+              height: parent.height - y
+              contentWidth: width
+              contentHeight: folderPickerColumn.implicitHeight
+              clip: true
+              boundsBehavior: Flickable.StopAtBounds
+              interactive: contentHeight > height
+              QQC.ScrollBar.vertical: QQC.ScrollBar { policy: QQC.ScrollBar.AsNeeded }
+
+              Column {
+                id: folderPickerColumn
+                width: parent.width
+                spacing: Style.space(2)
+
+                Repeater {
+                  model: root.folderPickerEntries.slice(0, 80)
+
+                  delegate: BorderSurface {
+                    required property var modelData
+                    width: folderPickerColumn.width
+                    height: Style.space(32)
+                    color: folderHover.hovered
+                      ? Style.hoverFillFor(Color.popups.text, Color.accent) : "transparent"
+                    borderSpec: Border.none()
+                    radius: Style.cornerRadius
+
+                    Row {
+                      anchors.left: parent.left
+                      anchors.right: parent.right
+                      anchors.verticalCenter: parent.verticalCenter
+                      anchors.margins: Style.space(9)
+                      spacing: Style.space(8)
+
+                      Text {
+                        text: "▸"
+                        color: Color.accent
+                        font.family: Style.font.family
+                        font.pixelSize: Style.font.body
+                        textFormat: Text.PlainText
+                      }
+
+                      Text {
+                        width: parent.width - parent.children[0].width - Style.space(8)
+                        text: Model.safeLabel(modelData.name)
+                        color: Color.popups.text
+                        font.family: Style.font.family
+                        font.pixelSize: Style.font.bodySmall
+                        elide: Text.ElideMiddle
+                        textFormat: Text.PlainText
+                      }
+                    }
+
+                    HoverHandler { id: folderHover }
+                    MouseArea {
+                      anchors.fill: parent
+                      enabled: modelData.actionable && !folderListProcess.running
+                      cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
+                      onClicked: root.browseFolder(modelData.path)
+                    }
+
+                    Accessible.name: "Open folder " + Model.safeLabel(modelData.name)
+                    Accessible.role: Accessible.ListItem
+                  }
+                }
+
+                Text {
+                  visible: root.folderPickerState !== "loading" && root.folderPickerEntries.length === 0
+                  width: parent.width
+                  text: root.folderPickerError ? "This folder could not be opened" : "No subfolders here"
+                  color: Color.muted
+                  font.family: Style.font.family
+                  font.pixelSize: Style.font.bodySmall
+                  horizontalAlignment: Text.AlignHCenter
+                  textFormat: Text.PlainText
+                }
+
+                Text {
+                  visible: root.folderPickerEntries.length > 80
+                  width: parent.width
+                  text: "Showing the first 80 folders"
+                  color: Color.muted
+                  font.family: Style.font.family
+                  font.pixelSize: Style.font.caption
+                  horizontalAlignment: Text.AlignHCenter
+                  textFormat: Text.PlainText
+                }
+              }
+            }
+          }
+        }
+
         Column {
+          visible: !root.folderPickerOpen
           width: parent.width
           spacing: Style.space(8)
 
@@ -454,47 +797,66 @@ BarWidget {
             Button {
               id: parentButton
               iconText: "‹"
-              tooltipText: "Scan parent directory"
+              tooltipText: "Go back without rescanning"
               focusable: true
-              enabled: !root.scanRunning && root.currentScope !== "/"
+              enabled: !root.scanRunning && root.navigationHistory.length > 0
               opacity: enabled ? 1 : 0.35
-              onClicked: root.requestScan(root.parentPath(root.currentScope))
+              onClicked: root.goBack()
             }
 
-            BorderSurface {
-              width: parent.width - parentButton.width - scanButton.width - Style.space(16)
+            TextField {
+              id: scopeField
+              width: parent.width - parentButton.width - folderPickerButton.width - Style.space(16)
+                - (scanButton.visible ? scanButton.width + Style.space(8) : 0)
               height: scanButton.height
-              color: Style.normalFillFor(Color.popups.text, Color.accent)
-              borderSpec: Border.controlSpec("normal", Color.popups.text, Color.accent)
-              radius: Style.cornerRadius
-
-              Text {
-                anchors.left: parent.left
-                anchors.right: parent.right
-                anchors.verticalCenter: parent.verticalCenter
-                anchors.margins: Style.spacing.controlPaddingX
-                text: Model.safeLabel(root.currentScope)
-                color: Color.popups.text
-                font.family: Style.font.family
-                font.pixelSize: Style.font.bodySmall
-                elide: Text.ElideMiddle
-                textFormat: Text.PlainText
+              text: root.scopeDraft
+              placeholderText: "/home/you or ~/Projects"
+              selectByMouse: true
+              enabled: !root.scanRunning
+              Accessible.name: "Folder path to inspect"
+              onTextEdited: {
+                root.scopeDraft = text
+                root.scopeInputError = ""
               }
+              onAccepted: root.submitScopeInput()
+
+              TapHandler { onTapped: scopeField.forceActiveFocus() }
+            }
+
+            Button {
+              id: folderPickerButton
+              iconText: "…"
+              tooltipText: "Choose a folder"
+              focusable: true
+              enabled: !root.scanRunning
+              opacity: enabled ? 1 : 0.35
+              Accessible.name: "Choose a folder"
+              onClicked: root.chooseFolder()
             }
 
             Button {
               id: scanButton
+              visible: root.scanRunning || (root.diskService && root.diskService.lastScanPath !== "")
               text: root.scanRunning
                 ? (root.diskService && root.diskService.scanState === "cancelling" ? "Cancelling…" : "Cancel")
-                : (root.diskService && root.diskService.lastScanPath ? "Refresh" : "Scan Home")
-              iconText: "↻"
-              iconSpinning: root.scanRunning
+                : (root.scopeDraftChanged ? "Open" : "Refresh")
+              iconText: root.scanRunning ? "■" : (root.scopeDraftChanged ? "→" : "↻")
               bordered: true
               focusable: true
               active: root.scanRunning
               onClicked: root.scanOrCancel()
             }
 
+          }
+
+          Text {
+            visible: root.scopeInputError !== ""
+            width: parent.width
+            text: root.scopeInputError
+            color: Color.urgent
+            font.family: Style.font.family
+            font.pixelSize: Style.font.caption
+            textFormat: Text.PlainText
           }
 
           Row {
@@ -549,7 +911,7 @@ BarWidget {
 
             Button {
               text: root.includeHidden ? "Hidden shown" : "Hidden off"
-              selected: root.includeHidden
+              selected: !root.includeHidden
               focusable: true
               onClicked: root.includeHidden = !root.includeHidden
             }
@@ -571,7 +933,8 @@ BarWidget {
         }
 
         BorderSurface {
-          visible: !root.diskService || root.diskService.scanState === "idle"
+          id: firstUseSurface
+          visible: !root.folderPickerOpen && (!root.diskService || root.diskService.scanState === "idle")
           width: parent.width
           implicitHeight: firstUseColumn.implicitHeight + Style.space(34)
           color: Util.alpha(Color.accent, 0.08)
@@ -597,7 +960,7 @@ BarWidget {
 
             Text {
               width: parent.width
-              text: "Disk Lens scans only when you ask. Start with Home, then drill into the largest directory."
+              text: "Type a folder path or choose one, then follow its largest branch. Disk Lens scans only when you ask."
               color: Color.muted
               font.family: Style.font.family
               font.pixelSize: Style.font.body
@@ -608,72 +971,56 @@ BarWidget {
 
             Button {
               anchors.horizontalCenter: parent.horizontalCenter
-              text: "Scan Home"
+              text: root.scopeDraftPath === Quickshell.env("HOME") ? "Scan Home" : "Scan folder"
               iconText: "↻"
               bordered: true
               focusable: true
-              onClicked: root.requestScan(Quickshell.env("HOME"))
+              onClicked: root.submitScopeInput()
             }
           }
         }
 
         BorderSurface {
-          visible: root.diskService && root.scanRunning
+          visible: !root.folderPickerOpen && root.diskService && root.scanRunning
           width: parent.width
           implicitHeight: scanProgressRow.implicitHeight + Style.space(24)
           color: Util.alpha(Color.accent, 0.08)
           borderSpec: Border.controlSpec("normal", Color.popups.text, Color.accent)
           radius: Style.cornerRadius
 
-          Row {
+          Column {
             id: scanProgressRow
             anchors.left: parent.left
             anchors.right: parent.right
             anchors.verticalCenter: parent.verticalCenter
             anchors.margins: Style.space(12)
-            spacing: Style.space(10)
+            spacing: Style.space(2)
 
-            ActivityRing {
-              id: scanProgressIndicator
-              width: Style.space(28)
-              height: width
-              anchors.verticalCenter: parent.verticalCenter
-              running: root.popupOpen && root.scanRunning
-              foreground: Color.accent
-              track: Util.alpha(Color.popups.text, 0.14)
-              strokeWidth: Math.max(2, width * 0.09)
+            Text {
+              width: parent.width
+              text: root.diskService && root.diskService.scanState === "cancelling"
+                ? "Stopping the scan safely…" : "Measuring allocated space…"
+              color: Color.popups.text
+              font.family: Style.font.family
+              font.pixelSize: Style.font.body
+              font.bold: true
+              textFormat: Text.PlainText
             }
 
-            Column {
-              width: parent.width - scanProgressIndicator.width - Style.space(10)
-              spacing: Style.space(2)
-
-              Text {
-                width: parent.width
-                text: root.diskService && root.diskService.scanState === "cancelling"
-                  ? "Stopping the scan safely…" : "Measuring allocated space…"
-                color: Color.popups.text
-                font.family: Style.font.family
-                font.pixelSize: Style.font.body
-                font.bold: true
-                textFormat: Text.PlainText
-              }
-
-              Text {
-                width: parent.width
-                text: "The last complete result stays intact until this scan finishes."
-                color: Color.muted
-                font.family: Style.font.family
-                font.pixelSize: Style.font.caption
-                elide: Text.ElideRight
-                textFormat: Text.PlainText
-              }
+            Text {
+              width: parent.width
+              text: "The last complete result stays intact until this scan finishes."
+              color: Color.muted
+              font.family: Style.font.family
+              font.pixelSize: Style.font.caption
+              elide: Text.ElideRight
+              textFormat: Text.PlainText
             }
           }
         }
 
         BorderSurface {
-          visible: root.diskService && root.diskService.scanState === "failed"
+          visible: !root.folderPickerOpen && root.diskService && root.diskService.scanState === "failed"
           width: parent.width
           implicitHeight: scanErrorColumn.implicitHeight + Style.space(24)
           color: Util.alpha(Color.urgent, 0.09)
@@ -709,7 +1056,7 @@ BarWidget {
         }
 
         BorderSurface {
-          visible: root.diskService && root.diskService.scanState === "cancelled"
+          visible: !root.folderPickerOpen && root.diskService && root.diskService.scanState === "cancelled"
           width: parent.width
           implicitHeight: cancelledRow.implicitHeight + Style.space(24)
           color: Util.alpha(Color.accent, 0.08)
@@ -762,7 +1109,7 @@ BarWidget {
         }
 
         BorderSurface {
-          visible: root.diskService && root.diskService.scanState === "partial"
+          visible: !root.folderPickerOpen && root.diskService && root.diskService.scanState === "partial"
           width: parent.width
           implicitHeight: partialRow.implicitHeight + Style.space(16)
           color: Util.alpha(Color.accent, 0.08)
@@ -802,7 +1149,7 @@ BarWidget {
         }
 
         BorderSurface {
-          visible: root.diskService
+          visible: !root.folderPickerOpen && root.diskService
             && (root.diskService.scanState === "ready" || root.diskService.scanState === "partial")
             && root.diskService.entries.length === 0
           width: parent.width
@@ -842,7 +1189,7 @@ BarWidget {
         }
 
         Column {
-          visible: root.diskService && root.diskService.entries.length > 0
+          visible: !root.folderPickerOpen && root.diskService && root.diskService.entries.length > 0
           width: parent.width
           spacing: Style.space(8)
 
@@ -1085,7 +1432,7 @@ BarWidget {
         }
 
         BorderSurface {
-          visible: root.selectedEntry !== null
+          visible: !root.folderPickerOpen && root.selectedEntry !== null
           width: parent.width
           implicitHeight: inspectorColumn.implicitHeight + Style.space(18)
           color: Style.selectedFillFor(Color.popups.text, Color.accent)
@@ -1192,6 +1539,8 @@ BarWidget {
     function close(): string { root.close(); return "closed" }
     function toggle(): string { root.toggle(); return root.opened ? "opened" : "closed" }
     function scan(path: string): string { return root.requestScan(path) ? "started" : "rejected" }
+    function navigate(path: string): string { return root.navigateTo(path) ? "opened" : "rejected" }
+    function back(): string { return root.goBack() ? "opened" : "unavailable" }
     function cancel(): string { return root.diskService && root.diskService.cancelScan() ? "cancelling" : "idle" }
     function setFilter(query: string): string { root.query = query; return String(root.visibleEntries.length) }
     function setView(mode: string): string {

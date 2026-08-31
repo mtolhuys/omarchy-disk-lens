@@ -7,6 +7,8 @@ readonly project_root
 
 "$project_root/tests/manifest.test.sh"
 "$project_root/tests/scan.test.sh"
+"$project_root/tests/folders.test.sh"
+"$project_root/tests/scanner-efficiency.test.sh"
 node "$project_root/tests/model.test.js"
 "$project_root/tests/english.test.sh"
 
@@ -15,13 +17,21 @@ if command -v shellcheck >/dev/null; then
     "$project_root/bin/dev-sync" \
     "$project_root/bin/test" \
     "$project_root/scripts/build-showcase" \
+    "$project_root/scripts/disk-lens-folders" \
     "$project_root/scripts/disk-lens-scan" \
     "$project_root/tests/english.test.sh" \
     "$project_root/tests/manifest.test.sh" \
     "$project_root/tests/scan.test.sh" \
+    "$project_root/tests/folders.test.sh" \
+    "$project_root/tests/scanner-efficiency.test.sh" \
     "$project_root/tests/lab/acceptance.sh" \
     "$project_root/tests/lab/public-install.sh" \
-    "$project_root/tests/fixtures/slow-bin/du"
+    "$project_root/tests/fixtures/slow-bin/find" \
+    "$project_root/tests/fixtures/slow-bin/du" \
+    "$project_root/tests/fixtures/counting-bin/base64" \
+    "$project_root/tests/fixtures/counting-bin/iconv" \
+    "$project_root/tests/fixtures/counting-bin/jq" \
+    "$project_root/tests/fixtures/counting-bin/stat"
   printf 'ok - ShellCheck\n'
 fi
 

@@ -5,9 +5,13 @@ set -uo pipefail
 readonly protocol=1
 readonly max_entries=5000
 readonly max_emitted_warnings=20
+readonly metadata_batch_size=64
 scan_path=""
 work_dir=""
 du_pid=""
+declare -a entry_paths=()
+declare -a entry_sizes=()
+declare -a json_batch=()
 
 emit_error() {
   local code=$1
@@ -41,6 +45,60 @@ usage() {
   printf 'Usage: disk-lens-scan --path ABSOLUTE_DIRECTORY\n' >&2
 }
 
+flush_json_batch() {
+  (( ${#json_batch[@]} > 0 )) || return 0
+
+  jq -cn \
+    --argjson protocol "$protocol" \
+    --args \
+    '$ARGS.positional as $values
+      | range(0; $values | length; 5) as $index
+      | ($values[$index]) as $path
+      | {
+          protocol: $protocol,
+          type: "entry",
+          path: $path,
+          pathB64: ($path | @base64),
+          name: $values[$index + 1],
+          kind: $values[$index + 2],
+          allocatedBytes: ($values[$index + 3] | tonumber),
+          mtime: ($values[$index + 4] | tonumber),
+          validUtf8: true,
+          actionable: true
+        }' \
+    -- "${json_batch[@]}"
+  json_batch=()
+}
+
+emit_invalid_utf8_entry() {
+  local entry_path=$1
+  local allocated_bytes=$2
+  local entry_kind=$3
+  local entry_mtime=$4
+  local entry_b64
+
+  entry_b64=$(printf '%s' "$entry_path" | base64 -w0)
+  jq -cn \
+    --argjson protocol "$protocol" \
+    --arg path "$entry_path" \
+    --arg pathB64 "$entry_b64" \
+    --arg kind "$entry_kind" \
+    --argjson allocatedBytes "$allocated_bytes" \
+    --argjson mtime "$entry_mtime" \
+    '{
+      protocol: $protocol,
+      type: "entry",
+      path: $path,
+      pathB64: $pathB64,
+      name: "[name is not valid UTF-8]",
+      kind: $kind,
+      allocatedBytes: $allocatedBytes,
+      mtime: $mtime,
+      validUtf8: false,
+      actionable: false
+    }'
+}
+
 if (( EUID == 0 )); then
   emit_error "root-refused" "Disk Lens scans must run as the desktop user."
   exit 77
@@ -66,6 +124,11 @@ scan_path=$(realpath -e -- "$2") || {
   emit_error "unresolvable-path" "The selected scan path could not be resolved."
   exit 66
 }
+
+if ! printf '%s' "$scan_path" | iconv -f UTF-8 -t UTF-8 >/dev/null 2>&1; then
+  emit_error "invalid-path-encoding" "The selected scan path is not valid UTF-8."
+  exit 66
+fi
 
 work_dir=$(mktemp -d -t omarchy-disk-lens.XXXXXX) || {
   emit_error "temporary-storage" "Disk Lens could not create temporary scan storage."
@@ -96,6 +159,11 @@ warning_count=0
 emitted_warning_count=0
 total_bytes=0
 truncated=false
+records_are_utf8=true
+
+if ! iconv -f UTF-8 -t UTF-8 "$work_dir/records" >/dev/null 2>&1; then
+  records_are_utf8=false
+fi
 
 while IFS= read -r -d '' record; do
   [[ $record == *$'\t'* ]] || continue
@@ -113,51 +181,69 @@ while IFS= read -r -d '' record; do
     continue
   fi
 
-  if [[ -L $entry_path ]]; then
-    entry_kind="symlink"
-  elif [[ -d $entry_path ]]; then
-    entry_kind="directory"
-  elif [[ -f $entry_path ]]; then
-    entry_kind="file"
-  else
-    entry_kind="other"
-  fi
-
-  entry_mtime=$(stat -c '%Y' -- "$entry_path" 2>/dev/null || printf '0')
-  entry_b64=$(printf '%s' "$entry_path" | base64 -w0)
-  entry_name=${entry_path##*/}
-  valid_utf8=true
-  actionable=true
-  if ! printf '%s' "$entry_path" | iconv -f UTF-8 -t UTF-8 >/dev/null 2>&1; then
-    valid_utf8=false
-    actionable=false
-    entry_name="[name is not valid UTF-8]"
-  fi
-
-  jq -cn \
-    --argjson protocol "$protocol" \
-    --arg path "$entry_path" \
-    --arg pathB64 "$entry_b64" \
-    --arg name "$entry_name" \
-    --arg kind "$entry_kind" \
-    --argjson allocatedBytes "$allocated_bytes" \
-    --argjson mtime "$entry_mtime" \
-    --argjson validUtf8 "$valid_utf8" \
-    --argjson actionable "$actionable" \
-    '{
-      protocol: $protocol,
-      type: "entry",
-      path: $path,
-      pathB64: $pathB64,
-      name: $name,
-      kind: $kind,
-      allocatedBytes: $allocatedBytes,
-      mtime: $mtime,
-      validUtf8: $validUtf8,
-      actionable: $actionable
-    }'
+  entry_paths+=("$entry_path")
+  entry_sizes+=("$allocated_bytes")
   (( entry_count += 1 ))
 done <"$work_dir/records"
+
+for (( batch_start = 0; batch_start < entry_count; batch_start += metadata_batch_size )); do
+  batch_count=$((entry_count - batch_start))
+  if (( batch_count > metadata_batch_size )); then
+    batch_count=$metadata_batch_size
+  fi
+
+  metadata_file="$work_dir/metadata-$batch_start"
+  batch_paths=("${entry_paths[@]:batch_start:batch_count}")
+  stat --printf '%n\0%F\0%Y\0' -- "${batch_paths[@]}" >"$metadata_file" 2>/dev/null || true
+
+  declare -a metadata_paths=()
+  declare -a metadata_types=()
+  declare -a metadata_mtimes=()
+  while IFS= read -r -d '' metadata_path \
+      && IFS= read -r -d '' metadata_type \
+      && IFS= read -r -d '' metadata_mtime; do
+    metadata_paths+=("$metadata_path")
+    metadata_types+=("$metadata_type")
+    metadata_mtimes+=("$metadata_mtime")
+  done <"$metadata_file"
+
+  for (( batch_index = 0; batch_index < batch_count; batch_index += 1 )); do
+    entry_index=$((batch_start + batch_index))
+    entry_path=${entry_paths[$entry_index]}
+    allocated_bytes=${entry_sizes[$entry_index]}
+    entry_kind="other"
+    entry_mtime=0
+
+    for (( metadata_index = 0; metadata_index < ${#metadata_paths[@]}; metadata_index += 1 )); do
+      [[ ${metadata_paths[$metadata_index]} == "$entry_path" ]] || continue
+      entry_mtime=${metadata_mtimes[$metadata_index]}
+      case ${metadata_types[$metadata_index]} in
+        directory) entry_kind="directory" ;;
+        "regular file") entry_kind="file" ;;
+        "symbolic link") entry_kind="symlink" ;;
+      esac
+      break
+    done
+
+    valid_utf8=$records_are_utf8
+    if [[ $records_are_utf8 == false ]] \
+        && printf '%s' "$entry_path" | iconv -f UTF-8 -t UTF-8 >/dev/null 2>&1; then
+      valid_utf8=true
+    fi
+
+    if [[ $valid_utf8 == true ]]; then
+      entry_name=${entry_path##*/}
+      json_batch+=("$entry_path" "$entry_name" "$entry_kind" "$allocated_bytes" "$entry_mtime")
+      if (( ${#json_batch[@]} >= metadata_batch_size * 5 )); then
+        flush_json_batch
+      fi
+    else
+      flush_json_batch
+      emit_invalid_utf8_entry "$entry_path" "$allocated_bytes" "$entry_kind" "$entry_mtime"
+    fi
+  done
+done
+flush_json_batch
 
 warning_slots=$max_emitted_warnings
 if [[ $truncated == true ]]; then

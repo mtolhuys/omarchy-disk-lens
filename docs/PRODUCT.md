@@ -4,17 +4,18 @@
 
 Omarchy Disk Lens makes Home-filesystem pressure understandable within seconds and provides a clear, fully native route from “the disk is filling up” to “this directory deserves investigation.”
 
-## Implemented `0.4.1` journey
+## Implemented `0.5.0` development journey
 
 1. The bar shows used capacity for the filesystem backing Home as a compact proportional pie gauge.
 2. Clicking the widget opens a theme-native panel without starting a recursive scan.
 3. Capacity is immediately available when `findmnt` succeeds; scan freshness is independently labelled.
-4. The user explicitly starts or refreshes an immediate-child scan; a bounded activity ring and status text stay visible until that job ends.
-5. A squarified treemap and ranked list reveal the largest entries from the same canonical model.
-6. Search and type, hidden-entry, minimum-size, and modification-age filters narrow only the visible projection.
-7. Selection exposes exact allocated size, type, modification time, and safe actions.
-8. An actionable directory can be drilled into, opened in the file manager, or sent to the configured Omarchy agent with a read-only explanation request.
-9. The agent prompt includes a control-free, length-bounded path value and measured allocation after a fixed read-only trust boundary, then asks why the directory is large, whether it is necessary, what may be reclaimable, and whether deletion is safe.
+4. The user types an absolute or Home-relative path, or chooses one through the inline folder browser; neither action measures disk usage until the user opens that scope.
+5. The user explicitly starts or refreshes an immediate-child scan; one bounded bar activity ring and status text stay visible until that job ends.
+6. A squarified treemap and ranked list reveal the largest entries from the same canonical model; hidden entries are included by default.
+7. Search and type, hidden-entry, minimum-size, and modification-age filters narrow only the visible projection.
+8. Selection exposes exact allocated size, type, modification time, and safe actions.
+9. An actionable directory can be drilled into, opened in the file manager, or sent to the configured Omarchy agent with a read-only explanation request. Back restores a bounded in-memory result instead of rescanning when that scope remains cached.
+10. The agent prompt includes a control-free, length-bounded path value and measured allocation after a fixed read-only trust boundary, then asks why the directory is large, whether it is necessary, what may be reclaimable, and whether deletion is safe.
 
 ## Implemented capabilities
 
@@ -27,14 +28,15 @@ Omarchy Disk Lens makes Home-filesystem pressure understandable within seconds a
 ### Analysis panel
 
 - One explicit, cancellable scan at a time.
-- Purposeful live scan activity without replacing the last completed result.
+- One purposeful live activity ring in the bar without replacing the last completed result.
 - Immediate children and total allocated bytes for one absolute, same-filesystem scope.
-- Parent navigation and directory drill-down.
+- Editable absolute or `~/` scope input and an inline shallow folder browser.
+- Directory drill-down plus bounded history and in-memory result restoration for instant Back navigation.
 - Ranked list and proportional treemap with shared selection.
-- Name, minimum size, file/directory, hidden-entry, and recent-modification filters.
+- Name, minimum size, file/directory, hidden-entry, and recent-modification filters, with hidden entries shown by default.
 - Freshness, filtered totals, warning count, and partial-result labelling.
 - First-use, scanning, ready, partial, cancelled, failed, empty, and filtered-empty states.
-- Safe native actions: parent, drill in, open in file manager, refresh, cancel, clear filters, and Ask Omarchy.
+- Safe native actions: Back, choose folder, drill in, open in file manager, refresh, cancel, clear filters, and Ask Omarchy.
 
 ### Omarchy agent guidance
 
@@ -47,21 +49,21 @@ Omarchy Disk Lens makes Home-filesystem pressure understandable within seconds a
 
 - **Beautiful:** restrained theme-native surfaces, strong hierarchy, balanced density, semantic color, and a useful rather than decorative treemap.
 - **Useful:** exact values remain reachable through the list and inspector.
-- **Responsive by design:** panel opening and capacity never wait for a traversal; quantitative budgets remain release work.
+- **Responsive by design:** panel opening and capacity never wait for a traversal; the recursive scan uses one `du` walk and bounded metadata/JSON batches, while the folder browser performs only a shallow directory listing.
 - **Honest:** filesystem capacity, directory allocation, filtered totals, incomplete traversal, and Btrfs uncertainty remain distinct.
 - **Recoverable:** cancellation preserves the last completed result and every failure state names a next action.
 - **Self-contained:** the full visual analysis flow needs no additional graphical package.
 - **Private by default:** capacity and directory analysis stay local. The explicit agent hand-off delegates path and size data to the user's configured agent, whose provider and network behavior are outside Disk Lens.
 
-## Non-goals for `0.4.1`
+## Non-goals for `0.5.0`
 
 - Automatic cleanup, deletion, trash management, bulk actions, or scripted recipes.
 - Root scanning, a privileged GUI, or privilege handling inside Disk Lens.
-- Continuous recursive indexing, filesystem watching, or persistent scan caches.
+- Continuous recursive indexing, filesystem watching, or persistent scan caches. The bounded navigation cache exists only for the lifetime of the loaded service.
 - A complete explanation of Btrfs snapshots, reserved space, open-deleted files, sparse files, reflinks, shared extents, or compression.
 - Remote, cloud, and network-share analytics or telemetry.
 - Sandboxing, selecting, authenticating, or configuring the user's coding agent.
 
 ## Milestone success criterion
 
-The development milestone succeeds when a user can identify a dominant synthetic directory, narrow the view, ask the configured Omarchy agent about it through a verified non-destructive prompt, and drill into that exact scope; the same disposable-guest flow must remain understandable when a scan is cancelled or a directory is unreadable. Public-release criteria remain in [`RELEASE.md`](RELEASE.md).
+The development milestone succeeds when a user can type or browse to a synthetic scope, identify a dominant directory with hidden entries present, drill into it, return through the visible Back control without a new scan, narrow the view, and ask the configured Omarchy agent about it through a verified non-destructive prompt; the same disposable-guest flow must remain understandable when a scan is cancelled or a directory is unreadable. Public-release criteria remain in [`RELEASE.md`](RELEASE.md).
