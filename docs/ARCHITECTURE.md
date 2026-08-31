@@ -59,7 +59,7 @@ The browser stays inside the Omarchy panel. A native `QtQuick.Dialogs`/GTK folde
 
 One active in-memory entry array drives both projections. Filters are pure projections over name, kind, hidden status, minimum allocated bytes, and maximum modification age. Hidden entries are included by default. Filtered bytes are labelled independently from scanned totals. Treemap geometry is bounded to the 48 largest visible entries; the ranked view renders at most 80 and directs the user to filters for further narrowing.
 
-Drilling into an actionable directory pushes the prior scope into a 16-step widget history and starts a new immediate-child scan only when that target has no cache entry. The service retains at most eight completed scopes and 12,000 total entries, with the Home result retained when it fits alongside the active result. Back promotes the cached snapshot atomically and preserves its original timestamp; explicit Refresh always starts a new scan. Version `0.5.0` does not persist scopes or results, so a shell reload returns to Home and first-use state.
+Drilling into an actionable directory pushes the prior scope into a 16-step widget history and starts a new immediate-child scan only when that target has no cache entry. The service retains at most eight completed scopes and 12,000 total entries, with the Home result retained when it fits alongside the active result. Back promotes the cached snapshot atomically and preserves its original timestamp; explicit Refresh always starts a new scan. Version `0.5.1` does not persist scopes or results, so a shell reload returns to Home and first-use state.
 
 `src/ActivityRing.qml` paints the single theme-derived scan ring around the bar gauge, exists visually only while its `running` property is true, and exposes progress semantics. Panel status and Cancel remain literal and static, so scan state stays available when motion cannot be perceived.
 
@@ -77,7 +77,7 @@ After success, the service clears its navigation cache, refreshes capacity, and 
 
 ## Btrfs accounting
 
-Filesystem free space and per-path allocation answer different questions. Snapshots, compression, and shared extents can explain a gap. Version `0.5.0` does not calculate exclusive/shared extents, snapshot ownership, or reclaimable bytes.
+Filesystem free space and per-path allocation answer different questions. Snapshots, compression, and shared extents can explain a gap. Version `0.5.1` does not calculate exclusive/shared extents, snapshot ownership, or reclaimable bytes.
 
 ## Lifecycle and development snapshots
 

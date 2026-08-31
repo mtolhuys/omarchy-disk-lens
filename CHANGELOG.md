@@ -2,6 +2,13 @@
 
 All notable changes to Omarchy Disk Lens are documented here. The format follows Keep a Changelog and the project uses Semantic Versioning.
 
+## 0.5.1 — 2026-08-31
+
+### Changed
+
+- Removed the redundant panel-header close button. Clicking the active Disk Lens bar widget now provides the single visible toggle route, while Escape and outside-click dismissal remain available.
+- Bumped the manifest and loaded service/widget identities for the `0.5.1` release.
+
 ## 0.5.0 — 2026-08-31
 
 ### Added

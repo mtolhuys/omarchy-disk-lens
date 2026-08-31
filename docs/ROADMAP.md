@@ -33,4 +33,4 @@ Still required before 1.0: a reproducible distribution artifact and SHA-256, cle
 - Purpose-built native views for package-owned or unpackaged files.
 - Permanent deletion, empty-Trash controls, or bulk cleanup without a separately proven recovery and safety model.
 
-These are not version `0.5.0` promises.
+These are not version `0.5.1` promises.

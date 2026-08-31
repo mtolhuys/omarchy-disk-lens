@@ -11,7 +11,7 @@ BarWidget {
 
   moduleName: "io.github.mtolhuys.disk-lens"
 
-  readonly property string buildIdentity: "disk-lens-widget-v0500"
+  readonly property string buildIdentity: "disk-lens-widget-v0501"
   readonly property var diskService: bar && bar.shell
     ? bar.shell.serviceFor("io.github.mtolhuys.disk-lens") : null
   readonly property var capacity: diskService ? diskService.capacity : Model.parseCapacity("")
@@ -377,11 +377,9 @@ BarWidget {
       folderPickerState: folderPickerState,
       folderPickerCount: folderPickerEntries.length,
       scanActionCount: (scanButton.visible ? 1 : 0) + (firstUseSurface.visible ? 1 : 0),
-      closeButtonWidth: closeButton.width,
-      closeButtonHeight: closeButton.height,
-      closeButtonFocused: closeButton.activeFocus,
+      headerCloseActionPresent: false,
       headerAvailableWidth: panelHeaderRow.width,
-      headerContentWidth: headerGauge.width + headerCopy.width + closeButton.width + panelHeaderRow.spacing * 2,
+      headerContentWidth: headerGauge.width + headerCopy.width + panelHeaderRow.spacing,
       scanIndicatorRunning: scanRunning,
       activityIndicatorCount: scanRunning ? 1 : 0,
       trashState: diskService ? diskService.trashState : "unavailable",
@@ -553,7 +551,7 @@ BarWidget {
 
           Column {
             id: headerCopy
-            width: parent.width - headerGauge.width - closeButton.width - panelHeaderRow.spacing * 2
+            width: parent.width - headerGauge.width - panelHeaderRow.spacing
             anchors.verticalCenter: parent.verticalCenter
             spacing: Style.space(2)
 
@@ -578,21 +576,6 @@ BarWidget {
             }
           }
 
-          Button {
-            id: closeButton
-            width: Style.space(32)
-            height: width
-            anchors.verticalCenter: parent.verticalCenter
-            iconText: "×"
-            iconSize: Style.font.body
-            horizontalPadding: 0
-            verticalPadding: 0
-            tooltipText: "Close Disk Lens"
-            focusable: true
-            Accessible.name: "Close Disk Lens"
-            Accessible.role: Accessible.Button
-            onClicked: root.close()
-          }
         }
 
         BorderSurface {

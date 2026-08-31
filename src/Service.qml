@@ -12,7 +12,7 @@ Item {
   property var barWidgetRegistry: null
   property string omarchyPath: ""
 
-  readonly property string buildIdentity: "disk-lens-service-v0500"
+  readonly property string buildIdentity: "disk-lens-service-v0501"
   readonly property string homePath: Quickshell.env("HOME")
   readonly property string sourceDir: manifest ? String(manifest.__sourceDir || "") : ""
   readonly property string scannerPath: sourceDir ? sourceDir + "/scripts/disk-lens-scan" : ""

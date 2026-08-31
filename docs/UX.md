@@ -14,9 +14,9 @@ Disk Lens feels precise, calm, and tactile: an instrument panel rather than a ge
 
 ## Bar widget and panel
 
-Every bar orientation uses one square slot containing a proportional pie gauge. The percentage is absent from the bar and remains available in the tooltip, accessibility name, and panel. While a scan runs, a thin activity ring orbits the gauge without changing its capacity meaning. Middle-click refreshes capacity; ordinary click opens the host-owned `KeyboardPanel` through the live bar pointer route.
+Every bar orientation uses one square slot containing a proportional pie gauge. The percentage is absent from the bar and remains available in the tooltip, accessibility name, and panel. While a scan runs, a thin activity ring orbits the gauge without changing its capacity meaning. Middle-click refreshes capacity; ordinary click toggles the host-owned `KeyboardPanel` through the live bar pointer route.
 
-The compact panel has five stable zones. Its header ends in one centered 32-pixel square close control; first focus goes to the editable scope on first use or search after results exist, so the close action never becomes an accidental visual tile.
+The compact panel has five stable zones. Its header contains only the gauge, product name, pressure, and scan state. The active bar widget is the single visible panel toggle; Escape and an outside click remain additional dismissal routes. First focus goes to the editable scope on first use or search after results exist.
 
 1. slim header with the same pie gauge, pressure, and scan state;
 2. condensed Home-filesystem capacity rail with exact values;
@@ -62,7 +62,7 @@ Current controls provide case-insensitive name search; files, directories, or al
 
 ## Accessibility boundary
 
-The bar has a semantic button role and descriptive name. Panel controls are keyboard-focusable, the search field is the initial focus target after results exist, Escape closes the inline folder browser before it closes the panel, and list/treemap information is duplicated in exact text and the inspector. The editable scope, inline browser, filtered-list input, and clear action have passed real-session QMP acceptance.
+The bar has a semantic button role and descriptive name. Panel controls are keyboard-focusable, the search field is the initial focus target after results exist, Escape closes the inline folder browser before it closes the panel, and list/treemap information is duplicated in exact text and the inspector. The active bar widget toggles the panel without a duplicate header close control. The editable scope, inline browser, filtered-list input, and clear action have passed real-session QMP acceptance.
 
 Only an active scan uses custom looping motion. The same state is always communicated through literal status text, control labels, and accessibility metadata. Full keyboard traversal, treemap keyboard selection, screen-reader announcements, WCAG contrast, pointer targets, and composed reduced-motion behavior remain public-release gates.
 

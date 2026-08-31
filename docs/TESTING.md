@@ -25,7 +25,7 @@ cd "$OMARCHY_PLUGIN_LAB_ROOT"
 `acceptance.sh` installs through public `make update` inside the guest and proves:
 
 1. interrupted-add recovery, source tests, manifest validation, catalog discovery, registration, and loaded identities;
-2. real bar geometry and QMP pointer routing into the real panel, including square close-control geometry, rendered dismissal, and bar-pointer reopening;
+2. real bar geometry and QMP pointer routing into the real panel, including the absence of a duplicate header close action and two consecutive bar-pointer toggles that close and reopen the panel;
 3. exactly one first-use scan action, hidden entries shown by default, the rendered inline folder browser, Escape recovery, typed scope entry, exact synthetic count and total, and explicit refresh;
 4. treemap selection, rendered Drill in, Back restoring the exact prior timestamp without a scanner process, plus rendered list, search, and clear interaction;
 5. visible **Ask Omarchy** closing the panel and launching an `org.omarchy.agent` terminal with the bounded path value, size, read-only constraint, untrusted-data boundary, and confirmation boundary captured by a guest-only shim, including a scanner-derived newline-injection fixture;
@@ -36,7 +36,7 @@ cd "$OMARCHY_PLUGIN_LAB_ROOT"
 10. a same-path public plugin update replacing both loaded identities;
 11. disable, re-enable, removal, ordinary user-data preservation, retained desktop Trash contents, and clean logs.
 
-`public-install.sh` separately proves that the README's public GitHub URL clones the expected repository commit, passes Omarchy validation, enables and loads both `v0500` entry points, and removes cleanly through the documented plugin id. It must be rerun after the candidate is published; the local development acceptance does not substitute for public-clone evidence.
+`public-install.sh` separately proves that the README's public GitHub URL clones the expected repository commit, passes Omarchy validation, enables and loads both `v0501` entry points, and removes cleanly through the documented plugin id. It must be rerun after the candidate is published; the local development acceptance does not substitute for public-clone evidence.
 
 ## Visual review boundary
 

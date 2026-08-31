@@ -9,7 +9,7 @@ readonly manifest="$project_root/manifest.json"
 jq -e '
   .schemaVersion == 1
   and .id == "io.github.mtolhuys.disk-lens"
-  and .version == "0.5.0"
+  and .version == "0.5.1"
   and (.kinds | sort == ["bar-widget", "service"])
   and .entryPoints.service == "src/Service.qml"
   and .entryPoints.barWidget == "src/BarWidget.qml"
@@ -23,9 +23,16 @@ while IFS= read -r entry_point; do
   [[ -f $project_root/$entry_point ]]
 done < <(jq -r '.entryPoints[]' "$manifest")
 
-rg -F 'disk-lens-service-v0500' "$project_root/src/Service.qml" >/dev/null
-rg -F 'disk-lens-widget-v0500' "$project_root/src/BarWidget.qml" >/dev/null
+rg -F 'disk-lens-service-v0501' "$project_root/src/Service.qml" >/dev/null
+rg -F 'disk-lens-widget-v0501' "$project_root/src/BarWidget.qml" >/dev/null
 [[ -x $project_root/scripts/disk-lens-trash ]]
+
+rg -F 'else root.toggle()' "$project_root/src/BarWidget.qml" >/dev/null
+rg -F 'else root.close()' "$project_root/src/BarWidget.qml" >/dev/null
+if rg -n 'id: closeButton|Close Disk Lens' "$project_root/src/BarWidget.qml"; then
+  echo "panel header must not duplicate the bar toggle's close action" >&2
+  exit 1
+fi
 
 if find "$project_root" -path "$project_root/.git" -prune -o -type l -print -quit | grep -q .; then
   echo "plugin tree contains a symbolic link" >&2
