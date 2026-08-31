@@ -4,7 +4,7 @@
 
 Omarchy Disk Lens makes Home-filesystem pressure understandable within seconds and provides a clear, fully native route from “the disk is filling up” to “this directory deserves investigation.”
 
-## Implemented `0.5.0` development journey
+## Implemented `0.5.0` journey
 
 1. The bar shows used capacity for the filesystem backing Home as a compact proportional pie gauge.
 2. Clicking the widget opens a theme-native panel without starting a recursive scan.

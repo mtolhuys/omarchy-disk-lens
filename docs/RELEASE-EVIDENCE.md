@@ -1,6 +1,6 @@
-# Development milestone evidence
+# Release evidence
 
-This record describes the strongest verified `0.5.0` pre-1.0 development milestone and preserves the public-install boundary of the preceding `0.4.1` release.
+This record describes the strongest verified public `0.5.0` pre-1.0 release milestone.
 
 ## Candidate identity
 
@@ -8,7 +8,7 @@ This record describes the strongest verified `0.5.0` pre-1.0 development milesto
 - Service identity: `disk-lens-service-v0500`
 - Widget identity: `disk-lens-widget-v0500`
 - Accepted repository candidate: `0fd5be3121d77db522294e7264be8de26fbf5b8a`, installed as exact development snapshot `fcf8b5a5370f`
-- Last public clean-clone candidate: `5d84d58563f577136ce9c517979bafbfeb157889` (`0.4.1`)
+- Public clean-clone candidate: `f4563caec6068edcb3919755b22c5d91ea3a9715` (`0.5.0` release preparation)
 - Omarchy base revision: `83881e979b35468c3e7d60b171e319ede61a88fd`
 - Plugin Lab base revision: `259ef26e9909bd74323177d2d29e2007cf8c73db`
 - Omarchy ISO harness revision: `268bac16d351a21d867e37565738f458b11cb06c`
@@ -29,7 +29,7 @@ cd "$OMARCHY_PLUGIN_LAB_ROOT"
 ./bin/lab plugin /absolute/path/to/omarchy-disk-lens/tests/lab/acceptance.sh
 ```
 
-After `0.5.0` is published, its distribution gate additionally requires:
+The distribution gate additionally requires:
 
 ```bash
 ./bin/lab plugin /absolute/path/to/omarchy-disk-lens/tests/lab/public-install.sh
@@ -39,6 +39,7 @@ After `0.5.0` is published, its distribution gate additionally requires:
 
 | Run id | Result | Scope |
 | --- | --- | --- |
+| `20260831-232241` | green | public HTTPS clone of exact `0.5.0` release-preparation commit `f4563ca`, Omarchy validation, enablement, loaded `v0500` identities, documented removal, unload, checkout cleanup, and clean compositor/log state |
 | `20260831-231750` | green | clean repository candidate `0fd5be3`, installed as snapshot `fcf8b5a5370f`: loaded `v0500` identities, exact 32-pixel square close geometry, real pointer dismissal and bar reopening, one first-use scan action, hidden entries shown, inline folder browser, typed scope, explicit refresh, cached Back without a scanner process, selected-folder agent hand-off, exact-target Trash confirmation on Cancel, cancellation without change, unsupported-mount preservation with a visible error, user-home Trash move plus automatic remeasurement, filters, themes, one activity indicator, scan cancellation, hostile paths, partial/long/empty states, same-path update, retained Trash contents, and full lifecycle cleanup |
 | `20260831-230121` | rejected | the initial success fixture attempted desktop Trash from the guest's internal `/tmp` mount; GIO correctly refused that mount, exposing a missing explicit platform-failure assertion. The accepted candidate adds a fixed inline error, proves the item remains intact, and separately proves success from a normal user-home scope |
 | `20260831-224131` | green | clean repository candidate `54973b8`, installed as snapshot `fe65d927d937`: loaded `v0500` identities, exact 32-pixel square close geometry, real pointer dismissal and bar reopening, one first-use scan action, hidden entries shown, inline folder browser, typed scope, explicit refresh, cached Back without a scanner process, agent hand-off, filters, themes, one activity indicator, cancellation, hostile paths, partial/long/empty states, same-path update, and full lifecycle cleanup |
@@ -82,7 +83,7 @@ The README product tour was built twice from the current seven captures. Both bu
 ## Deliberate limitations
 
 - The supported runtime contract is current Omarchy Quattro; no older minimum Omarchy release is claimed.
-- Public clean-clone proof for `0.5.0` cannot exist until the candidate is pushed. The `0.4.1` public proof remains valid historical distribution evidence but does not prove the unpublished version.
+- Public clean-clone proof at `f4563ca` closes the code and distribution boundary for `0.5.0`; the final evidence-only release commit is rechecked at the exact tag commit and recorded by the GitHub release.
 - Marketplace review state is external and is not asserted by this repository evidence record.
 - Automated activation, update, visual, and lifecycle work stays inside disposable guests.
 - The agent prompt is an instruction boundary, not a hard sandbox. Provider, network behavior, approvals, and sandbox policy belong to the configured agent.
@@ -94,4 +95,4 @@ The README product tour was built twice from the current seven captures. Both bu
 
 ## Historical milestones
 
-Versions `0.1.0` through `0.4.1` established the initial native panel, selected-folder agent guidance, compact pie gauge, strict protocol hardening, self-contained product boundary, deterministic media pipeline, and hardened prompt boundary. Their runtime evidence is superseded by the current candidate except where explicitly retained as public distribution proof.
+Versions `0.1.0` through `0.4.1` established the initial native panel, selected-folder agent guidance, compact pie gauge, strict protocol hardening, self-contained product boundary, deterministic media pipeline, and hardened prompt boundary. Their runtime evidence is superseded by the current release except where explicitly retained as historical distribution proof.
