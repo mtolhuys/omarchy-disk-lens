@@ -18,9 +18,9 @@ The GIF presents seven truthful native scenes: one clear starting action, in-pla
 
 ## Current provenance
 
-All seven source captures come from green `0.5.0` Plugin Lab run `20260831-231750`, which exercised clean repository candidate `0fd5be3121d77db522294e7264be8de26fbf5b8a` through installed development snapshot `fcf8b5a5370f`. The synthetic `1280x800` captures cover first use, the inline browser, the single-indicator scan state, hidden-by-default storage visibility, exact-target Trash confirmation, the selected-folder agent action, and filtering.
+All seven source captures come from green `0.5.1` Plugin Lab run `20260831-234322`, which exercised clean repository candidate `671be6091a981f651e6cedd13a77a9000512375a` through installed development snapshot `489839281f1f`. The synthetic `1280x800` captures cover first use without a duplicate header close action, the inline browser, the single-indicator scan state, hidden-by-default storage visibility, exact-target Trash confirmation, the selected-folder agent action, and filtering.
 
-The regenerated showcase is `1000x563`, 184 frames, 3,039,973 bytes, with SHA-256 `1d07822b55bf2ce9b97a3a700c5567b22e4f66d3f2a40998d943211a7fba994b`. The 191,208-byte marketplace preview has SHA-256 `7393c330bf981e9bfcfb6708cb35097dca4229cbcfca7878b65a7351e946bcf3`. Two consecutive deterministic builds produced those exact hashes.
+The regenerated showcase is `1000x563`, 184 frames, 3,039,740 bytes, with SHA-256 `8c7c4e95c82cd59fbcc8e22190d25d912a1d9e682c681eb097611041cb93fa13`. The 190,996-byte marketplace preview has SHA-256 `bdd0b2488c62e48727a9b81fc38774135f762b18f19afb60106fb8f44cb2786a`. Two consecutive deterministic builds produced those exact hashes.
 
 Rebuild both derivatives with:
 
