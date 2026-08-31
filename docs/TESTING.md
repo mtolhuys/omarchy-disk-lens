@@ -38,7 +38,7 @@ cd "$OMARCHY_PLUGIN_LAB_ROOT"
 
 `acceptance.sh` installs through the public `make update` target inside the guest and proves:
 
-1. source tests, manifest validation, plugin registration, and loaded service/widget identities;
+1. recovery from a checkout left by an interrupted add, source tests, manifest validation, bounded catalog discovery, plugin registration, and loaded service/widget identities;
 2. real bar geometry and QMP pointer routing into the real panel;
 3. exact synthetic scan scope, entry count, allocated total, and explicit refresh;
 4. treemap selection plus rendered list/search/clear interaction;

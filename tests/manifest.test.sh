@@ -33,4 +33,12 @@ if rg -n '(^|[^A-Za-z])(sudo|pkexec|eval)([^A-Za-z]|$)|bash[[:space:]]+-c.*selec
   exit 1
 fi
 
+rg -F 'omarchy plugin add "$snapshot_dir" --yes' "$project_root/bin/dev-install" >/dev/null
+rg -F 'wait_for_plugin_state known' "$project_root/bin/dev-install" >/dev/null
+rg -F 'omarchy plugin enable "$plugin_id"' "$project_root/bin/dev-install" >/dev/null
+if rg -F 'omarchy plugin add "$snapshot_dir" --enable' "$project_root/bin/dev-install" >/dev/null; then
+  echo "development installer races add and enable in one command" >&2
+  exit 1
+fi
+
 printf 'ok - manifest, entry points, tree shape, and forbidden primitives\n'

@@ -8,6 +8,7 @@ All notable changes to Omarchy Disk Lens are documented here. The format follows
 
 - Added `make update` and `make install` aliases for the exact-working-tree development installer.
 - The installer now verifies the installed snapshot commit and reads expected runtime identities from the current source tree.
+- Split development add, catalog discovery, and enablement into bounded phases so a slow shell scan or interrupted add is recoverable by rerunning `make update`.
 
 ## 0.2.0 — 2026-08-31
 

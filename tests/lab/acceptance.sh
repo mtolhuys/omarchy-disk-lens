@@ -36,6 +36,10 @@ omarchy_host_test() {
     chmod 000 '/tmp/disk-lens-permission/restricted' && \
     dd if=/dev/zero of='$long_scope/long-path.bin' bs=1M count=1 status=none"
 
+  log "Staging a checkout left behind by an interrupted add"
+  ssh_session "mkdir -p \"\$HOME/.config/omarchy/plugins\" && \
+    rm -rf '$plugin_dir' && git clone -q /tmp/disk-lens-candidate '$plugin_dir'"
+
   ssh_session "cd /tmp/disk-lens-candidate && make update"
 
   wait_for_guest_state "service and widget load with matching candidate identity" 25 ssh_session \

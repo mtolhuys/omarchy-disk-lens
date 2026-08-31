@@ -11,6 +11,7 @@ readonly project_root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
 readonly cache_root="${XDG_CACHE_HOME:-$HOME/.cache}/omarchy-disk-lens"
 readonly snapshot_dir="$cache_root/development-source"
 readonly installed_dir="${XDG_CONFIG_HOME:-$HOME/.config}/omarchy/plugins/$plugin_id"
+readonly shell_config="${XDG_CONFIG_HOME:-$HOME/.config}/omarchy/shell.json"
 
 fail() {
   printf 'dev-install: %s\n' "$*" >&2
@@ -25,6 +26,31 @@ done
 
 identity_from() {
   sed -n 's/^[[:space:]]*readonly property string buildIdentity: "\([^"]*\)".*/\1/p' "$1"
+}
+
+plugin_known() {
+  omarchy plugin list --json | jq -e --arg id "$plugin_id" \
+    'any(.[]; .id == $id)' >/dev/null
+}
+
+wait_for_plugin_state() {
+  local expected="$1"
+  local attempt
+
+  for attempt in {1..200}; do
+    if [[ $expected == known ]] && plugin_known; then
+      return 0
+    fi
+    if [[ $expected == absent ]] && ! plugin_known; then
+      return 0
+    fi
+    if (( attempt % 20 == 0 )); then
+      omarchy-shell shell rescanPlugins >/dev/null || true
+    fi
+    sleep 0.1
+  done
+
+  return 1
 }
 
 readonly expected_service_identity=$(identity_from "$project_root/src/Service.qml")
@@ -72,12 +98,55 @@ fi
 snapshot_commit=$(git -C "$snapshot_dir" rev-parse HEAD)
 snapshot_short_commit=$(git -C "$snapshot_dir" rev-parse --short=12 HEAD)
 
-if omarchy plugin list --json | jq -e --arg id "$plugin_id" 'any(.[]; .id == $id)' >/dev/null; then
+previous_placement=""
+if [[ -f $shell_config ]]; then
+  previous_placement=$(jq -r --arg id "$plugin_id" '
+    first(
+      ["left", "center", "right"][] as $section
+      | (.bar.layout[$section] // [])
+      | to_entries[]
+      | select((if (.value | type) == "object" then .value.id else .value end) == $id)
+      | [$section, (.key | tostring)]
+      | @tsv
+    ) // empty
+  ' "$shell_config")
+fi
+
+if [[ -e $installed_dir || -L $installed_dir ]]; then
   printf 'Replacing the installed Disk Lens development copy...\n'
   omarchy plugin remove "$plugin_id" --yes
 fi
 
-omarchy plugin add "$snapshot_dir" --enable --yes
+omarchy-shell shell rescanPlugins >/dev/null
+wait_for_plugin_state absent \
+  || fail "the removed plugin remained in the Omarchy catalog after rescanning"
+
+# Omarchy's combined add-and-enable path has a short internal discovery window.
+# Keep the phases separate so a busy shell cannot race enablement against its
+# asynchronous manifest scan, and so a checkout left by an interrupted add can
+# be recovered by simply running this command again.
+omarchy plugin add "$snapshot_dir" --yes
+omarchy-shell shell rescanPlugins >/dev/null
+wait_for_plugin_state known \
+  || fail "the installed plugin was not discovered after repeated rescans"
+
+enable_args=()
+if [[ -n $previous_placement ]]; then
+  IFS=$'\t' read -r previous_section previous_index <<<"$previous_placement"
+  enable_args=(--section "$previous_section" --index "$previous_index")
+fi
+omarchy plugin enable "$plugin_id" "${enable_args[@]}"
+
+enabled=false
+for _ in {1..100}; do
+  if omarchy plugin list --json | jq -e --arg id "$plugin_id" \
+      'any(.[]; .id == $id and .enabled == true)' >/dev/null; then
+    enabled=true
+    break
+  fi
+  sleep 0.1
+done
+[[ $enabled == true ]] || fail "the plugin was discovered but did not become enabled"
 
 [[ -d $installed_dir/.git ]] || fail "Omarchy did not create the installed plugin checkout"
 installed_commit=$(git -C "$installed_dir" rev-parse HEAD)
@@ -91,7 +160,7 @@ installed_origin=$(git -C "$installed_dir" remote get-url origin)
   || fail "the installed plugin checkout differs from the current development snapshot"
 
 loaded=false
-for _ in {1..50}; do
+for _ in {1..100}; do
   if omarchy-shell disk-lens-service state 2>/dev/null | jq -e \
       --arg expected "$expected_service_identity" '.buildIdentity == $expected' >/dev/null \
       && omarchy-shell disk-lens state 2>/dev/null | jq -e \
