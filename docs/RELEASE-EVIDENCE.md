@@ -25,12 +25,14 @@ make showcase
 cd "$OMARCHY_PLUGIN_LAB_ROOT"
 ./bin/lab doctor
 ./bin/lab plugin /absolute/path/to/omarchy-disk-lens/tests/lab/acceptance.sh
+./bin/lab plugin /absolute/path/to/omarchy-disk-lens/tests/lab/public-install.sh
 ```
 
 ## Timestamped disposable-guest evidence
 
 | Run id | Result | Scope |
 | --- | --- | --- |
+| `20260831-085831` | green | public GitHub commit `2c1debf`: documented HTTPS clone, Omarchy validation, enablement, exact remote and commit, loaded `v0400` identities, documented removal, unload, checkout cleanup, and clean compositor/log state |
 | `20260831-085530` | green | exact clean publication candidate `d073768`: public `make update` through `bin/dev-sync`, interrupted-add recovery, loaded `v0400` identities, real pointer-opened compact UI, synthetic scanning and filtering, visible activity indicator, agent hand-off, light/dark themes, cancellation, partial/long/empty states, same-path update, disable/re-enable/remove, preserved fixture, and clean teardown |
 | `20260831-084135` | green | preceding native-only runtime candidate `dfabca9`; superseded by the publication-candidate run above |
 
@@ -49,6 +51,7 @@ Run artifacts remain under the Plugin Lab evidence root. Selected synthetic scre
 - Permission denial yielded an explicit usable partial result; long and empty scopes remained distinct and recoverable.
 - Maintained light and dark themes preserved state without compositor errors.
 - A public same-path update replaced both runtime identities. Disable unloaded both entry points, re-enable restored one of each, and removal preserved synthetic files.
+- The documented public GitHub URL cloned the expected shared commit in a fresh guest, passed Omarchy validation, enabled and loaded both entry points, then removed and unloaded cleanly through the documented plugin id.
 - Final compositor configuration and targeted shell logs were clean.
 
 ## Visual and media review
