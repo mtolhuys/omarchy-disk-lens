@@ -137,7 +137,7 @@ scene_svg 3 '#63d8c6' 'READ-ONLY GUIDANCE' 'ASK BEFORE' 'YOU DELETE.' \
 cp "$work_dir/scene-3-base.png" "$work_dir/scene-3.png"
 panel_capture disk-lens-agent.png '520x585+755+28' '+520+12' '#63d8c6' "$work_dir/scene-3.png"
 
-scene_svg 4 '#ff7f91' 'OPTIONAL DEEP DIVE' 'OPEN THE SAME' 'SCOPE IN QDIRSTAT.' \
+scene_svg 4 '#ff7f91' 'OPTIONAL DEEP DIVE' 'GO DEEPER IN' 'QDIRSTAT.' \
   'Disk Lens stays fast and native.' 'QDirStat remains the specialist desktop analyzer.' 'STRUCTURED PATH' 'DESKTOP USER'
 cp "$work_dir/scene-4-base.png" "$work_dir/scene-4.png"
 panel_capture disk-lens-qdirstat.png '1240x760+20+28' '+442+118' '#ff7f91' "$work_dir/scene-4.png"

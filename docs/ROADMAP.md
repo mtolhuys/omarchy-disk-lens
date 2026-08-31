@@ -63,7 +63,7 @@ Still required for a public release:
 - reproducible distribution artifact and SHA-256;
 - clean-clone installation on the declared minimum Omarchy version;
 - quantified performance and accessibility gates;
-- final public screenshots and release notes;
+- final release notes and owner publication approval;
 - owner-authorized push, tag, release, and marketplace submission.
 
 ## Later, only with evidence
