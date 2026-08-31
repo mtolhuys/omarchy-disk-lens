@@ -8,6 +8,7 @@ This record describes the strongest verified `0.4.1` pre-1.0 security-patch mile
 - Service identity: `disk-lens-service-v0401`
 - Widget identity: `disk-lens-widget-v0401`
 - Accepted runtime candidate: `4b1ca629cea916ad8b760a72a8104dfba0c8defa`
+- Public clean-clone candidate: `5d84d58563f577136ce9c517979bafbfeb157889`
 - Omarchy base revision: `83881e979b35468c3e7d60b171e319ede61a88fd`
 - Plugin Lab base revision: `259ef26e9909bd74323177d2d29e2007cf8c73db`
 - Omarchy ISO harness revision: `268bac16d351a21d867e37565738f458b11cb06c`
@@ -33,6 +34,7 @@ cd "$OMARCHY_PLUGIN_LAB_ROOT"
 
 | Run id | Result | Scope |
 | --- | --- | --- |
+| `20260831-145042` | green | public GitHub commit `5d84d58`: documented HTTPS clone, exact remote and commit, Omarchy validation, enablement, loaded `v0401` identities, documented removal, unload, checkout cleanup, and clean compositor/log state |
 | `20260831-144715` | green | exact clean runtime candidate `4b1ca62`: public `make update` through `bin/dev-sync`, loaded `v0401` identities, real pointer-opened compact UI, normal and hostile-path agent hand-offs, light/dark themes, scan states, same-path update, disable/re-enable/remove, preserved fixtures, and clean teardown |
 | `20260831-144243` | green | complete selected Omarchy source suite in a disposable guest; all 207 test files passed, including the maintained default-agent and plugin contracts |
 | `20260831-085831` | green | preceding `0.4.0` public clean-clone proof; retained as historical evidence and superseded for current publication by the required `0.4.1` clean-clone run |
@@ -55,7 +57,7 @@ Run `20260831-144603` stopped during scenario preflight because `OMARCHY_PLUGIN_
 - Permission denial yielded an explicit usable partial result; long and empty scopes remained distinct and recoverable.
 - Maintained light and dark themes preserved state without compositor errors.
 - A public same-path update replaced both runtime identities. Disable unloaded both entry points, re-enable restored one of each, and removal preserved synthetic files.
-- The documented public GitHub URL cloned the expected shared commit in a fresh guest, passed Omarchy validation, enabled and loaded both entry points, then removed and unloaded cleanly through the documented plugin id.
+- The documented public GitHub URL cloned exact shared commit `5d84d58` in a fresh guest, passed Omarchy validation, enabled and loaded both `v0401` entry points, then removed and unloaded cleanly through the documented plugin id.
 - Final compositor configuration and targeted shell logs were clean.
 
 ## Visual and media review
