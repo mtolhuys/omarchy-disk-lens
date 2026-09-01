@@ -18,9 +18,9 @@ The GIF leads with visual analysis, then presents capacity, in-place folder choi
 
 ## Current provenance
 
-Until the `0.5.2` candidate completes its exact-candidate visual run, all seven source captures remain the synthetic `1280x800` images from green `0.5.1` Plugin Lab run `20260831-234322`. The candidate does not claim those historical captures as new runtime evidence; they temporarily preserve truthful first-use, inline-browser, single-indicator, treemap, Trash, agent, and filter compositions while the release media is prepared.
+All seven source captures come from green `0.5.2` Plugin Lab run `20260901-121313`, which exercised clean repository candidate `e563eb4b7bf166e5241996fe0cef4566b283c5d7` through installed development snapshot `1806ccbfec0e`. The synthetic `1280x800` captures cover first use, inline browsing, the single-indicator scan state, hidden-by-default treemap insight, exact-target Trash confirmation, the selected-folder agent action, and filtering. The scenario parks the virtual pointer outside the panel before each publication capture, avoiding accidental hover emphasis or cursor obstruction.
 
-The current `0.5.2` candidate showcase is `1000x563`, 184 frames, 2,745,006 bytes, with SHA-256 `a1f8a43f518f816451004af0b69f11a26ded0da0c883173bb3ae9a1088e6f2fd`. The 194,661-byte visual-insight marketplace preview has SHA-256 `da9087ebf782b371363c90c0926480e41863c3d5312d5e49bac939618a34c164`. Two consecutive deterministic builds produced those exact hashes.
+The `0.5.2` showcase is `1000x563`, 184 frames, 2,707,264 bytes, with SHA-256 `8e1795b72735b02ac9dcd4228321a6db46af4b63378be2c0c8f80d0ba541281d`. The 194,028-byte visual-insight marketplace preview has SHA-256 `8f3f2810c29ba5a3993e4a4403acf340de78b7e33df55aced9f3e5f79c98e4f9`. Two consecutive deterministic builds produced those exact hashes.
 
 Rebuild both derivatives with:
 

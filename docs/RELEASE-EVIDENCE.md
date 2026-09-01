@@ -1,20 +1,20 @@
-# Release evidence
+# Development milestone evidence
 
-This record describes the strongest verified public `0.5.1` pre-1.0 release milestone.
+This record describes the strongest verified `0.5.2` pre-1.0 release candidate and preserves the public-install boundary of the preceding `0.5.1` release.
 
 ## Candidate identity
 
-- Manifest: `io.github.mtolhuys.disk-lens` version `0.5.1`
-- Service identity: `disk-lens-service-v0501`
-- Widget identity: `disk-lens-widget-v0501`
-- Accepted repository candidate: `671be6091a981f651e6cedd13a77a9000512375a`, installed as exact development snapshot `489839281f1f`
-- Public clean-clone candidate: `18577771efa0d6eea26a7a85a00563c06b63525d` (`0.5.1` evidence and media)
+- Manifest: `io.github.mtolhuys.disk-lens` version `0.5.2`
+- Service identity: `disk-lens-service-v0502`
+- Widget identity: `disk-lens-widget-v0502`
+- Accepted repository candidate: `e563eb4b7bf166e5241996fe0cef4566b283c5d7`, installed as exact development snapshot `1806ccbfec0e`
+- Last public tag candidate: `5a3e0e9661107e1d750cf9c54833dcde3ce21922` (`0.5.1`)
 - Omarchy base revision: `83881e979b35468c3e7d60b171e319ede61a88fd`
 - Plugin Lab base revision: `259ef26e9909bd74323177d2d29e2007cf8c73db`
 - Omarchy ISO harness revision: `268bac16d351a21d867e37565738f458b11cb06c`
 - ISO/base identity: `omarchy-2026.08.27-x86_64-local`, verified official ISO checksum, reusable clean base plus a fresh per-run overlay
-- README showcase: `1000x563`, 184 frames, 3,039,740 bytes, SHA-256 `8c7c4e95c82cd59fbcc8e22190d25d912a1d9e682c681eb097611041cb93fa13`
-- Marketplace preview: `1000x563`, 190,996 bytes, SHA-256 `bdd0b2488c62e48727a9b81fc38774135f762b18f19afb60106fb8f44cb2786a`
+- README showcase: `1000x563`, 184 frames, 2,707,264 bytes, SHA-256 `8e1795b72735b02ac9dcd4228321a6db46af4b63378be2c0c8f80d0ba541281d`
+- Marketplace preview: `1000x563`, 194,028 bytes, SHA-256 `8f3f2810c29ba5a3993e4a4403acf340de78b7e33df55aced9f3e5f79c98e4f9`
 
 ## Required commands
 
@@ -39,6 +39,9 @@ The distribution gate additionally requires:
 
 | Run id | Result | Scope |
 | --- | --- | --- |
+| `20260901-121313` | green | clean repository candidate `e563eb4`, installed as snapshot `1806ccbfec0e`: loaded `v0502` identities, cursor-free publication captures, real bar-pointer toggles, editable and browsable scopes, hidden entries, explicit refresh, cached Back, treemap selection, filters, agent hand-off, guarded Trash, themes, one activity indicator, scan cancellation, preserved partial warning state, hostile paths, same-path update, and complete lifecycle cleanup |
+| `20260901-120834` | green | clean repository candidate `434e5ff`, installed as snapshot `267f3333e901`: complete `v0502` product journey before the publication-capture pointer was moved outside the panel |
+| `20260901-120502` | green | complete Omarchy source suite in a disposable guest: all 207 test files passed for the release session |
 | `20260831-235236` | green | public HTTPS clone of exact `0.5.1` evidence commit `1857777`, Omarchy validation, enablement, loaded `v0501` identities, documented removal, unload, checkout cleanup, and clean compositor/log state |
 | `20260831-234845` | interrupted | the public-clone guest did not reach readiness while two unrelated 5 GiB Plugin Lab guests were already competing for host memory; the run was stopped before plugin staging and its overlay discarded. The unchanged public candidate passed once capacity was available |
 | `20260831-234322` | green | clean repository candidate `671be60`, installed as snapshot `489839281f1f`: loaded `v0501` identities, no duplicate header close action, real bar-pointer close and reopen toggles, one first-use scan action, hidden entries shown, inline folder browser, typed scope, explicit refresh, cached Back without a scanner process, selected-folder agent hand-off, exact-target Trash confirmation on Cancel, cancellation without change, unsupported-mount preservation with a visible error, user-home Trash move plus automatic remeasurement, filters, themes, one activity indicator, scan cancellation, hostile paths, partial/long/empty states, same-path update, retained Trash contents, and full lifecycle cleanup |
@@ -59,7 +62,7 @@ Run artifacts remain under the Plugin Lab evidence root. Selected synthetic scre
 ## Machine assertions passed
 
 - Source tests, scanner process-budget checks, and Omarchy manifest validation ran before guest installation; ShellCheck ran because it was available.
-- Registry, service IPC, and widget IPC agreed on enabled state and `v0501` identities.
+- Registry, service IPC, and widget IPC agreed on enabled state and `v0502` identities.
 - Real bar geometry exposed one square proportional capacity pie; a QMP pointer opened the host-owned panel.
 - The header contained no duplicate close action. A second pointer click on the same active bar widget closed the panel through the host forwarding route, and a third reopened it.
 - Opening the panel did not scan. First use presented one scan action, while the scope field remained directly editable and the inline browser listed folders with a shallow, NUL-safe helper only.
@@ -70,7 +73,7 @@ Run artifacts remain under the Plugin Lab evidence root. Selected synthetic scre
 - The rendered Trash action snapshotted one exact current entry, showed its path and measured allocation, selected Cancel by default, and left the fixture unchanged when cancelled.
 - Explicit keyboard confirmation on an unsupported internal mount produced a fixed visible failure and retained the item. The same guarded action moved a user-home directory through `gio trash`, cleared stale cached scopes, remeasured to an empty result, retained the Trash entry through plugin removal, and never exposed permanent-delete or empty-Trash behavior.
 - A live scan exposed exactly one machine-visible activity indicator around the bar gauge. Static status and Cancel remained usable; cancellation preserved the last completed result and left no scanner process.
-- Permission denial yielded an explicit usable partial result; long, empty, and hostile scopes remained distinct and recoverable.
+- Permission denial yielded an explicit usable partial result. Starting and cancelling a replacement scan retained that complete last-good result, including its actual warning total; long, empty, and hostile scopes remained distinct and recoverable.
 - Maintained light and dark themes preserved state without compositor errors.
 - A same-path update replaced both runtime identities. Disable unloaded both entry points, re-enable restored one of each, and removal preserved synthetic files.
 - Final compositor configuration and targeted shell logs were clean.
@@ -83,14 +86,14 @@ On the development host, the same synthetic 600-entry fixture improved from appr
 
 ## Visual and media review
 
-Eighteen Disk Lens checkpoints from the final 22-capture run were reviewed, including the close-free first-use header, inline browsing, typed scope, active scan, ready treemap, cached Back, filtered list, selected-folder agent action, Trash confirmation, unsupported Trash, successful Trash, maintained light/dark themes, cancelled, partial, long, empty, hostile-path, update, and removed states. All visible filesystem data was synthetic.
+Twenty-two Disk Lens checkpoints from run `20260901-121313` were reviewed, including the close-free first-use header, inline browsing, typed scope, active scan, ready treemap, cached Back, filtered list, selected-folder agent action, Trash confirmation, unsupported Trash, successful Trash, maintained light/dark themes, cancelled, partial, long, empty, hostile-path, update, and removed states. All visible filesystem data was synthetic. The seven publication captures park the cursor outside the panel before capture.
 
-The README product tour was built twice from the current seven captures. Both builds produced the recorded 184-frame hash. The opening frame and marketplace preview were inspected at original `1000x563` resolution; hierarchy, screenshot crops, progress markers, browser scene, Cancel-first Trash confirmation, native filter finale, and agent action remained legible without implying automatic scanning, permanent deletion, empty-Trash cleanup, privilege, package installation, or hard agent sandboxing.
+The README product tour was built twice from the current seven captures. Both builds produced the recorded 184-frame hash. The opening frame and marketplace preview were inspected at original `1000x563` resolution; the treemap-led hierarchy, screenshot crops, progress markers, scope browser, Cancel-first Trash confirmation, filter scene, and agent action remained legible without implying automatic scanning, permanent deletion, empty-Trash cleanup, privilege, package installation, or hard agent sandboxing.
 
 ## Deliberate limitations
 
 - The supported runtime contract is current Omarchy Quattro; no older minimum Omarchy release is claimed.
-- Public clean-clone proof at `1857777` closes the code, media, and distribution boundary for `0.5.1`; the final evidence-only release commit is rechecked at the exact tag commit and recorded by the GitHub release.
+- Public clean-clone proof for `0.5.2` cannot exist until the candidate is pushed. Exact `0.5.1` tag commit `5a3e0e9` remains the last public distribution boundary; local development acceptance does not substitute for the pending public-clone gate.
 - Marketplace review state is external and is not asserted by this repository evidence record.
 - Automated activation, update, visual, and lifecycle work stays inside disposable guests.
 - The agent prompt is an instruction boundary, not a hard sandbox. Provider, network behavior, approvals, and sandbox policy belong to the configured agent.
@@ -102,4 +105,4 @@ The README product tour was built twice from the current seven captures. Both bu
 
 ## Historical milestones
 
-Versions `0.1.0` through `0.5.0` established the initial native panel, selected-folder agent guidance, compact pie gauge, strict protocol hardening, self-contained product boundary, deterministic media pipeline, hardened prompt boundary, editable scope navigation, and guarded Trash workflow. Their runtime evidence is superseded by the current release except where explicitly retained as historical distribution proof.
+Versions `0.1.0` through `0.5.1` established the initial native panel, selected-folder agent guidance, compact pie gauge, strict protocol hardening, self-contained product boundary, deterministic media pipeline, hardened prompt boundary, editable scope navigation, guarded Trash workflow, and single-toggle header. Their runtime evidence is superseded by the current candidate except where explicitly retained as historical distribution proof.
