@@ -4,6 +4,19 @@
 # fixtures, pointer input, and lifecycle mutations stay inside the disposable
 # Omarchy Plugin Lab guest.
 
+park_pointer_outside_panel() {
+  local response
+  response=$(qmp '"input-send-event", "arguments": {"events": [
+    {"type":"abs","data":{"axis":"x","value":0}},
+    {"type":"abs","data":{"axis":"y","value":32767}}
+  ]}')
+  if grep -q '"error"' <<<"$response"; then
+    printf 'QMP pointer parking failed: %s\n' "$response" >&2
+    return 1
+  fi
+  sleep 0.4
+}
+
 omarchy_host_test() {
   local project_dir lab_root plugin_dir geometry icon_x icon_y widget_width widget_height
   local screen_width screen_height scan_total runtime_before runtime_after
@@ -93,6 +106,7 @@ omarchy_host_test() {
       '.opened == true and .scanState == \"idle\" and .capacityPercent >= 0 and .includeHidden == true \
        and .scanActionCount == 1 and .headerCloseActionPresent == false \
        and .headerContentWidth == .headerAvailableWidth'" || return 1
+  park_pointer_outside_panel || return 1
   capture_console "success-disk-lens-01-first-use"
 
   qmp_pointer_tap "$screen_width" "$screen_height" "$icon_x" "$icon_y" left
@@ -107,6 +121,7 @@ omarchy_host_test() {
     "omarchy-shell disk-lens state | jq -e \
       '.opened == true and .folderPickerOpen == true and .folderPickerState == \"ready\" \
        and .folderPickerPath == \"/home/omarchy\"'" || return 1
+  park_pointer_outside_panel || return 1
   capture_console "success-disk-lens-01-folder-picker"
   press esc
   wait_for_guest_state "Escape closes only the folder picker" 12 ssh_session \
@@ -131,6 +146,7 @@ omarchy_host_test() {
   wait_for_guest_state "rendered Refresh control starts and completes a newer scan" 15 ssh_session \
     "omarchy-shell disk-lens-service state | jq -e \
       '.scanState == \"ready\" and .lastScanPath == \"/tmp/disk-lens-fixture\" and .scannedAt > $scanned_before'" || return 1
+  park_pointer_outside_panel || return 1
   capture_console "success-disk-lens-02-treemap"
 
   qmp_pointer_tap "$screen_width" "$screen_height" $((screen_width - 400)) 400 left
@@ -154,6 +170,7 @@ omarchy_host_test() {
   qmp_pointer_tap "$screen_width" "$screen_height" $((screen_width - 400)) 400 left
   wait_for_guest_state "restored treemap remains directly selectable" 10 ssh_session \
     "omarchy-shell disk-lens state | jq -e '.selectedPath == \"/tmp/disk-lens-fixture/Archive\"'" || return 1
+  park_pointer_outside_panel || return 1
   capture_console "success-disk-lens-03-agent-action"
 
   log "Proving the selected-folder hand-off through Omarchy's maintained agent prompt"
@@ -195,6 +212,7 @@ omarchy_host_test() {
   type_text "Archive"
   wait_for_guest_state "rendered view and search controls drive one filtered list model" 10 ssh_session \
     "omarchy-shell disk-lens state | jq -e '.query == \"Archive\" and .visibleCount == 1 and .viewMode == \"list\"'" || return 1
+  park_pointer_outside_panel || return 1
   capture_console "success-disk-lens-04-filtered-list"
 
   qmp_pointer_tap "$screen_width" "$screen_height" "$clear_x" "$filter_y" left
@@ -210,6 +228,7 @@ omarchy_host_test() {
     "omarchy-shell disk-lens state | jq -e \
       '.trashConfirmOpen == true and .trashConfirmPath == \"/tmp/disk-lens-fixture/.cache\" \
        and .trashConfirmSelectedIndex == 0 and .trashMoveCount == 0'" || return 1
+  park_pointer_outside_panel || return 1
   capture_console "success-disk-lens-05-trash-confirm"
   press ret
   wait_for_guest_state "default confirmation choice cancels without changing the selected fixture" 10 ssh_session \
@@ -280,6 +299,7 @@ omarchy_host_test() {
   ssh_session "test \"\$(omarchy-shell disk-lens-service scan /)\" = started"
   wait_for_guest_state "scan exposes a visible running activity indicator" 10 ssh_session \
     "omarchy-shell disk-lens state | jq -e '.opened == true and .scanState == \"scanning\" and .scanIndicatorRunning == true and .activityIndicatorCount == 1'" || return 1
+  park_pointer_outside_panel || return 1
   capture_console "success-disk-lens-06-scanning"
   qmp_pointer_tap "$screen_width" "$screen_height" "$scan_button_x" "$scan_button_y" left
   wait_for_guest_state "rendered Cancel control preserves the last completed result" 12 ssh_session \
