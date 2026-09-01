@@ -11,7 +11,7 @@ BarWidget {
 
   moduleName: "io.github.mtolhuys.disk-lens"
 
-  readonly property string buildIdentity: "disk-lens-widget-v0501"
+  readonly property string buildIdentity: "disk-lens-widget-v0502"
   readonly property var diskService: bar && bar.shell
     ? bar.shell.serviceFor("io.github.mtolhuys.disk-lens") : null
   readonly property var capacity: diskService ? diskService.capacity : Model.parseCapacity("")
@@ -427,7 +427,7 @@ BarWidget {
       var output = String(folderListStdout.text || "")
       if (exitCode !== 0 && !output) {
         root.folderPickerState = "failed"
-        root.folderPickerError = String(folderListStderr.text || "Folder browsing failed").trim()
+        root.folderPickerError = Model.diagnosticText(folderListStderr.text, "Folder browsing failed")
         return
       }
       var result = Model.parseFolderList(output)
@@ -1239,8 +1239,8 @@ BarWidget {
             spacing: Style.space(9)
 
             Text {
-              text: "Partial scan · " + (root.diskService ? root.diskService.warnings.length : 0)
-                + ((root.diskService && root.diskService.warnings.length === 1) ? " warning" : " warnings")
+              text: "Partial scan · " + (root.diskService ? root.diskService.warningCount : 0)
+                + ((root.diskService && root.diskService.warningCount === 1) ? " warning" : " warnings")
               color: Color.accent
               font.family: Style.font.family
               font.pixelSize: Style.font.body

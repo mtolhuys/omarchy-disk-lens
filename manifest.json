@@ -2,9 +2,9 @@
   "schemaVersion": 1,
   "id": "io.github.mtolhuys.disk-lens",
   "name": "Omarchy Disk Lens",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "author": "Maarten Tolhuijs",
-  "description": "A calm, visual answer to what is eating your disk.",
+  "description": "See exactly what is eating your disk—right from the Omarchy bar.",
   "kinds": [
     "service",
     "bar-widget"
@@ -16,7 +16,7 @@
   },
   "barWidget": {
     "displayName": "Disk Lens",
-    "description": "Inspect storage pressure and the largest local paths",
+    "description": "See disk pressure and find the paths consuming it",
     "category": "System",
     "allowMultiple": false,
     "defaultSection": "right"

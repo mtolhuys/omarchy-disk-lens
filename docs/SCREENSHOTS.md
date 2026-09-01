@@ -12,15 +12,15 @@ Repository media must come from the current Disk Lens runtime in a disposable Om
 - `disk-lens-agent.png`: selected synthetic directory with visible **Ask Omarchy** and **Trash** actions;
 - `disk-lens-filtered-list.png`: one-result ranked list after rendered search and view controls;
 - `disk-lens-showcase.gif`: deterministic widescreen product tour built from the captures above;
-- `preview.png`: deterministic marketplace preview extracted from the safe-removal scene.
+- `preview.png`: deterministic marketplace preview built from the opening visual-insight scene.
 
-The GIF presents seven truthful native scenes: one clear starting action, in-place folder choice, explicit scanning, visual analysis, recoverable selected-item removal, read-only agent guidance, and focused filtering. It stays legible at GitHub README width and does not imply automatic scans, permanent deletion, empty-Trash cleanup, privileged analysis, package installation, or a sandboxed agent.
+The GIF leads with visual analysis, then presents capacity, in-place folder choice, explicit scanning, focused filtering, read-only agent guidance, and recoverable selected-item removal. It stays legible at GitHub README width and does not imply automatic scans, permanent deletion, empty-Trash cleanup, privileged analysis, package installation, or a sandboxed agent.
 
 ## Current provenance
 
-All seven source captures come from green `0.5.1` Plugin Lab run `20260831-234322`, which exercised clean repository candidate `671be6091a981f651e6cedd13a77a9000512375a` through installed development snapshot `489839281f1f`. The synthetic `1280x800` captures cover first use without a duplicate header close action, the inline browser, the single-indicator scan state, hidden-by-default storage visibility, exact-target Trash confirmation, the selected-folder agent action, and filtering.
+Until the `0.5.2` candidate completes its exact-candidate visual run, all seven source captures remain the synthetic `1280x800` images from green `0.5.1` Plugin Lab run `20260831-234322`. The candidate does not claim those historical captures as new runtime evidence; they temporarily preserve truthful first-use, inline-browser, single-indicator, treemap, Trash, agent, and filter compositions while the release media is prepared.
 
-The regenerated showcase is `1000x563`, 184 frames, 3,039,740 bytes, with SHA-256 `8c7c4e95c82cd59fbcc8e22190d25d912a1d9e682c681eb097611041cb93fa13`. The 190,996-byte marketplace preview has SHA-256 `bdd0b2488c62e48727a9b81fc38774135f762b18f19afb60106fb8f44cb2786a`. Two consecutive deterministic builds produced those exact hashes.
+The current `0.5.2` candidate showcase is `1000x563`, 184 frames, 2,745,006 bytes, with SHA-256 `a1f8a43f518f816451004af0b69f11a26ded0da0c883173bb3ae9a1088e6f2fd`. The 194,661-byte visual-insight marketplace preview has SHA-256 `da9087ebf782b371363c90c0926480e41863c3d5312d5e49bac939618a34c164`. Two consecutive deterministic builds produced those exact hashes.
 
 Rebuild both derivatives with:
 

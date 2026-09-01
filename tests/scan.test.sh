@@ -6,6 +6,7 @@ project_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 readonly project_root
 readonly scanner="$project_root/scripts/disk-lens-scan"
 readonly slow_bin="$project_root/tests/fixtures/slow-bin"
+readonly locale_bin="$project_root/tests/fixtures/locale-bin"
 fixture=$(mktemp -d -t disk-lens-scan-test.XXXXXX)
 
 cleanup() {
@@ -13,6 +14,15 @@ cleanup() {
   rm -rf -- "$fixture"
 }
 trap cleanup EXIT
+
+assert_model_accepts() {
+  DISK_LENS_MODEL="$project_root/src/Model.js" node -e '
+    const fs = require("node:fs")
+    const Model = require(process.env.DISK_LENS_MODEL)
+    const result = Model.parseScan(fs.readFileSync(0, "utf8"))
+    if (!result.ok) throw new Error(result.error)
+  '
+}
 
 mkdir -p "$fixture/large folder" "$fixture/.hidden"
 dd if=/dev/zero of="$fixture/large folder/payload.bin" bs=4096 count=8 status=none
@@ -24,6 +34,7 @@ invalid_name=$(printf 'invalid-\377')
 printf 'invalid' >"$fixture/$invalid_name"
 
 output=$($scanner --path "$fixture")
+printf '%s\n' "$output" | assert_model_accepts
 printf '%s\n' "$output" | jq -e -s '
   length >= 8
   and all(.[]; .protocol == 1)
@@ -43,6 +54,14 @@ printf '%s\n' "$output" | jq -e -s --arg path "$fixture/line"$'\n'"name" \
 invalid_b64=$(printf '%s' "$fixture/$invalid_name" | base64 -w0)
 printf '%s\n' "$output" | jq -e -s --arg pathB64 "$invalid_b64" \
   'any(.[]; .type == "entry" and .pathB64 == $pathB64 and .validUtf8 == false and .actionable == false)' >/dev/null
+
+mkdir -p "$fixture/locale-fixture/pre-epoch"
+touch -d '@-1' "$fixture/locale-fixture/pre-epoch"
+locale_output=$(LC_ALL=POSIX PATH="$locale_bin:$PATH" "$scanner" --path "$fixture/locale-fixture")
+printf '%s\n' "$locale_output" | assert_model_accepts
+printf '%s\n' "$locale_output" | jq -e -s --arg path "$fixture/locale-fixture/pre-epoch" '
+  any(.[]; .type == "entry" and .path == $path and .kind == "directory" and .mtime == 0)
+' >/dev/null
 
 mkdir -p "$fixture/permission-fixture/restricted"
 printf 'private' >"$fixture/permission-fixture/restricted/payload"

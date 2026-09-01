@@ -4,7 +4,7 @@
 
 Omarchy Disk Lens makes Home-filesystem pressure understandable within seconds and provides a clear, fully native route from “the disk is filling up” to “this directory deserves investigation.”
 
-## Implemented `0.5.1` journey
+## Implemented `0.5.2` journey
 
 1. The bar shows used capacity for the filesystem backing Home as a compact proportional pie gauge.
 2. Clicking the widget opens a theme-native panel without starting a recursive scan.
@@ -64,7 +64,7 @@ Omarchy Disk Lens makes Home-filesystem pressure understandable within seconds a
 - **Self-contained:** the full visual analysis flow needs no additional graphical package.
 - **Private by default:** capacity and directory analysis stay local. The explicit agent hand-off delegates path and size data to the user's configured agent, whose provider and network behavior are outside Disk Lens.
 
-## Non-goals for `0.5.1`
+## Non-goals for `0.5.2`
 
 - Automatic cleanup, permanent deletion, empty-Trash management, bulk actions, or scripted recipes.
 - Root scanning, a privileged GUI, or privilege handling inside Disk Lens.

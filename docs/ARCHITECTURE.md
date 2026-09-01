@@ -45,9 +45,9 @@ Capacity refreshes at service start, panel open, middle-click, explicit IPC requ
 
 The helper emits protocol-versioned NDJSON. The parser requires one start record, no more than 5,000 valid entry records, no more than 20 bounded warnings, and one matching completion record whose path, entry count, warning floor, totals, and completeness flag agree with the parsed stream. Paths, names, encoded paths, flags, warnings, and numeric fields have explicit type or length bounds. Unknown versions, types, malformed JSON, invalid fields, truncation, or missing completion fail the attempt without replacing the last good result.
 
-The QML process collector promotes a complete parsed result atomically. Permission and I/O messages become a bounded warning set and mark the completed result partial. Cancellation stops the helper, which terminates its owned `du` child and cleans temporary state.
+The QML process collector promotes a complete parsed result atomically. Permission and I/O messages become a bounded, control-free warning set, while the completion record retains the total warning count. Starting or cancelling a replacement scan leaves every last-good result field intact. Cancellation stops the helper, which terminates its owned `du` child and cleans temporary state.
 
-The `du` traversal is already the only recursive process. Post-processing first classifies UTF-8 once for the common case, then resolves file type and modification metadata in groups of 64 and emits JSON in groups of 64. A source regression proves that 1,024 normal entries require no more than 16 `stat` processes, 18 `jq` processes, two `iconv` processes, and no standalone `base64` process; invalid UTF-8 uses a deliberately slower isolated fallback.
+The `du` traversal is already the only recursive process. Post-processing first classifies UTF-8 once for the common case, then resolves locale-independent file type and modification metadata in groups of 64 and emits JSON in groups of 64. Valid pre-epoch timestamps normalize to the protocol's unknown-date value instead of invalidating the scan. A source regression proves that 1,024 normal entries require no more than 16 `stat` processes, 18 `jq` processes, two `iconv` processes, and no standalone `base64` process; invalid UTF-8 uses a deliberately slower isolated fallback.
 
 ## Folder browser adapter
 
@@ -59,7 +59,7 @@ The browser stays inside the Omarchy panel. A native `QtQuick.Dialogs`/GTK folde
 
 One active in-memory entry array drives both projections. Filters are pure projections over name, kind, hidden status, minimum allocated bytes, and maximum modification age. Hidden entries are included by default. Filtered bytes are labelled independently from scanned totals. Treemap geometry is bounded to the 48 largest visible entries; the ranked view renders at most 80 and directs the user to filters for further narrowing.
 
-Drilling into an actionable directory pushes the prior scope into a 16-step widget history and starts a new immediate-child scan only when that target has no cache entry. The service retains at most eight completed scopes and 12,000 total entries, with the Home result retained when it fits alongside the active result. Back promotes the cached snapshot atomically and preserves its original timestamp; explicit Refresh always starts a new scan. Version `0.5.1` does not persist scopes or results, so a shell reload returns to Home and first-use state.
+Drilling into an actionable directory pushes the prior scope into a 16-step widget history and starts a new immediate-child scan only when that target has no cache entry. The service retains at most eight completed scopes and 12,000 total entries, with the Home result retained when it fits alongside the active result. Back promotes the cached snapshot atomically and preserves its original timestamp; explicit Refresh always starts a new scan. Version `0.5.2` does not persist scopes or results, so a shell reload returns to Home and first-use state.
 
 `src/ActivityRing.qml` paints the single theme-derived scan ring around the bar gauge, exists visually only while its `running` property is true, and exposes progress semantics. Panel status and Cancel remain literal and static, so scan state stays available when motion cannot be perceived.
 
@@ -77,7 +77,7 @@ After success, the service clears its navigation cache, refreshes capacity, and 
 
 ## Btrfs accounting
 
-Filesystem free space and per-path allocation answer different questions. Snapshots, compression, and shared extents can explain a gap. Version `0.5.1` does not calculate exclusive/shared extents, snapshot ownership, or reclaimable bytes.
+Filesystem free space and per-path allocation answer different questions. Snapshots, compression, and shared extents can explain a gap. Version `0.5.2` does not calculate exclusive/shared extents, snapshot ownership, or reclaimable bytes.
 
 ## Lifecycle and development snapshots
 

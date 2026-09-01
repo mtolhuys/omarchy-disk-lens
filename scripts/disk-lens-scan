@@ -194,7 +194,7 @@ for (( batch_start = 0; batch_start < entry_count; batch_start += metadata_batch
 
   metadata_file="$work_dir/metadata-$batch_start"
   batch_paths=("${entry_paths[@]:batch_start:batch_count}")
-  stat --printf '%n\0%F\0%Y\0' -- "${batch_paths[@]}" >"$metadata_file" 2>/dev/null || true
+  LC_ALL=C stat --printf '%n\0%F\0%Y\0' -- "${batch_paths[@]}" >"$metadata_file" 2>/dev/null || true
 
   declare -a metadata_paths=()
   declare -a metadata_types=()
@@ -224,6 +224,13 @@ for (( batch_start = 0; batch_start < entry_count; batch_start += metadata_batch
       esac
       break
     done
+
+    # GNU stat can report negative seconds for valid pre-epoch timestamps.
+    # The protocol represents an unknown date as zero and otherwise accepts
+    # only non-negative integers, so normalize values outside that contract.
+    if [[ ! $entry_mtime =~ ^[0-9]+$ ]]; then
+      entry_mtime=0
+    fi
 
     valid_utf8=$records_are_utf8
     if [[ $records_are_utf8 == false ]] \

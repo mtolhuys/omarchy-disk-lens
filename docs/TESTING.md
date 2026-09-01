@@ -11,7 +11,7 @@ make test
 make validate
 ```
 
-`make test` proves the manifest and entry points; strict capacity, scan, and shallow-folder parsing; bounded paths, warnings, totals, completion accounting, and post-processing process counts; deterministic formatting, scope normalization, navigation helpers, filtering, totals, and treemap geometry; hidden and hostile filenames plus invalid UTF-8 handling; guarded Trash arguments, parent-scope enforcement, symlink treatment, no-shell hostile paths, and no permanent-delete fallback; usable partial results; cancellation cleanup; rejected invalid arguments; English tracked text; and ShellCheck when available. Fixtures use temporary synthetic directories only and never traverse the developer's Home directory or modify the host desktop Trash.
+`make test` proves the manifest and entry points; strict capacity, scan, and shallow-folder parsing; bounded control-free diagnostics, paths, warnings, totals, completion accounting, and post-processing process counts; locale-independent kind detection and pre-epoch timestamp normalization; generated-helper-to-model compatibility; deterministic formatting, scope normalization, navigation helpers, filtering, totals, and treemap geometry; hidden and hostile filenames plus invalid UTF-8 handling; guarded Trash arguments, parent-scope enforcement, symlink treatment, no-shell hostile paths, and no permanent-delete fallback; usable partial results; cancellation cleanup; rejected invalid arguments; English tracked text; and ShellCheck when available. Fixtures use temporary synthetic directories only and never traverse the developer's Home directory or modify the host desktop Trash.
 
 ## Product-owned Plugin Lab scenario
 
@@ -36,7 +36,7 @@ cd "$OMARCHY_PLUGIN_LAB_ROOT"
 10. a same-path public plugin update replacing both loaded identities;
 11. disable, re-enable, removal, ordinary user-data preservation, retained desktop Trash contents, and clean logs.
 
-`public-install.sh` separately proves that the README's public GitHub URL clones the expected repository commit, passes Omarchy validation, enables and loads both `v0501` entry points, and removes cleanly through the documented plugin id. It must be rerun after the candidate is published; the local development acceptance does not substitute for public-clone evidence.
+`public-install.sh` separately proves that the README's public GitHub URL clones the expected repository commit, passes Omarchy validation, enables and loads both `v0502` entry points, and removes cleanly through the documented plugin id. It must be rerun after the candidate is published; the local development acceptance does not substitute for public-clone evidence.
 
 ## Visual review boundary
 

@@ -12,7 +12,7 @@ Item {
   property var barWidgetRegistry: null
   property string omarchyPath: ""
 
-  readonly property string buildIdentity: "disk-lens-service-v0501"
+  readonly property string buildIdentity: "disk-lens-service-v0502"
   readonly property string homePath: Quickshell.env("HOME")
   readonly property string sourceDir: manifest ? String(manifest.__sourceDir || "") : ""
   readonly property string scannerPath: sourceDir ? sourceDir + "/scripts/disk-lens-scan" : ""
@@ -30,6 +30,7 @@ Item {
   property double totalBytes: 0
   property bool partial: false
   property var warnings: []
+  property double warningCount: 0
   property string scanError: ""
   property double scannedAt: 0
   property bool expectedStop: false
@@ -72,7 +73,6 @@ Item {
 
     scanPath = selectedPath
     scanError = ""
-    warnings = []
     expectedStop = false
     scanOutput = ""
     scanStderr = ""
@@ -122,6 +122,7 @@ Item {
       entries = snapshot.entries.slice()
       totalBytes = snapshot.totalBytes
       warnings = snapshot.warnings.slice()
+      warningCount = snapshot.warningCount
       partial = snapshot.partial
       lastScanPath = snapshot.path
       scanPath = snapshot.path
@@ -208,6 +209,7 @@ Item {
     entries = result.entries
     totalBytes = result.totalBytes
     warnings = result.warnings
+    warningCount = result.warningCount
     partial = result.partial
     lastScanPath = result.path
     scanPath = result.path
@@ -220,6 +222,7 @@ Item {
       entries: entries.slice(),
       totalBytes: totalBytes,
       warnings: warnings.slice(),
+      warningCount: warningCount,
       partial: partial,
       scannedAt: scannedAt
     })
@@ -237,7 +240,7 @@ Item {
       entryCount: entries.length,
       totalBytes: totalBytes,
       partial: partial,
-      warningCount: warnings.length,
+      warningCount: warningCount,
       scanError: scanError,
       scannedAt: scannedAt,
       cacheCount: scanCache.length,
@@ -267,7 +270,7 @@ Item {
     onExited: function(exitCode) {
       if (exitCode !== 0) {
         root.capacityState = "failed"
-        root.capacityError = String(capacityStderr.text || "Could not read filesystem capacity").trim()
+        root.capacityError = Model.diagnosticText(capacityStderr.text, "Could not read filesystem capacity")
         return
       }
       var parsed = Model.parseCapacity(capacityStdout.text)
@@ -299,8 +302,8 @@ Item {
 
       if (exitCode !== 0) {
         root.trashState = "failed"
-        root.trashError = String(trashStderr.text || "The selected item could not be moved to Trash")
-          .replace(/[\u0000-\u001f\u007f]/g, " ").trim().slice(0, 8192)
+        root.trashError = Model.diagnosticText(trashStderr.text,
+          "The selected item could not be moved to Trash")
         return
       }
 
@@ -344,7 +347,8 @@ Item {
       var output = String(scanStdout.text || root.scanOutput || "")
       if (exitCode !== 0 && !output) {
         root.scanState = "failed"
-        root.scanError = String(scanStderrCollector.text || root.scanStderr || "Disk scan failed").trim()
+        root.scanError = Model.diagnosticText(scanStderrCollector.text || root.scanStderr,
+          "Disk scan failed")
         return
       }
       root.applyScanOutput(output)

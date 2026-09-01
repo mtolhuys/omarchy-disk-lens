@@ -22,6 +22,9 @@ assert.equal(capacity.target, "/home")
 assert.equal(Model.parseCapacity("not json").available, false)
 assert.doesNotThrow(() => Model.parseCapacity(JSON.stringify({ filesystems: [null] })))
 assert.equal(Model.parseCapacity(JSON.stringify({ filesystems: [null] })).available, false)
+assert.equal(Model.parseCapacity(JSON.stringify({
+  filesystems: [{ size: 1000, used: 720, avail: 280, "use%": "72% full" }]
+})).available, false)
 
 const scanOutput = [
   record({ type: "start", path: "/fixture" }),
@@ -64,6 +67,11 @@ assert.equal(scan.entries.length, 2)
 assert.equal(scan.entries[0].name, "large folder")
 assert.equal(scan.partial, true)
 assert.equal(scan.totalBytes, 1000)
+assert.equal(scan.warningCount, 1)
+assert.equal(Model.parseScan(scanOutput.replace('"warnings":1', '"warnings":25')).warningCount, 25)
+const diagnosticScan = Model.parseScan(scanOutput.replace("one path was unreadable", "warning\\u0007"))
+assert.equal(diagnosticScan.ok, true)
+assert.equal(diagnosticScan.warnings[0], "warning�")
 
 assert.equal(Model.parseScan(scanOutput.replace('"protocol":1', '"protocol":2')).ok, false)
 assert.equal(Model.parseScan(scanOutput.replace(/\n[^\n]+$/, "")).ok, false)
@@ -112,6 +120,7 @@ assert.equal(Model.parseFolderList(folderOutput.replace('"entries":2', '"entries
 assert.equal(Model.parseFolderList(folderOutput.replace('"path":"/fixture/Projects"', '"path":"/outside"')).ok, false)
 assert.equal(Model.parseFolderList(folderOutput.replace('"name":"Projects"', '"name":"Projects\\u0000hidden"')).ok, false)
 assert.equal(Model.parseFolderList(folderOutput.replace(/\n[^\n]+$/, "")).ok, false)
+assert.equal(Model.parseFolderList(folderOutput.replace('"warning":""', '"warning":"unexpected"')).ok, false)
 
 const boundedWarnings = [record({ type: "start", path: "/fixture" })]
 for (let index = 0; index < Model.MAX_WARNINGS; index += 1)
@@ -143,6 +152,8 @@ assert.equal(Model.formatBytes(0), "0 B")
 assert.equal(Model.formatBytes(1024), "1 KiB")
 assert.equal(Model.formatBytes(1073741824), "1 GiB")
 assert.equal(Model.safeLabel("line\nname\t"), "line�name�")
+assert.equal(Model.diagnosticText("  line\nname\t  ", "fallback"), "line�name�")
+assert.equal(Model.diagnosticText("", "fallback"), "fallback")
 assert.equal(Model.safeMarkupLabel("/fixture/<b>&name\n"), "/fixture/&lt;b&gt;&amp;name�")
 assert.equal(Model.normalizeScopeInput("~", "/home/tester"), "/home/tester")
 assert.equal(Model.normalizeScopeInput("~/Steam/", "/home/tester"), "/home/tester/Steam")

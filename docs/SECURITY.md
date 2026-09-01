@@ -40,7 +40,7 @@ The confirmation snapshot contains the selected path, displayed allocation, kind
 
 ## State and lifecycle
 
-Version `0.5.1` keeps capacity, bounded navigation snapshots, folder-browser state, filters, selection, Trash status, and agent-dispatch bookkeeping in memory. It writes no scan-result cache or plugin settings. Disablement and plugin removal unload the service and widget without deleting scanned files or emptying desktop Trash. The opt-in development installer uses a dedicated XDG-cache snapshot and replaces only plugin id `io.github.mtolhuys.disk-lens`.
+Version `0.5.2` keeps capacity, bounded navigation snapshots, folder-browser state, filters, selection, Trash status, and agent-dispatch bookkeeping in memory. It writes no scan-result cache or plugin settings. Disablement and plugin removal unload the service and widget without deleting scanned files or emptying desktop Trash. The opt-in development installer uses a dedicated XDG-cache snapshot and replaces only plugin id `io.github.mtolhuys.disk-lens`.
 
 ## Vulnerability reporting
 

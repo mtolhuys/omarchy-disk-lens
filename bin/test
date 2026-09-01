@@ -31,6 +31,7 @@ if command -v shellcheck >/dev/null; then
     "$project_root/tests/lab/public-install.sh" \
     "$project_root/tests/fixtures/slow-bin/find" \
     "$project_root/tests/fixtures/slow-bin/du" \
+    "$project_root/tests/fixtures/locale-bin/stat" \
     "$project_root/tests/fixtures/trash-bin/gio" \
     "$project_root/tests/fixtures/counting-bin/base64" \
     "$project_root/tests/fixtures/counting-bin/iconv" \

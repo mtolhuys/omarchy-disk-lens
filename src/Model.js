@@ -64,7 +64,8 @@ function parseCapacity(raw) {
 
   var fs = payload.filesystems[0]
   if (!plainObject(fs)) return emptyCapacity("Capacity values were incomplete")
-  var percent = parseInt(String(fs["use%"] || "").replace("%", ""), 10)
+  var percentMatch = /^([0-9]{1,3})%$/.exec(String(fs["use%"] || ""))
+  var percent = percentMatch ? Number(percentMatch[1]) : NaN
   if (!finiteBytes(fs.size) || !finiteBytes(fs.used)
       || !finiteBytes(fs.avail) || !isFinite(percent) || percent < 0 || percent > 100)
     return emptyCapacity("Capacity values were incomplete")
@@ -147,14 +148,14 @@ function parseScan(raw) {
         protocolError = "Scanner warning record was invalid"
         break
       }
-      warnings.push(record.message)
+      warnings.push(diagnosticText(record.message, "Scanner warning"))
     } else if (record.type === "error") {
       if (typeof record.message !== "string" || record.message.length === 0
           || record.message.length > MAX_WARNING_LENGTH) {
         protocolError = "Scanner error record was invalid"
         break
       }
-      protocolError = record.message
+      protocolError = diagnosticText(record.message, "Disk scan failed")
       break
     } else if (record.type === "complete") {
       if (!started || typeof record.path !== "string"
@@ -184,6 +185,7 @@ function parseScan(raw) {
       entries: [],
       totalBytes: 0,
       warnings: warnings,
+      warningCount: warnings.length,
       partial: false
     }
   }
@@ -201,6 +203,7 @@ function parseScan(raw) {
     entries: entries,
     totalBytes: Number(completed.totalBytes),
     warnings: warnings,
+    warningCount: Number(completed.warnings),
     partial: completed.partial === true || warnings.length > 0
   }
 }
@@ -228,8 +231,9 @@ function parseFolderList(raw) {
       break
     }
     if (record.type === "error") {
-      errorMessage = typeof record.message === "string" && record.message.length <= MAX_WARNING_LENGTH
-        ? record.message : "Folder browsing failed"
+      errorMessage = typeof record.message === "string" && record.message.length > 0
+          && record.message.length <= MAX_WARNING_LENGTH
+        ? diagnosticText(record.message, "Folder browsing failed") : "Folder browsing failed"
       break
     }
     if (record.type === "folder-start") {
@@ -260,7 +264,8 @@ function parseFolderList(raw) {
     } else if (record.type === "folder-complete") {
       if (!started || record.path !== started.path || !protocolInteger(record.entries)
           || record.entries !== entries.length || typeof record.partial !== "boolean"
-          || typeof record.warning !== "string" || record.warning.length > MAX_WARNING_LENGTH) {
+          || typeof record.warning !== "string" || record.warning.length > MAX_WARNING_LENGTH
+          || (record.warning !== "" && !record.partial)) {
         errorMessage = "Folder browser completion record was invalid"
         break
       }
@@ -281,7 +286,7 @@ function parseFolderList(raw) {
     path: completed.path,
     entries: entries,
     partial: completed.partial,
-    warning: completed.warning
+    warning: completed.warning ? diagnosticText(completed.warning, "Folder browsing was incomplete") : ""
   }
 }
 
@@ -302,6 +307,12 @@ function formatBytes(value) {
 
 function safeLabel(value) {
   return String(value || "").replace(/[\u0000-\u001f\u007f]/g, "�")
+}
+
+function diagnosticText(value, fallback) {
+  var text = safeLabel(value).trim().slice(0, MAX_WARNING_LENGTH)
+  if (text) return text
+  return safeLabel(fallback || "Operation failed").trim().slice(0, MAX_WARNING_LENGTH)
 }
 
 function safeMarkupLabel(value) {
@@ -497,6 +508,7 @@ if (typeof module !== "undefined") {
     parseFolderList: parseFolderList,
     formatBytes: formatBytes,
     safeLabel: safeLabel,
+    diagnosticText: diagnosticText,
     safeMarkupLabel: safeMarkupLabel,
     isImmediateChild: isImmediateChild,
     normalizeScopeInput: normalizeScopeInput,

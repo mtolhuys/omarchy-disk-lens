@@ -9,7 +9,7 @@ omarchy_host_test() {
   local screen_width screen_height scan_total runtime_before runtime_after
   local scan_button_x scan_button_y view_button_x search_x filter_y clear_x agent_x agent_y
   local back_button_x folder_picker_x scope_field_x drill_x fixture_scanned_at
-  local agent_pid agent_sid scanned_before long_scope hostile_path_b64 trash_x trash_y
+  local agent_pid agent_sid scanned_before long_scope hostile_path_b64 trash_x trash_y partial_warning_count
   project_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/../.." && pwd)"
   lab_root="${OMARCHY_PLUGIN_LAB_ROOT:?Set OMARCHY_PLUGIN_LAB_ROOT to the disposable Plugin Lab checkout}"
   # Expands only inside guest commands.
@@ -56,8 +56,8 @@ omarchy_host_test() {
 
   wait_for_guest_state "service and widget load with matching candidate identity" 25 ssh_session \
     "omarchy-plugin-list --json | jq -e 'any(.[]; .id == \"io.github.mtolhuys.disk-lens\" and .enabled == true)' && \
-     omarchy-shell disk-lens-service state | jq -e '.buildIdentity == \"disk-lens-service-v0501\" and (.capacityState == \"ready\" or .capacityState == \"loading\")' && \
-     omarchy-shell disk-lens state | jq -e '.buildIdentity == \"disk-lens-widget-v0501\" and .opened == false'" || {
+     omarchy-shell disk-lens-service state | jq -e '.buildIdentity == \"disk-lens-service-v0502\" and (.capacityState == \"ready\" or .capacityState == \"loading\")' && \
+     omarchy-shell disk-lens state | jq -e '.buildIdentity == \"disk-lens-widget-v0502\" and .opened == false'" || {
     ssh_session "omarchy-shell shell listPlugins || true; journalctl --user --since '-3 minutes' --no-pager \
       | grep -Ei 'quickshell|qml|disk-lens|segmentation|fatal|core dumped' | tail -n 240" || true
     return 1
@@ -294,7 +294,19 @@ omarchy_host_test() {
     "omarchy-shell disk-lens-service state | jq -e \
       '.scanState == \"partial\" and .partial == true and .warningCount > 0 and .entryCount > 0'" || return 1
   capture_console "success-disk-lens-08-partial"
+  partial_warning_count=$(ssh_session "omarchy-shell disk-lens-service state | jq -r .warningCount")
   ssh_session "chmod 700 '/tmp/disk-lens-permission/restricted'"
+  ssh_session "test \"\$(omarchy-shell disk-lens-service scan /)\" = started"
+  wait_for_guest_state "a new scan keeps the last partial result intact" 10 ssh_session \
+    "omarchy-shell disk-lens-service state | jq -e \
+      '.scanState == \"scanning\" and .lastScanPath == \"/tmp/disk-lens-permission\" \
+       and .partial == true and .warningCount == $partial_warning_count'" || return 1
+  ssh_session "test \"\$(omarchy-shell disk-lens-service cancel)\" = cancelling"
+  wait_for_guest_state "cancellation preserves the prior warnings and completeness state" 12 ssh_session \
+    "omarchy-shell disk-lens-service state | jq -e \
+      '.scanState == \"cancelled\" and .lastScanPath == \"/tmp/disk-lens-permission\" \
+       and .partial == true and .warningCount == $partial_warning_count' && \
+     ! pgrep -f '[d]isk-lens-scan' >/dev/null" || return 1
 
   ssh_session "test \"\$(omarchy-shell disk-lens scan '$long_scope')\" = started"
   wait_for_guest_state "long scopes remain exact in state and bounded in the rendered control" 15 ssh_session \
@@ -348,17 +360,17 @@ omarchy_host_test() {
      ! hyprctl -j clients | jq -e 'any(.[]; .class == \"org.omarchy.agent\" and .mapped == true)'" || return 1
 
   log "Applying a same-path runtime edit through the public update flow"
-  ssh_guest "sed -i 's/disk-lens-service-v0501/disk-lens-service-v0501-labupdate/' \
+  ssh_guest "sed -i 's/disk-lens-service-v0502/disk-lens-service-v0502-labupdate/' \
       /home/omarchy/.cache/omarchy-disk-lens/development-source/src/Service.qml && \
-    sed -i 's/disk-lens-widget-v0501/disk-lens-widget-v0501-labupdate/' \
+    sed -i 's/disk-lens-widget-v0502/disk-lens-widget-v0502-labupdate/' \
       /home/omarchy/.cache/omarchy-disk-lens/development-source/src/BarWidget.qml && \
     git -C /home/omarchy/.cache/omarchy-disk-lens/development-source add src/Service.qml src/BarWidget.qml && \
     git -C /home/omarchy/.cache/omarchy-disk-lens/development-source \
       -c user.name=DiskLensLab -c user.email=lab@invalid commit -qm runtime-update"
   ssh_session "omarchy-plugin-update io.github.mtolhuys.disk-lens --yes"
   wait_for_guest_state "same-path update replaces service and widget runtime identities" 30 ssh_session \
-    "omarchy-shell disk-lens-service state | jq -e '.buildIdentity == \"disk-lens-service-v0501-labupdate\"' && \
-     omarchy-shell disk-lens state | jq -e '.buildIdentity == \"disk-lens-widget-v0501-labupdate\"'" || {
+    "omarchy-shell disk-lens-service state | jq -e '.buildIdentity == \"disk-lens-service-v0502-labupdate\"' && \
+     omarchy-shell disk-lens state | jq -e '.buildIdentity == \"disk-lens-widget-v0502-labupdate\"'" || {
     ssh_session "omarchy-shell disk-lens-service state; omarchy-shell disk-lens state; journalctl --user --since '-3 minutes' --no-pager | tail -n 220" || true
     return 1
   }
@@ -372,8 +384,8 @@ omarchy_host_test() {
 
   ssh_session "omarchy-plugin-enable io.github.mtolhuys.disk-lens"
   wait_for_guest_state "re-enable restores one service and one widget" 25 ssh_session \
-    "omarchy-shell disk-lens-service state | jq -e '.buildIdentity == \"disk-lens-service-v0501-labupdate\"' && \
-     omarchy-shell disk-lens state | jq -e '.buildIdentity == \"disk-lens-widget-v0501-labupdate\"'" || return 1
+    "omarchy-shell disk-lens-service state | jq -e '.buildIdentity == \"disk-lens-service-v0502-labupdate\"' && \
+     omarchy-shell disk-lens state | jq -e '.buildIdentity == \"disk-lens-widget-v0502-labupdate\"'" || return 1
 
   ssh_session "omarchy-plugin-remove io.github.mtolhuys.disk-lens --yes"
   wait_for_guest_state "remove unloads Disk Lens without touching synthetic user data" 25 ssh_session \

@@ -2,6 +2,20 @@
 
 All notable changes to Omarchy Disk Lens are documented here. The format follows Keep a Changelog and the project uses Semantic Versioning.
 
+## 0.5.2 — 2026-09-01
+
+### Changed
+
+- Reframed the README tour and static marketplace preview around the product's central value: making the largest disk consumers visually obvious.
+- Tightened the marketplace and bar-widget descriptions and bumped the manifest plus loaded service/widget identities for the `0.5.2` release.
+
+### Fixed
+
+- Made scanner file-kind classification independent of the desktop locale, so translated `stat` output cannot turn directories into non-actionable entries.
+- Normalized valid pre-epoch modification timestamps to the existing unknown-date representation instead of rejecting the complete scan protocol.
+- Centralized bounded, control-free process diagnostics before they enter panel state.
+- Preserved the complete last-good warning state across refresh cancellation and report the scanner's total warning count even when only the first 20 messages are retained.
+
 ## 0.5.1 — 2026-08-31
 
 ### Changed
