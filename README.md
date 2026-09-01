@@ -6,7 +6,7 @@
 
 Disk Lens turns “my disk is full” into an obvious next step. One quiet bar icon opens a proportional treemap and exact ranked list, so the biggest local paths stand out immediately—even when the storage lives inside hidden folders.
 
-Version **0.5.2** is the current pre-1.0 release candidate. It combines the complete native analysis journey with stricter scanner boundaries, resilient refresh state, and a marketplace story led by visual insight instead of cleanup.
+Version **0.5.2** is the current public pre-1.0 release. It combines the complete native analysis journey with stricter scanner boundaries, resilient refresh state, and a marketplace story led by visual insight instead of cleanup.
 
 ## The useful path from full disk to a clear next step
 
@@ -96,6 +96,6 @@ Start with [CONTRIBUTING.md](CONTRIBUTING.md), [the product contract](docs/PRODU
 
 ## Status
 
-The `0.5.2` candidate retains the complete verified `0.5.1` product journey, adds scanner and refresh-state hardening, and makes visual disk insight the opening README and marketplace story. Exact-candidate runtime and public-clone evidence are required before publication. End-to-end performance budgets, dense/narrow layouts, pressure fixtures, complete assistive-technology review, and composed reduced-motion acceptance remain explicit pre-1.0 hardening work.
+The public `0.5.2` release has source, public-clone, real-shell, active-bar toggle, inline-folder, typed-scope, cache-restored Back, single-indicator, guarded Trash, visual, hostile-path agent-prompt, update, and lifecycle evidence in disposable guests. Scanner post-processing has a source-enforced process budget. End-to-end performance budgets, dense/narrow layouts, pressure fixtures, complete assistive-technology review, and composed reduced-motion acceptance remain explicit pre-1.0 hardening work.
 
 MIT licensed. See [LICENSE](LICENSE).

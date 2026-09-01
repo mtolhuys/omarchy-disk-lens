@@ -1,6 +1,6 @@
-# Development milestone evidence
+# Release evidence
 
-This record describes the strongest verified `0.5.2` pre-1.0 release candidate and preserves the public-install boundary of the preceding `0.5.1` release.
+This record describes the strongest verified public `0.5.2` pre-1.0 release milestone.
 
 ## Candidate identity
 
@@ -8,7 +8,7 @@ This record describes the strongest verified `0.5.2` pre-1.0 release candidate a
 - Service identity: `disk-lens-service-v0502`
 - Widget identity: `disk-lens-widget-v0502`
 - Accepted repository candidate: `e563eb4b7bf166e5241996fe0cef4566b283c5d7`, installed as exact development snapshot `1806ccbfec0e`
-- Last public tag candidate: `5a3e0e9661107e1d750cf9c54833dcde3ce21922` (`0.5.1`)
+- Public clean-clone candidate: `aee774ac6feb32bca88a369555865cb944453549` (`0.5.2` evidence and media)
 - Omarchy base revision: `83881e979b35468c3e7d60b171e319ede61a88fd`
 - Plugin Lab base revision: `259ef26e9909bd74323177d2d29e2007cf8c73db`
 - Omarchy ISO harness revision: `268bac16d351a21d867e37565738f458b11cb06c`
@@ -39,6 +39,7 @@ The distribution gate additionally requires:
 
 | Run id | Result | Scope |
 | --- | --- | --- |
+| `20260901-121745` | green | public HTTPS clone of exact `0.5.2` evidence commit `aee774a`, Omarchy validation, enablement, loaded `v0502` identities, documented removal, unload, checkout cleanup, and clean compositor/log state |
 | `20260901-121313` | green | clean repository candidate `e563eb4`, installed as snapshot `1806ccbfec0e`: loaded `v0502` identities, cursor-free publication captures, real bar-pointer toggles, editable and browsable scopes, hidden entries, explicit refresh, cached Back, treemap selection, filters, agent hand-off, guarded Trash, themes, one activity indicator, scan cancellation, preserved partial warning state, hostile paths, same-path update, and complete lifecycle cleanup |
 | `20260901-120834` | green | clean repository candidate `434e5ff`, installed as snapshot `267f3333e901`: complete `v0502` product journey before the publication-capture pointer was moved outside the panel |
 | `20260901-120502` | green | complete Omarchy source suite in a disposable guest: all 207 test files passed for the release session |
@@ -93,7 +94,7 @@ The README product tour was built twice from the current seven captures. Both bu
 ## Deliberate limitations
 
 - The supported runtime contract is current Omarchy Quattro; no older minimum Omarchy release is claimed.
-- Public clean-clone proof for `0.5.2` cannot exist until the candidate is pushed. Exact `0.5.1` tag commit `5a3e0e9` remains the last public distribution boundary; local development acceptance does not substitute for the pending public-clone gate.
+- Public clean-clone proof at `aee774a` closes the code, media, and distribution boundary for `0.5.2`; the final evidence-only release commit is rechecked at the exact tag commit and recorded by the GitHub release.
 - Marketplace review state is external and is not asserted by this repository evidence record.
 - Automated activation, update, visual, and lifecycle work stays inside disposable guests.
 - The agent prompt is an instruction boundary, not a hard sandbox. Provider, network behavior, approvals, and sandbox policy belong to the configured agent.
@@ -105,4 +106,4 @@ The README product tour was built twice from the current seven captures. Both bu
 
 ## Historical milestones
 
-Versions `0.1.0` through `0.5.1` established the initial native panel, selected-folder agent guidance, compact pie gauge, strict protocol hardening, self-contained product boundary, deterministic media pipeline, hardened prompt boundary, editable scope navigation, guarded Trash workflow, and single-toggle header. Their runtime evidence is superseded by the current candidate except where explicitly retained as historical distribution proof.
+Versions `0.1.0` through `0.5.1` established the initial native panel, selected-folder agent guidance, compact pie gauge, strict protocol hardening, self-contained product boundary, deterministic media pipeline, hardened prompt boundary, editable scope navigation, guarded Trash workflow, and single-toggle header. Their runtime evidence is superseded by the current release except where explicitly retained as historical distribution proof.
