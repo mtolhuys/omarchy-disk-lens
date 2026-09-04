@@ -2,7 +2,7 @@
 
 > See exactly what is eating your disk—without leaving Omarchy.
 
-![Omarchy Disk Lens product tour: visual disk insight, capacity, scope selection, active scan, focused filtering, agent guidance, and safe Trash confirmation](docs/media/disk-lens-showcase.gif)
+![Omarchy Disk Lens showing the disk map, Ask Omarchy guidance, and ranked list across dark and light themes](docs/media/disk-lens-banner.png)
 
 Disk Lens turns “my disk is full” into an obvious next step. One quiet bar icon opens a proportional treemap and exact ranked list, so the biggest local paths stand out immediately—even when the storage lives inside hidden folders.
 
