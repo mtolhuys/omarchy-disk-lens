@@ -4,7 +4,7 @@
   "name": "Omarchy Disk Lens",
   "version": "0.5.2",
   "author": "Maarten Tolhuijs",
-  "description": "See exactly what is eating your disk—right from the Omarchy bar.",
+  "description": "See exactly what is eating your disk right from the Omarchy bar.",
   "kinds": [
     "service",
     "bar-widget"
