@@ -10,6 +10,7 @@ All notable changes to Omarchy Disk Lens are documented here. The format follows
 
 ### Changed
 
+- Exposed `keysButtonCenterX/Y` in widget state so Plugin Lab can open the Keys sheet by pointer.
 - Bumped the manifest and loaded service/widget identities for the `0.6.12` inner-budget layout fix.
 
 ## 0.6.11 — 2026-09-07

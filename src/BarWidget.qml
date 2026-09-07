@@ -533,6 +533,7 @@ BarWidget {
     var openCenter = openButton.visible
       ? openButton.mapToGlobal(openButton.width / 2, openButton.height / 2)
       : Qt.point(0, 0)
+    var keysCenter = keysHint.mapToGlobal(keysHint.width / 2, keysHint.height / 2)
     return {
       buildIdentity: buildIdentity,
       opened: opened,
@@ -574,7 +575,9 @@ BarWidget {
       askButtonCenterX: Math.round(askCenter.x),
       askButtonCenterY: Math.round(askCenter.y),
       openButtonCenterX: Math.round(openCenter.x),
-      openButtonCenterY: Math.round(openCenter.y)
+      openButtonCenterY: Math.round(openCenter.y),
+      keysButtonCenterX: Math.round(keysCenter.x),
+      keysButtonCenterY: Math.round(keysCenter.y)
     }
   }
 

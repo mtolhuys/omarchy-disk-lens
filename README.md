@@ -1,6 +1,6 @@
 # Omarchy Disk Lens
 
-![Omarchy Disk Lens showing the disk map, Ask Omarchy guidance, and ranked list across dark and light themes](docs/media/disk-lens-banner.png)
+![Omarchy Disk Lens — quiet scan beam, treemap with Open · Ask Omarchy · Trash, and list or Keys](docs/media/disk-lens-banner.png)
 
 Disk Lens is a disk usage viewer for the Omarchy bar. If you have used [WinDirStat](https://windirstat.net/) on Windows or [QDirStat](https://github.com/shundhammer/qdirstat) on Linux, you already know the idea: scan a folder and see what is taking up the space. Disk Lens shows the result as either a proportional map or a ranked list. Hidden folders are included by default, so Steam libraries and other large hidden directories are not missed.
 
@@ -12,10 +12,10 @@ Nothing is scanned in the background. Opening the panel shows disk capacity. A f
 * Accepts typed paths and includes a folder picker.
 * Remembers recent results, so Back does not trigger another scan.
 * Filters by name, file type, hidden status, allocated size, and modification age.
-* Opens a selected entry in the file manager or scans deeper into it.
+* Drills into a folder with **Enter / →**, or opens the selection in the file manager with **o** (binaries are revealed, not launched as downloads).
 * Sends a selected folder to **Ask Omarchy** with its measured size and instructions to investigate without making changes.
 * Moves one selected entry to desktop Trash after an explicit confirmation.
-* Shows scan activity on the bar pie and as a smooth vertical scanner stripe in the results pane.
+* Shows scan activity on the bar pie and as a quiet vertical beam that sweeps across the results pane.
 
 The scanner stays on the selected filesystem and preserves the last complete result if a refresh is cancelled. Unreadable paths are reported as a partial scan instead of being quietly omitted.
 
@@ -108,6 +108,7 @@ make update
 ```bash
 cd "$OMARCHY_PLUGIN_LAB_ROOT"
 ./bin/lab plugin /absolute/path/to/omarchy-disk-lens/tests/lab/acceptance.sh
+./bin/lab plugin /absolute/path/to/omarchy-disk-lens/tests/lab/banner-capture.sh
 ```
 
 Start with [CONTRIBUTING.md](CONTRIBUTING.md), [the product contract](docs/PRODUCT.md), [the test contract](docs/TESTING.md), and [the screenshot provenance](docs/SCREENSHOTS.md). Verified release evidence is recorded in [RELEASE-EVIDENCE.md](docs/RELEASE-EVIDENCE.md).
@@ -120,6 +121,6 @@ Disk Lens is built specifically for Omarchy. It does not bundle, install, or dep
 
 ## Status
 
-The current public release is **0.6.1**. See [the release evidence](docs/RELEASE-EVIDENCE.md) for what has been tested and [the roadmap](docs/ROADMAP.md) for what is still planned before version 1.0.
+The current public release is **0.6.12**. See [the release evidence](docs/RELEASE-EVIDENCE.md) for what has been tested and [the roadmap](docs/ROADMAP.md) for what is still planned before version 1.0.
 
 MIT licensed. See [LICENSE](LICENSE).

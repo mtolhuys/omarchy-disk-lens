@@ -6,3 +6,5 @@ Product-owned host-driven scenarios belong here. They are executed by the mainta
 - `public-install.sh` proves the documented public GitHub clone, exact commit, enablement, loaded identities, removal, and cleanup.
 
 The scenario creates only synthetic guest fixtures inside the run overlay. Its plugin, compositor, and process mutations disappear with that overlay.
+- `banner-capture.sh` captures README and marketplace banner frames (scan beam, selection actions, Keys sheet, list) from a disposable guest.
+
