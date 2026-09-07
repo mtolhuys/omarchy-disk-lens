@@ -88,10 +88,10 @@
 
 **Consequence:** Browsing never measures disk usage, hidden directories are present, 5,000 entries are accepted, and at most 80 rows are rendered. A different external picker requires crash-free disposable-shell evidence.
 
-## D012 — Batch scanner post-processing
+## D012 — Parallel per-child measurement with batched post-processing
 
-**Decision:** Keep one GNU `du` traversal and batch common-case UTF-8 validation, metadata lookup, and JSON emission instead of spawning helper processes per entry.
+**Decision:** Measure each immediate child independently: real directories through a bounded parallel pool of GNU `du -s` jobs, and non-directory children through batched `st_blocks` accounting. Keep common-case UTF-8 validation, metadata lookup, and JSON emission in large batches instead of spawning helper processes per entry.
 
-**Why:** Per-entry process startup dominated small and dense scopes without improving measurement accuracy.
+**Why:** A single serial `du --max-depth=1` walk left deep Home scopes wait on one thread of filesystem traversal. Per-entry process startup separately dominated dense shallow scopes. Parallel per-child directory work cuts wall time on multi-core hosts while preserving NUL-safe records, cancellation of every owned worker, and the existing NDJSON protocol.
 
-**Consequence:** A source regression enforces bounded process counts for 1,024 entries; invalid UTF-8 retains its isolated slower path so hostile-name safety is not traded for speed.
+**Consequence:** Listed sizes match `du -s -- child` for each entry. Cross-directory hard links may therefore contribute to more than one child total, unlike a single shared-inode `du` invocation; the ranked and treemap views still answer “how large is this child?” Total allocated bytes equal the sum of measured children. A source regression enforces bounded `stat`/`jq`/`iconv` counts for 1,024 entries; invalid UTF-8 retains its isolated slower path. Noise directories are not skipped—they are primary analysis targets.

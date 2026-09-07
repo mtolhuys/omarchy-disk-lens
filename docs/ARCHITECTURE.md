@@ -15,8 +15,10 @@ Omarchy shell
        └─ structural launches: file manager and Omarchy agent
 
 disk-lens-scan
-  └─ GNU du --all --one-file-system --max-depth=1 --null
-       └─ strict NDJSON protocol version 1
+  └─ immediate children via shell glob
+       ├─ real directories: bounded parallel GNU du -s --one-file-system --null
+       └─ files/symlinks/other: batched st_blocks accounting
+            └─ strict NDJSON protocol version 1
 
 disk-lens-folders
   └─ GNU find -mindepth 1 -maxdepth 1 with NUL output
@@ -41,13 +43,13 @@ Capacity refreshes at service start, panel open, middle-click, explicit IPC requ
 
 ## Scan adapter
 
-`scripts/disk-lens-scan` accepts exactly `--path ABSOLUTE_DIRECTORY`, refuses UID `0`, resolves the directory, and runs one same-filesystem GNU `du` traversal. It reads NUL-delimited byte/path pairs so tabs and newlines cannot split records.
+`scripts/disk-lens-scan` accepts exactly `--path ABSOLUTE_DIRECTORY`, refuses UID `0`, resolves the directory, and measures each immediate child independently on the same filesystem. Real directories are sized with a bounded parallel pool of GNU `du -s` jobs (override with `DISK_LENS_SCAN_JOBS`, capped at 32). Non-directory children use batched `stat` block accounting. Records stay NUL-delimited so tabs and newlines cannot split them. Noise directories such as `.git`, `node_modules`, and caches are intentionally measured—they are common disk consumers the product must surface.
 
 The helper emits protocol-versioned NDJSON. The parser requires one start record, no more than 5,000 valid entry records, no more than 20 bounded warnings, and one matching completion record whose path, entry count, warning floor, totals, and completeness flag agree with the parsed stream. Paths, names, encoded paths, flags, warnings, and numeric fields have explicit type or length bounds. Unknown versions, types, malformed JSON, invalid fields, truncation, or missing completion fail the attempt without replacing the last good result.
 
 The QML process collector promotes a complete parsed result atomically. Permission and I/O messages become a bounded, control-free warning set, while the completion record retains the total warning count. Starting or cancelling a replacement scan leaves every last-good result field intact. Cancellation stops the helper, which terminates its owned `du` child and cleans temporary state.
 
-The `du` traversal is already the only recursive process. Post-processing first classifies UTF-8 once for the common case, then resolves locale-independent file type and modification metadata in groups of 64 and emits JSON in groups of 64. Valid pre-epoch timestamps normalize to the protocol's unknown-date value instead of invalidating the scan. A source regression proves that 1,024 normal entries require no more than 16 `stat` processes, 18 `jq` processes, two `iconv` processes, and no standalone `base64` process; invalid UTF-8 uses a deliberately slower isolated fallback.
+Recursive work is confined to the owned `du -s` workers for real directories. Post-processing classifies UTF-8 once for the common case, then resolves locale-independent file type and modification metadata in groups of 256 with associative path lookups and emits JSON in groups of 256. Valid pre-epoch timestamps normalize to the protocol's unknown-date value instead of invalidating the scan. A source regression proves that 1,024 normal file entries require no more than 10 `stat` processes, 8 `jq` processes, two `iconv` processes, and no standalone `base64` process; invalid UTF-8 uses a deliberately slower isolated fallback. Cancellation terminates every owned measurement child before cleaning temporary state.
 
 ## Folder browser adapter
 

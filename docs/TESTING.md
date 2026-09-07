@@ -46,7 +46,7 @@ Before public release, add quantified warning/critical/unknown-capacity fixtures
 
 ## Performance boundary
 
-The implementation bounds recursive process count to one, one scan result to 5,000 entries, the navigation cache to eight scopes and 12,000 entries, folder results to 5,000 entries, treemap items to 48, and rendered lists to 80. The 1,024-entry source fixture enforces at most 16 metadata batches, 18 JSON batches, two UTF-8 checks, and zero standalone Base64 processes for normal UTF-8 names. Panel opening, capacity display, and folder browsing do not wait for a recursive scan. No end-to-end public performance claim is made until idle CPU/memory, representative scan responsiveness, dense-model interaction, and cancellation teardown are measured in a recorded VM context.
+The implementation bounds the parallel directory measurement pool (default `nproc`, max 32), one scan result to 5,000 entries, the navigation cache to eight scopes and 12,000 entries, folder results to 5,000 entries, treemap items to 48, and rendered lists to 80. The 1,024-entry source fixture enforces at most 10 `stat` processes, 8 `jq` processes, two UTF-8 checks, and zero standalone Base64 processes for normal UTF-8 names. Panel opening, capacity display, and folder browsing do not wait for a recursive scan. No end-to-end public performance claim is made until idle CPU/memory, representative scan responsiveness, dense-model interaction, and cancellation teardown are measured in a recorded VM context.
 
 ## Evidence records
 

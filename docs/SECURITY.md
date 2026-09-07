@@ -13,11 +13,11 @@ Disk Lens inspects filenames, metadata, and allocated sizes on local filesystems
 ## Enforced invariants
 
 - Both bundled helpers refuse UID `0`, require exactly one absolute directory, resolve it with `realpath`, and terminate option parsing before the path.
-- GNU `du` emits NUL-delimited records and stays on one filesystem. Filenames never become shell source.
+- Owned GNU `du -s` workers emit NUL-delimited records and stay on one filesystem. Filenames never become shell source.
 - GNU `find` emits NUL-delimited immediate-directory records for the inline browser and never starts a size traversal.
 - Display labels replace control characters. Invalid UTF-8 entries retain an encoded identity for accounting but are non-actionable in the UI.
 - At most one recursive scan belongs to the service. Scan results and folder-browser results are separately bounded to 5,000 immediate entries, while rendered projections are smaller.
-- Each helper forwards `TERM` to its owned `du`, `find`, or `gio` child, waits for it, removes private temporary state, and exits `130`.
+- Each helper forwards `TERM` to its owned `du` workers, `find`, or `gio` child, waits for them, removes private temporary state, and exits `130`.
 - The last completed result is not replaced by a cancelled or protocol-invalid attempt.
 - Navigation cache snapshots are accepted only after strict scan parsing, remain memory-only, and are bounded to eight scopes and 12,000 total entries.
 - The file manager receives selected paths as individual process arguments.

@@ -29,8 +29,9 @@ stat_calls=$(find "$counter" -mindepth 1 -maxdepth 1 -type d -name 'stat.*' | wc
 iconv_calls=$(find "$counter" -mindepth 1 -maxdepth 1 -type d -name 'iconv.*' | wc -l)
 base64_calls=$(find "$counter" -mindepth 1 -maxdepth 1 -type d -name 'base64.*' | wc -l)
 
-(( jq_calls <= 18 ))
-(( stat_calls <= 16 ))
+# 256-entry batches: four size stats, four metadata stats, six jq records, two UTF-8 checks.
+(( jq_calls <= 8 ))
+(( stat_calls <= 10 ))
 (( iconv_calls <= 2 ))
 (( base64_calls == 0 ))
 

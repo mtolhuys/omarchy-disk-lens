@@ -59,7 +59,7 @@ Omarchy Disk Lens makes Home-filesystem pressure understandable within seconds a
 
 - **Beautiful:** restrained theme-native surfaces, strong hierarchy, balanced density, semantic color, and a useful rather than decorative treemap.
 - **Useful:** exact values remain reachable through the list and inspector.
-- **Responsive by design:** panel opening and capacity never wait for a traversal; the recursive scan uses one `du` walk and bounded metadata/JSON batches, while the folder browser performs only a shallow directory listing.
+- **Responsive by design:** panel opening and capacity never wait for a traversal; the recursive scan parallelizes per-child directory measurement with bounded metadata/JSON batches, while the folder browser performs only a shallow directory listing.
 - **Honest:** filesystem capacity, directory allocation, filtered totals, incomplete traversal, and Btrfs uncertainty remain distinct.
 - **Recoverable:** cancellation preserves the last completed result, selected-item removal uses desktop Trash, and every failure state names a next action.
 - **Self-contained:** the full visual analysis flow needs no additional graphical package.

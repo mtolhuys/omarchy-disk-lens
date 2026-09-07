@@ -2,6 +2,19 @@
 
 All notable changes to Omarchy Disk Lens are documented here. The format follows Keep a Changelog and the project uses Semantic Versioning.
 
+## 0.6.2 — 2026-09-07
+
+### Changed
+
+- Parallelized immediate-child directory measurement with a bounded `du -s` job pool, and sized non-directory children from batched `st_blocks` instead of one serial `du --max-depth=1` walk.
+- Enlarged scanner metadata/JSON batches from 64 to 256 entries and replaced linear metadata matching with associative lookups.
+- Documented independent per-child allocation accounting (equivalent to `du -s -- child` for each immediate child). Cross-directory hard links may therefore appear in more than one child total; listed entry sizes remain the primary UI contract.
+- Bumped the manifest and loaded service/widget identities for the `0.6.2` performance release.
+
+### Fixed
+
+- Cut representative Home and dense shallow-scope scan wall time without changing the NDJSON protocol, cancellation, or hostile-name handling.
+
 ## 0.6.1 — 2026-09-07
 
 ### Fixed

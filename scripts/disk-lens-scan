@@ -5,10 +5,11 @@ set -uo pipefail
 readonly protocol=1
 readonly max_entries=5000
 readonly max_emitted_warnings=20
-readonly metadata_batch_size=64
+readonly metadata_batch_size=256
 scan_path=""
 work_dir=""
-du_pid=""
+measure_pid=""
+declare -a measure_pids=()
 declare -a entry_paths=()
 declare -a entry_sizes=()
 declare -a json_batch=()
@@ -30,13 +31,34 @@ cleanup() {
   fi
 }
 
+# shellcheck disable=SC2329 # Invoked by stop_scan on INT/TERM.
+terminate_measurement() {
+  local pid
+  for pid in "${measure_pids[@]+"${measure_pids[@]}"}"; do
+    if [[ -n $pid ]] && kill -0 "$pid" 2>/dev/null; then
+      kill -TERM "$pid" 2>/dev/null || true
+    fi
+  done
+  if [[ -n $measure_pid ]] && kill -0 "$measure_pid" 2>/dev/null; then
+    # Kill the whole measurement process group when available.
+    kill -TERM -- "-$measure_pid" 2>/dev/null || kill -TERM "$measure_pid" 2>/dev/null || true
+  fi
+  for pid in "${measure_pids[@]+"${measure_pids[@]}"}"; do
+    if [[ -n $pid ]]; then
+      wait "$pid" 2>/dev/null || true
+    fi
+  done
+  if [[ -n $measure_pid ]]; then
+    wait "$measure_pid" 2>/dev/null || true
+  fi
+  measure_pids=()
+  measure_pid=""
+}
+
 # shellcheck disable=SC2329 # Invoked by INT and TERM traps.
 stop_scan() {
   trap - INT TERM
-  if [[ -n $du_pid ]] && kill -0 "$du_pid" 2>/dev/null; then
-    kill -TERM "$du_pid" 2>/dev/null || true
-    wait "$du_pid" 2>/dev/null || true
-  fi
+  terminate_measurement
   cleanup
   exit 130
 }
@@ -99,6 +121,98 @@ emit_invalid_utf8_entry() {
     }'
 }
 
+scan_jobs() {
+  local jobs=${DISK_LENS_SCAN_JOBS:-}
+  if [[ ! $jobs =~ ^[1-9][0-9]*$ ]]; then
+    jobs=$(nproc 2>/dev/null || printf '4')
+  fi
+  if (( jobs < 1 )); then
+    jobs=1
+  elif (( jobs > 32 )); then
+    jobs=32
+  fi
+  printf '%s' "$jobs"
+}
+
+# Measure immediate children: real directories via parallel du -s; other entries
+# via batched st_blocks accounting. Independent child measurement matches
+# `du -s -- child` per entry and parallelizes the recursive work safely.
+measure_children() {
+  local max_jobs child out_file active pid status=0
+  local -a dirs=()
+  local -a nondirs=()
+
+  shopt -s nullglob dotglob
+
+  for child in "$scan_path"/*; do
+    if [[ -d $child && ! -L $child ]]; then
+      dirs+=("$child")
+    else
+      nondirs+=("$child")
+    fi
+  done
+
+  shopt -u nullglob dotglob
+
+  : >"$work_dir/records"
+  : >"$work_dir/errors"
+
+  mkdir -p -- "$work_dir/du-out"
+  max_jobs=$(scan_jobs)
+  active=0
+  for child in "${dirs[@]+"${dirs[@]}"}"; do
+    while (( active >= max_jobs )); do
+      if ! wait -n; then
+        status=1
+      fi
+      (( active -= 1 )) || true
+    done
+    out_file=$(mktemp "$work_dir/du-out/XXXXXX")
+    # PATH-resolved du keeps cancellation fixtures working.
+    du -s --one-file-system --block-size=1 --null -- "$child" \
+      >"$out_file" 2>>"$work_dir/errors" &
+    pid=$!
+    measure_pids+=("$pid")
+    (( active += 1 ))
+  done
+
+  while (( active > 0 )); do
+    if ! wait -n; then
+      status=1
+    fi
+    (( active -= 1 )) || true
+  done
+
+  for out_file in "$work_dir"/du-out/*; do
+    [[ -f $out_file ]] || continue
+    cat -- "$out_file" >>"$work_dir/records"
+  done
+
+  if (( ${#nondirs[@]} > 0 )); then
+    local batch_start batch_count batch_paths metadata_file
+    local metadata_path metadata_blocks
+    for (( batch_start = 0; batch_start < ${#nondirs[@]}; batch_start += metadata_batch_size )); do
+      batch_count=$((${#nondirs[@]} - batch_start))
+      if (( batch_count > metadata_batch_size )); then
+        batch_count=$metadata_batch_size
+      fi
+      batch_paths=("${nondirs[@]:batch_start:batch_count}")
+      metadata_file="$work_dir/nondir-$batch_start"
+      LC_ALL=C stat --printf '%n\0%b\0' -- "${batch_paths[@]}" \
+        >"$metadata_file" 2>>"$work_dir/errors" || true
+      while IFS= read -r -d '' metadata_path \
+          && IFS= read -r -d '' metadata_blocks; do
+        if [[ $metadata_blocks =~ ^[0-9]+$ ]]; then
+          printf '%s\t%s\0' "$((metadata_blocks * 512))" "$metadata_path" \
+            >>"$work_dir/records"
+        fi
+      done <"$metadata_file"
+    done
+  fi
+
+  return "$status"
+}
+
 if (( EUID == 0 )); then
   emit_error "root-refused" "Disk Lens scans must run as the desktop user."
   exit 77
@@ -143,16 +257,13 @@ jq -cn \
   --arg path "$scan_path" \
   '{protocol: $protocol, type: "start", path: $path}'
 
-LC_ALL=C du --all --one-file-system --block-size=1 --max-depth=1 --null -- "$scan_path" \
-  >"$work_dir/records" 2>"$work_dir/errors" &
-du_pid=$!
-
-if wait "$du_pid"; then
-  du_status=0
-else
-  du_status=$?
+# Run measurement in the foreground of this script so cancellation can terminate
+# every owned du child. Status reflects whether any du/stat failed.
+measure_status=0
+if ! measure_children; then
+  measure_status=1
 fi
-du_pid=""
+measure_pids=()
 
 entry_count=0
 warning_count=0
@@ -172,9 +283,10 @@ while IFS= read -r -d '' record; do
 
   [[ $allocated_bytes =~ ^[0-9]+$ ]] || continue
   if [[ $entry_path == "$scan_path" ]]; then
-    total_bytes=$allocated_bytes
     continue
   fi
+
+  (( total_bytes += allocated_bytes ))
 
   if (( entry_count >= max_entries )); then
     truncated=true
@@ -186,6 +298,9 @@ while IFS= read -r -d '' record; do
   (( entry_count += 1 ))
 done <"$work_dir/records"
 
+declare -A metadata_kind_by_path=()
+declare -A metadata_mtime_by_path=()
+
 for (( batch_start = 0; batch_start < entry_count; batch_start += metadata_batch_size )); do
   batch_count=$((entry_count - batch_start))
   if (( batch_count > metadata_batch_size )); then
@@ -196,34 +311,24 @@ for (( batch_start = 0; batch_start < entry_count; batch_start += metadata_batch
   batch_paths=("${entry_paths[@]:batch_start:batch_count}")
   LC_ALL=C stat --printf '%n\0%F\0%Y\0' -- "${batch_paths[@]}" >"$metadata_file" 2>/dev/null || true
 
-  declare -a metadata_paths=()
-  declare -a metadata_types=()
-  declare -a metadata_mtimes=()
   while IFS= read -r -d '' metadata_path \
       && IFS= read -r -d '' metadata_type \
       && IFS= read -r -d '' metadata_mtime; do
-    metadata_paths+=("$metadata_path")
-    metadata_types+=("$metadata_type")
-    metadata_mtimes+=("$metadata_mtime")
+    case $metadata_type in
+      directory) metadata_kind_by_path["$metadata_path"]="directory" ;;
+      "regular file") metadata_kind_by_path["$metadata_path"]="file" ;;
+      "symbolic link") metadata_kind_by_path["$metadata_path"]="symlink" ;;
+      *) metadata_kind_by_path["$metadata_path"]="other" ;;
+    esac
+    metadata_mtime_by_path["$metadata_path"]=$metadata_mtime
   done <"$metadata_file"
 
   for (( batch_index = 0; batch_index < batch_count; batch_index += 1 )); do
     entry_index=$((batch_start + batch_index))
     entry_path=${entry_paths[$entry_index]}
     allocated_bytes=${entry_sizes[$entry_index]}
-    entry_kind="other"
-    entry_mtime=0
-
-    for (( metadata_index = 0; metadata_index < ${#metadata_paths[@]}; metadata_index += 1 )); do
-      [[ ${metadata_paths[$metadata_index]} == "$entry_path" ]] || continue
-      entry_mtime=${metadata_mtimes[$metadata_index]}
-      case ${metadata_types[$metadata_index]} in
-        directory) entry_kind="directory" ;;
-        "regular file") entry_kind="file" ;;
-        "symbolic link") entry_kind="symlink" ;;
-      esac
-      break
-    done
+    entry_kind=${metadata_kind_by_path["$entry_path"]:-other}
+    entry_mtime=${metadata_mtime_by_path["$entry_path"]:-0}
 
     # GNU stat can report negative seconds for valid pre-epoch timestamps.
     # The protocol represents an unknown date as zero and otherwise accepts
@@ -281,7 +386,7 @@ if [[ $truncated == true ]]; then
 fi
 
 partial=false
-if (( du_status != 0 || warning_count > 0 )); then
+if (( measure_status != 0 || warning_count > 0 )); then
   partial=true
 fi
 
