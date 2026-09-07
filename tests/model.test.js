@@ -199,21 +199,56 @@ const mappedArea = rectangles.reduce((sum, rect) => sum + rect.width * rect.heig
 assert.ok(Math.abs(mappedArea - 180000) < 0.01)
 
 
-// Panel results view must shrink when chrome (banners/toast) grows so the
-// selection footer never pushes past the fitted panel budget.
+// KeyboardPanel outer cap includes verticalContentInset (padding + borders).
+// The results/footer stack must budget against the INNER content area or the
+// selection footer clips into the bottom orange card border by exactly the inset.
+const outerCap = 640
+const verticalContentInset = 32 // popupPadding 14*2 + ~2px borders
+assert.equal(Model.panelInnerBudget(outerCap, verticalContentInset, 0), 608)
+assert.equal(Model.panelInnerBudget(outerCap, verticalContentInset, 500), 468)
+assert.equal(Model.panelInnerBudget(outerCap, verticalContentInset, -1), 608)
+
+const reproOpts = {
+  panelBudget: Model.panelInnerBudget(outerCap, verticalContentInset, 0),
+  chromeHeight: 295, // header + capacity + scope/filters + partial banner
+  headingHeight: 40,
+  inspectorHeight: 110, // name row + Open / Ask Omarchy / Trash
+  gapChrome: 9,
+  gapHeadingView: 8,
+  gapViewInspector: 8,
+  preferredViewHeight: 215,
+  minViewHeight: 0
+}
+const reproView = Model.resultsViewHeight(reproOpts)
+const reproStack = Model.panelStackHeight(reproOpts, reproView)
+assert.ok(reproView < 215, "treemap must shrink under stacked chrome")
+assert.equal(reproStack, reproOpts.panelBudget)
+assert.ok(reproStack <= reproOpts.panelBudget, "footer reserved inside inner budget")
+assert.ok(reproStack + verticalContentInset <= outerCap, "stack + inset fits outer card")
+
+// 0.6.11 bug: budgeting against the OUTER cap leaves the footer overhanging
+// the viewport by exactly the inset.
+const wrongOpts = Object.assign({}, reproOpts, { panelBudget: outerCap })
+const wrongView = Model.resultsViewHeight(wrongOpts)
+const wrongStack = Model.panelStackHeight(wrongOpts, wrongView)
+assert.equal(wrongStack, outerCap)
+assert.ok(wrongStack > Model.panelInnerBudget(outerCap, verticalContentInset, 0),
+  "outer-cap budget overflows the Flickable viewport")
+
 assert.equal(Model.resultsViewHeight({
-  panelBudget: 640,
-  chromeHeight: 270,
+  panelBudget: 608,
+  chromeHeight: 200,
   headingHeight: 40,
   inspectorHeight: 90,
   gapChrome: 9,
   gapHeadingView: 8,
   gapViewInspector: 8,
   preferredViewHeight: 215,
-  minViewHeight: 96
+  minViewHeight: 0
 }), 215)
+
 const fitted = Model.resultsViewHeight({
-  panelBudget: 640,
+  panelBudget: 608,
   chromeHeight: 380,
   headingHeight: 40,
   inspectorHeight: 90,
@@ -221,24 +256,44 @@ const fitted = Model.resultsViewHeight({
   gapHeadingView: 8,
   gapViewInspector: 8,
   preferredViewHeight: 215,
-  minViewHeight: 96
+  minViewHeight: 0
 })
-assert.equal(fitted, 105)
-assert.equal(380 + 9 + 40 + 8 + fitted + 8 + 90, 640)
-const floor = Model.resultsViewHeight({
-  panelBudget: 640,
-  chromeHeight: 420,
+assert.equal(fitted, 73)
+assert.equal(Model.panelStackHeight({
+  chromeHeight: 380,
+  headingHeight: 40,
+  inspectorHeight: 90,
+  gapChrome: 9,
+  gapHeadingView: 8,
+  gapViewInspector: 8
+}, fitted), 608)
+
+// Prefer collapsing the view to zero over overflowing past the footer.
+const collapsed = Model.resultsViewHeight({
+  panelBudget: 608,
+  chromeHeight: 460,
   headingHeight: 40,
   inspectorHeight: 90,
   gapChrome: 9,
   gapHeadingView: 8,
   gapViewInspector: 8,
   preferredViewHeight: 215,
-  minViewHeight: 96
+  minViewHeight: 0
 })
-assert.equal(floor, 96)
-// Below the floor the outer Flickable scrolls; the view never collapses further.
-assert.ok(420 + 9 + 40 + 8 + floor + 8 + 90 > 640)
+assert.equal(collapsed, 0)
+const collapsedStack = Model.panelStackHeight({
+  chromeHeight: 460,
+  headingHeight: 40,
+  inspectorHeight: 90,
+  gapChrome: 9,
+  gapHeadingView: 8,
+  gapViewInspector: 8
+}, collapsed)
+assert.equal(collapsedStack, 615)
+// Chrome + footer alone exceed the inner budget; Flickable scrolls. The view
+// still collapses to zero first so it never steals height from the footer.
+assert.ok(collapsedStack > 608)
+
 // Without an inspector, the view-inspector gap is omitted.
 assert.equal(Model.resultsViewHeight({
   panelBudget: 400,
@@ -249,7 +304,7 @@ assert.equal(Model.resultsViewHeight({
   gapHeadingView: 8,
   gapViewInspector: 8,
   preferredViewHeight: 215,
-  minViewHeight: 96
+  minViewHeight: 0
 }), 153)
 
 console.log("ok - model, protocol, filters, formatting, treemap, and panel layout budget")

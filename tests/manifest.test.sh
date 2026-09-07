@@ -9,7 +9,7 @@ readonly manifest="$project_root/manifest.json"
 jq -e '
   .schemaVersion == 1
   and .id == "io.github.mtolhuys.disk-lens"
-  and .version == "0.6.11"
+  and .version == "0.6.12"
   and (.kinds | sort == ["bar-widget", "service"])
   and .entryPoints.service == "src/Service.qml"
   and .entryPoints.barWidget == "src/BarWidget.qml"
@@ -23,8 +23,8 @@ while IFS= read -r entry_point; do
   [[ -f $project_root/$entry_point ]]
 done < <(jq -r '.entryPoints[]' "$manifest")
 
-rg -F 'disk-lens-service-v0611' "$project_root/src/Service.qml" >/dev/null
-rg -F 'disk-lens-widget-v0611' "$project_root/src/BarWidget.qml" >/dev/null
+rg -F 'disk-lens-service-v0612' "$project_root/src/Service.qml" >/dev/null
+rg -F 'disk-lens-widget-v0612' "$project_root/src/BarWidget.qml" >/dev/null
 [[ -x $project_root/scripts/disk-lens-trash ]]
 [[ -x $project_root/scripts/disk-lens-open ]]
 rg -F 'openHelperPath' "$project_root/src/BarWidget.qml" >/dev/null
@@ -39,11 +39,24 @@ rg -F 'positionViewAtIndex' "$project_root/src/BarWidget.qml" >/dev/null
 rg -F 'function ensureListSelectionVisible()' "$project_root/src/BarWidget.qml" >/dev/null
 
 rg -F 'resultsViewHeight' "$project_root/src/Model.js" >/dev/null
+rg -F 'panelInnerBudget' "$project_root/src/Model.js" >/dev/null
+rg -F 'panelStackHeight' "$project_root/src/Model.js" >/dev/null
 rg -F 'id: resultsViewHost' "$project_root/src/BarWidget.qml" >/dev/null
 rg -F 'id: panelChrome' "$project_root/src/BarWidget.qml" >/dev/null
 rg -F 'id: inspectorSurface' "$project_root/src/BarWidget.qml" >/dev/null
-rg -F 'fittedContentHeight(panelColumn.implicitHeight, root.panelContentBudget)' \
-  "$project_root/src/BarWidget.qml" >/dev/null
+rg -F 'anchors.bottom: parent.bottom' "$project_root/src/BarWidget.qml" >/dev/null
+rg -F 'docked outside the Flickable' "$project_root/src/BarWidget.qml" >/dev/null
+rg -F 'panelInnerBudget' "$project_root/src/BarWidget.qml" >/dev/null
+rg -F 'panelBudget: panelInnerBudget' "$project_root/src/BarWidget.qml" >/dev/null
+rg -F 'readonly property int resultsViewMin: 0' "$project_root/src/BarWidget.qml" >/dev/null
+rg -F 'fittedContentHeight(' "$project_root/src/BarWidget.qml" >/dev/null
+rg -F 'root.panelContentBudget)' "$project_root/src/BarWidget.qml" >/dev/null
+rg -F 'panelColumn.implicitHeight' "$project_root/src/BarWidget.qml" >/dev/null
+# Outer cap must not be reused as the results view budget (0.6.11 regression).
+if rg -n 'panelBudget: panelContentBudget' "$project_root/src/BarWidget.qml"; then
+  echo "results view must budget against panelInnerBudget (outer cap minus inset)" >&2
+  exit 1
+fi
 if rg -n 'fittedContentHeight\(Math\.min\(panelColumn\.implicitHeight' "$project_root/src/BarWidget.qml"; then
   echo "panel height must use the two-argument fittedContentHeight cap" >&2
   exit 1

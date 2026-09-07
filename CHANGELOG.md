@@ -2,6 +2,16 @@
 
 All notable changes to Omarchy Disk Lens are documented here. The format follows Keep a Changelog and the project uses Semantic Versioning.
 
+## 0.6.12 — 2026-09-07
+
+### Fixed
+
+- **Selection footer no longer clips into the bottom orange card border** after home scan → dig-deeper → select (with partial-scan warning). `0.6.11` budgeted the list/treemap against the outer `KeyboardPanel` cap (`640`), but `fittedContentHeight(implicit, cap)` treats that cap as the *outer* card height including `verticalContentInset` (padding + borders). The Flickable viewport is only `cap - inset`, so the Open / Ask Omarchy / Trash row overhanged by exactly that inset. Results now shrink against `panelInnerBudget`, the view floor is `0`, and the selection footer is **docked outside the Flickable** so Open / Ask Omarchy / Trash stay fully visible even when chrome (partial warning, Trash toast) forces the upper stack to scroll.
+
+### Changed
+
+- Bumped the manifest and loaded service/widget identities for the `0.6.12` inner-budget layout fix.
+
 ## 0.6.11 — 2026-09-07
 
 ### Fixed

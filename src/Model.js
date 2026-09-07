@@ -465,6 +465,14 @@ function layoutRow(row, bounds, output) {
 }
 
 
+// Height for the list/treemap host so chrome + heading + view + selection
+// footer fit inside the *inner* KeyboardPanel content area.
+//
+// Important: KeyboardPanel.fittedContentHeight(implicit, cap) treats `cap` as
+// the OUTER card height (padding + borders included). The Flickable viewport
+// is only `cap - verticalContentInset`. Callers must pass that inner budget
+// here — never the raw outer cap — or the selection footer clips into the
+// bottom card border by exactly the inset.
 function resultsViewHeight(options) {
   var opts = options && typeof options === "object" ? options : {}
   var panelBudget = Math.max(0, Number(opts.panelBudget) || 0)
@@ -479,6 +487,26 @@ function resultsViewHeight(options) {
   var reserved = chromeHeight + gapChrome + headingHeight + gapHeadingView + inspectorHeight + gapViewInspector
   var available = panelBudget - reserved
   return Math.max(minHeight, Math.min(preferred, Math.max(0, available)))
+}
+
+function panelStackHeight(options, viewHeight) {
+  var opts = options && typeof options === "object" ? options : {}
+  var chromeHeight = Math.max(0, Number(opts.chromeHeight) || 0)
+  var headingHeight = Math.max(0, Number(opts.headingHeight) || 0)
+  var inspectorHeight = Math.max(0, Number(opts.inspectorHeight) || 0)
+  var gapChrome = Math.max(0, Number(opts.gapChrome) || 0)
+  var gapHeadingView = Math.max(0, Number(opts.gapHeadingView) || 0)
+  var gapViewInspector = inspectorHeight > 0 ? Math.max(0, Number(opts.gapViewInspector) || 0) : 0
+  var viewH = Math.max(0, Number(viewHeight) || 0)
+  return chromeHeight + gapChrome + headingHeight + gapHeadingView + viewH + gapViewInspector + inspectorHeight
+}
+
+function panelInnerBudget(outerCap, verticalContentInset, availableCardHeight) {
+  var outer = Math.max(0, Number(outerCap) || 0)
+  var inset = Math.max(0, Number(verticalContentInset) || 0)
+  var available = Number(availableCardHeight)
+  if (isFinite(available) && available > 0) outer = Math.min(outer, available)
+  return Math.max(0, outer - inset)
 }
 
 function treemap(entries, width, height, limit) {
@@ -535,6 +563,8 @@ if (typeof module !== "undefined") {
     filterEntries: filterEntries,
     sumBytes: sumBytes,
     resultsViewHeight: resultsViewHeight,
+    panelStackHeight: panelStackHeight,
+    panelInnerBudget: panelInnerBudget,
     treemap: treemap
   }
 }

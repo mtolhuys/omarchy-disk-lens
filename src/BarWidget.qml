@@ -11,7 +11,7 @@ BarWidget {
 
   moduleName: "io.github.mtolhuys.disk-lens"
 
-  readonly property string buildIdentity: "disk-lens-widget-v0611"
+  readonly property string buildIdentity: "disk-lens-widget-v0612"
   readonly property var diskService: bar && bar.shell
     ? bar.shell.serviceFor("io.github.mtolhuys.disk-lens") : null
   readonly property var capacity: diskService ? diskService.capacity : Model.parseCapacity("")
@@ -39,21 +39,36 @@ BarWidget {
     Math.max(1, treemapCanvas.width - Style.space(4)),
     Math.max(1, treemapCanvas.height - Style.space(4)),
     48)
-  // Fitted panel content budget. Results list/treemap + selection footer flex
-  // inside the remaining height so toast/warning banners never push past the
-  // bottom border (especially on reopen when banners restore with results).
+  // Outer KeyboardPanel card cap (matches other Omarchy panels).
+  // fittedContentHeight(implicit, cap) uses this as the OUTER height including
+  // padding + borders. The Flickable viewport is only (cap - verticalContentInset).
   readonly property int panelContentBudget: Style.space(640)
+  // Inner content budget reserved for panelColumn. Using the outer cap here was
+  // the 0.6.11 regression: selection footer clipped by exactly the inset.
+  readonly property real panelInnerBudget: Model.panelInnerBudget(
+    panelContentBudget,
+    popup.verticalContentInset,
+    popup.availableCardHeight)
   readonly property int resultsViewPreferred: Style.space(215)
-  readonly property int resultsViewMin: Style.space(96)
+  // Collapse the treemap/list all the way before overflowing; never steal
+  // height from the selection footer to satisfy a view floor.
+  readonly property int resultsViewMin: 0
   readonly property real resultsViewHeight: {
     if (typeof resultsBlock === "undefined" || !resultsBlock.visible)
       return resultsViewPreferred
-    var chromeH = typeof panelChrome !== "undefined" ? panelChrome.height : 0
-    var headingH = typeof resultsHeading !== "undefined" ? resultsHeading.height : 0
-    var inspectorH = typeof inspectorSurface !== "undefined" && inspectorSurface.visible
-      ? inspectorSurface.implicitHeight : 0
+    var chromeH = 0
+    if (typeof panelChrome !== "undefined")
+      chromeH = panelChrome.height > 0 ? panelChrome.height : panelChrome.implicitHeight
+    var headingH = 0
+    if (typeof resultsHeading !== "undefined")
+      headingH = resultsHeading.height > 0 ? resultsHeading.height : resultsHeading.implicitHeight
+    var inspectorH = 0
+    if (typeof inspectorSurface !== "undefined" && inspectorSurface.visible)
+      inspectorH = inspectorSurface.height > 0
+        ? inspectorSurface.height
+        : inspectorSurface.implicitHeight
     return Model.resultsViewHeight({
-      panelBudget: panelContentBudget,
+      panelBudget: panelInnerBudget,
       chromeHeight: chromeH,
       headingHeight: headingH,
       inspectorHeight: inspectorH,
@@ -663,7 +678,12 @@ BarWidget {
     open: root.popupOpen
     focusTarget: keyCatcher
     contentWidth: popup.fittedContentWidth(Style.space(520))
-    contentHeight: popup.fittedContentHeight(panelColumn.implicitHeight, root.panelContentBudget)
+    contentHeight: popup.fittedContentHeight(
+      panelColumn.implicitHeight
+        + (inspectorSurface.visible
+          ? Style.space(8) + Math.max(inspectorSurface.implicitHeight, inspectorSurface.height)
+          : 0),
+      root.panelContentBudget)
 
     // Stock Omarchy KeyboardPanel pattern: PanelKeyCatcher as focusTarget.
     PanelKeyCatcher {
@@ -742,7 +762,11 @@ BarWidget {
 
       Flickable {
         id: panelScroll
-        anchors.fill: parent
+        anchors.top: parent.top
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.bottom: inspectorSurface.visible ? inspectorSurface.top : parent.bottom
+        anchors.bottomMargin: inspectorSurface.visible ? Style.space(8) : 0
         contentWidth: width
         contentHeight: panelColumn.implicitHeight
         clip: true
@@ -2006,10 +2030,20 @@ BarWidget {
           } // resultsViewHost
 
 
-        BorderSurface {
+        } // resultsBlock
+      } // panelColumn
+
+      } // panelScroll
+
+      // Selection footer is docked outside the Flickable so Open / Ask / Trash
+      // stay fully visible while the treemap/list shrinks (and chrome scrolls).
+      BorderSurface {
           id: inspectorSurface
+          anchors.left: parent.left
+          anchors.right: parent.right
+          anchors.bottom: parent.bottom
           visible: root.selectedEntry !== null
-          width: parent.width
+          height: implicitHeight
           implicitHeight: inspectorColumn.implicitHeight + Style.space(20)
           color: Style.selectedFillFor(Color.popups.text, Color.accent)
           borderSpec: Border.controlSpec("normal", Color.popups.text, Color.accent)
@@ -2117,10 +2151,7 @@ BarWidget {
             }
           }
         }
-        } // resultsBlock
-      } // panelColumn
 
-      } // panelScroll
 
       ConfirmDialog {
         id: trashConfirm
