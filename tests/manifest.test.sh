@@ -9,7 +9,7 @@ readonly manifest="$project_root/manifest.json"
 jq -e '
   .schemaVersion == 1
   and .id == "io.github.mtolhuys.disk-lens"
-  and .version == "0.6.10"
+  and .version == "0.6.11"
   and (.kinds | sort == ["bar-widget", "service"])
   and .entryPoints.service == "src/Service.qml"
   and .entryPoints.barWidget == "src/BarWidget.qml"
@@ -23,8 +23,8 @@ while IFS= read -r entry_point; do
   [[ -f $project_root/$entry_point ]]
 done < <(jq -r '.entryPoints[]' "$manifest")
 
-rg -F 'disk-lens-service-v0610' "$project_root/src/Service.qml" >/dev/null
-rg -F 'disk-lens-widget-v0610' "$project_root/src/BarWidget.qml" >/dev/null
+rg -F 'disk-lens-service-v0611' "$project_root/src/Service.qml" >/dev/null
+rg -F 'disk-lens-widget-v0611' "$project_root/src/BarWidget.qml" >/dev/null
 [[ -x $project_root/scripts/disk-lens-trash ]]
 [[ -x $project_root/scripts/disk-lens-open ]]
 rg -F 'openHelperPath' "$project_root/src/BarWidget.qml" >/dev/null
@@ -37,6 +37,17 @@ rg -F 'PanelKeyCatcher' "$project_root/src/BarWidget.qml" >/dev/null
 rg -F 'id: entriesList' "$project_root/src/BarWidget.qml" >/dev/null
 rg -F 'positionViewAtIndex' "$project_root/src/BarWidget.qml" >/dev/null
 rg -F 'function ensureListSelectionVisible()' "$project_root/src/BarWidget.qml" >/dev/null
+
+rg -F 'resultsViewHeight' "$project_root/src/Model.js" >/dev/null
+rg -F 'id: resultsViewHost' "$project_root/src/BarWidget.qml" >/dev/null
+rg -F 'id: panelChrome' "$project_root/src/BarWidget.qml" >/dev/null
+rg -F 'id: inspectorSurface' "$project_root/src/BarWidget.qml" >/dev/null
+rg -F 'fittedContentHeight(panelColumn.implicitHeight, root.panelContentBudget)' \
+  "$project_root/src/BarWidget.qml" >/dev/null
+if rg -n 'fittedContentHeight\(Math\.min\(panelColumn\.implicitHeight' "$project_root/src/BarWidget.qml"; then
+  echo "panel height must use the two-argument fittedContentHeight cap" >&2
+  exit 1
+fi
 rg -F 'ScanRadar' "$project_root/src/BarWidget.qml" >/dev/null
 [[ -f $project_root/src/ScanRadar.qml ]]
 if rg -n 'id: closeButton|Close Disk Lens' "$project_root/src/BarWidget.qml"; then

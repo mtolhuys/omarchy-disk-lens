@@ -464,6 +464,23 @@ function layoutRow(row, bounds, output) {
   return { x: bounds.x, y: bounds.y + rowHeight, width: bounds.width, height: Math.max(0, bounds.height - rowHeight) }
 }
 
+
+function resultsViewHeight(options) {
+  var opts = options && typeof options === "object" ? options : {}
+  var panelBudget = Math.max(0, Number(opts.panelBudget) || 0)
+  var chromeHeight = Math.max(0, Number(opts.chromeHeight) || 0)
+  var headingHeight = Math.max(0, Number(opts.headingHeight) || 0)
+  var inspectorHeight = Math.max(0, Number(opts.inspectorHeight) || 0)
+  var gapChrome = Math.max(0, Number(opts.gapChrome) || 0)
+  var gapHeadingView = Math.max(0, Number(opts.gapHeadingView) || 0)
+  var gapViewInspector = inspectorHeight > 0 ? Math.max(0, Number(opts.gapViewInspector) || 0) : 0
+  var preferred = Math.max(0, Number(opts.preferredViewHeight) || 0)
+  var minHeight = Math.max(0, Number(opts.minViewHeight) || 0)
+  var reserved = chromeHeight + gapChrome + headingHeight + gapHeadingView + inspectorHeight + gapViewInspector
+  var available = panelBudget - reserved
+  return Math.max(minHeight, Math.min(preferred, Math.max(0, available)))
+}
+
 function treemap(entries, width, height, limit) {
   var w = Math.max(0, Number(width) || 0)
   var h = Math.max(0, Number(height) || 0)
@@ -517,6 +534,7 @@ if (typeof module !== "undefined") {
     buildAgentPrompt: buildAgentPrompt,
     filterEntries: filterEntries,
     sumBytes: sumBytes,
+    resultsViewHeight: resultsViewHeight,
     treemap: treemap
   }
 }

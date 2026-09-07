@@ -11,7 +11,7 @@ BarWidget {
 
   moduleName: "io.github.mtolhuys.disk-lens"
 
-  readonly property string buildIdentity: "disk-lens-widget-v0610"
+  readonly property string buildIdentity: "disk-lens-widget-v0611"
   readonly property var diskService: bar && bar.shell
     ? bar.shell.serviceFor("io.github.mtolhuys.disk-lens") : null
   readonly property var capacity: diskService ? diskService.capacity : Model.parseCapacity("")
@@ -39,6 +39,31 @@ BarWidget {
     Math.max(1, treemapCanvas.width - Style.space(4)),
     Math.max(1, treemapCanvas.height - Style.space(4)),
     48)
+  // Fitted panel content budget. Results list/treemap + selection footer flex
+  // inside the remaining height so toast/warning banners never push past the
+  // bottom border (especially on reopen when banners restore with results).
+  readonly property int panelContentBudget: Style.space(640)
+  readonly property int resultsViewPreferred: Style.space(215)
+  readonly property int resultsViewMin: Style.space(96)
+  readonly property real resultsViewHeight: {
+    if (typeof resultsBlock === "undefined" || !resultsBlock.visible)
+      return resultsViewPreferred
+    var chromeH = typeof panelChrome !== "undefined" ? panelChrome.height : 0
+    var headingH = typeof resultsHeading !== "undefined" ? resultsHeading.height : 0
+    var inspectorH = typeof inspectorSurface !== "undefined" && inspectorSurface.visible
+      ? inspectorSurface.implicitHeight : 0
+    return Model.resultsViewHeight({
+      panelBudget: panelContentBudget,
+      chromeHeight: chromeH,
+      headingHeight: headingH,
+      inspectorHeight: inspectorH,
+      gapChrome: Style.space(9),
+      gapHeadingView: Style.space(8),
+      gapViewInspector: Style.space(8),
+      preferredViewHeight: resultsViewPreferred,
+      minViewHeight: resultsViewMin
+    })
+  }
   readonly property bool opened: popupOpen
   readonly property bool popoutSwitchClosing: false
   readonly property real openPanelIndicatorWidth: button.labelWidth
@@ -638,7 +663,7 @@ BarWidget {
     open: root.popupOpen
     focusTarget: keyCatcher
     contentWidth: popup.fittedContentWidth(Style.space(520))
-    contentHeight: popup.fittedContentHeight(Math.min(panelColumn.implicitHeight, Style.space(640)))
+    contentHeight: popup.fittedContentHeight(panelColumn.implicitHeight, root.panelContentBudget)
 
     // Stock Omarchy KeyboardPanel pattern: PanelKeyCatcher as focusTarget.
     PanelKeyCatcher {
@@ -752,6 +777,11 @@ BarWidget {
         id: panelColumn
         width: panelScroll.width
         spacing: Style.space(9)
+
+        Column {
+          id: panelChrome
+          width: parent.width
+          spacing: parent.spacing
 
         Item {
           id: panelHeaderRow
@@ -1670,12 +1700,17 @@ BarWidget {
           }
         }
 
+        } // panelChrome
+
         Column {
+          id: resultsBlock
           visible: !root.folderPickerOpen && root.diskService && root.diskService.entries.length > 0
           width: parent.width
           spacing: Style.space(8)
+          clip: true
 
           Row {
+            id: resultsHeading
             width: parent.width
 
             Column {
@@ -1716,11 +1751,16 @@ BarWidget {
             }
           }
 
+          Item {
+            id: resultsViewHost
+            width: parent.width
+            height: root.resultsViewHeight
+            clip: true
+
           BorderSurface {
             id: treemapFrame
             visible: root.viewMode === "treemap"
-            width: parent.width
-            height: Style.space(215)
+            anchors.fill: parent
             color: Util.alpha(Color.popups.text, 0.035)
             borderSpec: Border.controlSpec("normal", Color.popups.text, Color.accent)
             radius: Style.cornerRadius
@@ -1819,13 +1859,14 @@ BarWidget {
 
           Column {
             visible: root.viewMode === "list"
-            width: parent.width
+            anchors.fill: parent
             spacing: Style.space(3)
 
             BorderSurface {
               id: listFrame
               width: parent.width
-              height: Style.space(215)
+              height: Math.max(0, parent.height
+                - (listTruncateHint.visible ? listTruncateHint.height + parent.spacing : 0))
               color: Util.alpha(Color.popups.text, 0.035)
               borderSpec: Border.controlSpec("normal", Color.popups.text, Color.accent)
               radius: Style.cornerRadius
@@ -1951,6 +1992,7 @@ BarWidget {
             }
 
             Text {
+              id: listTruncateHint
               visible: root.visibleEntries.length > 80
               width: parent.width
               text: "Showing the largest 80 entries · refine the filters to narrow the list"
@@ -1961,10 +2003,12 @@ BarWidget {
               textFormat: Text.PlainText
             }
           }
-        }
+          } // resultsViewHost
+
 
         BorderSurface {
-          visible: !root.folderPickerOpen && root.selectedEntry !== null
+          id: inspectorSurface
+          visible: root.selectedEntry !== null
           width: parent.width
           implicitHeight: inspectorColumn.implicitHeight + Style.space(20)
           color: Style.selectedFillFor(Color.popups.text, Color.accent)
@@ -2073,7 +2117,8 @@ BarWidget {
             }
           }
         }
-      }
+        } // resultsBlock
+      } // panelColumn
 
       } // panelScroll
 

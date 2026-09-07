@@ -198,4 +198,58 @@ for (const rect of rectangles) {
 const mappedArea = rectangles.reduce((sum, rect) => sum + rect.width * rect.height, 0)
 assert.ok(Math.abs(mappedArea - 180000) < 0.01)
 
-console.log("ok - model, protocol, filters, formatting, and treemap")
+
+// Panel results view must shrink when chrome (banners/toast) grows so the
+// selection footer never pushes past the fitted panel budget.
+assert.equal(Model.resultsViewHeight({
+  panelBudget: 640,
+  chromeHeight: 270,
+  headingHeight: 40,
+  inspectorHeight: 90,
+  gapChrome: 9,
+  gapHeadingView: 8,
+  gapViewInspector: 8,
+  preferredViewHeight: 215,
+  minViewHeight: 96
+}), 215)
+const fitted = Model.resultsViewHeight({
+  panelBudget: 640,
+  chromeHeight: 380,
+  headingHeight: 40,
+  inspectorHeight: 90,
+  gapChrome: 9,
+  gapHeadingView: 8,
+  gapViewInspector: 8,
+  preferredViewHeight: 215,
+  minViewHeight: 96
+})
+assert.equal(fitted, 105)
+assert.equal(380 + 9 + 40 + 8 + fitted + 8 + 90, 640)
+const floor = Model.resultsViewHeight({
+  panelBudget: 640,
+  chromeHeight: 420,
+  headingHeight: 40,
+  inspectorHeight: 90,
+  gapChrome: 9,
+  gapHeadingView: 8,
+  gapViewInspector: 8,
+  preferredViewHeight: 215,
+  minViewHeight: 96
+})
+assert.equal(floor, 96)
+// Below the floor the outer Flickable scrolls; the view never collapses further.
+assert.ok(420 + 9 + 40 + 8 + floor + 8 + 90 > 640)
+// Without an inspector, the view-inspector gap is omitted.
+assert.equal(Model.resultsViewHeight({
+  panelBudget: 400,
+  chromeHeight: 200,
+  headingHeight: 30,
+  inspectorHeight: 0,
+  gapChrome: 9,
+  gapHeadingView: 8,
+  gapViewInspector: 8,
+  preferredViewHeight: 215,
+  minViewHeight: 96
+}), 153)
+
+console.log("ok - model, protocol, filters, formatting, treemap, and panel layout budget")

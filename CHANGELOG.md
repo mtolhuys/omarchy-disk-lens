@@ -2,6 +2,17 @@
 
 All notable changes to Omarchy Disk Lens are documented here. The format follows Keep a Changelog and the project uses Semantic Versioning.
 
+## 0.6.11 — 2026-09-07
+
+### Fixed
+
+- **Panel content no longer overflows the bottom border** when a Trash toast and partial-scan warning stack above results. The list/treemap + selection footer now flex-shrink inside the remaining fitted height so banners never push past the window chrome (including on reopen when restored banners return with results).
+- Corrected `KeyboardPanel` sizing to the two-argument `fittedContentHeight(implicit, cap)` form used by other Omarchy panels, so the 640px budget caps the card instead of only the pre-inset content height.
+
+### Changed
+
+- Bumped the manifest and loaded service/widget identities for the `0.6.11` layout overflow fix.
+
 ## 0.6.10 — 2026-09-07
 
 ### Fixed

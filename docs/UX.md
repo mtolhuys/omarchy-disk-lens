@@ -26,7 +26,7 @@ The compact panel has five stable zones. Its header contains only the gauge, pro
 
 The ordinary scope row contains a history Back control, an editable absolute or `~/` path, a compact folder-browser trigger, and one contextual Open/Refresh/Cancel action. First use exposes only one scan action. The inline folder browser lists immediate subdirectories without measuring them, includes hidden folders, accepts an editable path, and keeps the user inside the themed panel.
 
-The panel scrolls when content exceeds its fitted height, keeping small displays usable. No dependency or package-install row competes with the analysis result.
+The panel scrolls when chrome alone exceeds its fitted height. Results (list/treemap) and the selection footer flex-shrink inside the remaining height when banners or toasts appear, so content stays clipped within the card and never fights the outer border. No dependency or package-install row competes with the analysis result.
 
 ## Treemap and ranked list
 
