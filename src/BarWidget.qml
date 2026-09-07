@@ -11,7 +11,7 @@ BarWidget {
 
   moduleName: "io.github.mtolhuys.disk-lens"
 
-  readonly property string buildIdentity: "disk-lens-widget-v0600"
+  readonly property string buildIdentity: "disk-lens-widget-v0601"
   readonly property var diskService: bar && bar.shell
     ? bar.shell.serviceFor("io.github.mtolhuys.disk-lens") : null
   readonly property var capacity: diskService ? diskService.capacity : Model.parseCapacity("")
@@ -137,6 +137,14 @@ BarWidget {
     return -1
   }
 
+  function ensureListSelectionVisible() {
+    if (viewMode !== "list") return
+    if (typeof entriesList === "undefined" || !entriesList.visible) return
+    var idx = selectedListIndex()
+    if (idx < 0 || idx >= entriesList.count) return
+    entriesList.positionViewAtIndex(idx, ListView.Contain)
+  }
+
   function moveSelection(delta) {
     var list = boundedEntries()
     if (!list.length) return false
@@ -144,6 +152,7 @@ BarWidget {
     if (idx < 0) idx = delta > 0 ? -1 : 0
     var next = Math.max(0, Math.min(list.length - 1, idx + delta))
     selectedPath = list[next].path
+    Qt.callLater(ensureListSelectionVisible)
     return true
   }
 
@@ -169,6 +178,7 @@ BarWidget {
 
   function toggleViewMode() {
     viewMode = viewMode === "treemap" ? "list" : "treemap"
+    if (viewMode === "list") Qt.callLater(ensureListSelectionVisible)
   }
 
   function entryForPath(path) {
@@ -1787,81 +1797,120 @@ BarWidget {
             width: parent.width
             spacing: Style.space(3)
 
-            Repeater {
-              model: root.visibleEntries.slice(0, 80)
+            BorderSurface {
+              id: listFrame
+              width: parent.width
+              height: Style.space(215)
+              color: Util.alpha(Color.popups.text, 0.035)
+              borderSpec: Border.controlSpec("normal", Color.popups.text, Color.accent)
+              radius: Style.cornerRadius
+              clip: true
 
-              delegate: BorderSurface {
-                required property var modelData
-                required property int index
-                width: parent.width
-                height: Style.space(36)
-                color: root.selectedPath === modelData.path
-                  ? Style.selectedFillFor(Color.popups.text, Color.accent)
-                  : (rowHover.hovered ? Style.hoverFillFor(Color.popups.text, Color.accent) : "transparent")
-                borderSpec: root.selectedPath === modelData.path
-                  ? Border.controlSpec("focus", Color.popups.text, Color.accent)
-                  : Border.none()
-                radius: Style.cornerRadius
+              ListView {
+                id: entriesList
+                anchors.fill: parent
+                anchors.margins: Style.space(2)
+                clip: true
+                model: root.boundedEntries()
+                spacing: Style.space(2)
+                boundsBehavior: Flickable.StopAtBounds
+                interactive: contentHeight > height
+                keyNavigationEnabled: false
+                highlightFollowsCurrentItem: false
+                Accessible.role: Accessible.List
+                Accessible.name: "Largest entries"
+                QQC.ScrollBar.vertical: QQC.ScrollBar {
+                  policy: QQC.ScrollBar.AsNeeded
+                  width: Style.space(4)
+                }
 
-                Rectangle {
-                  anchors.left: parent.left
-                  anchors.verticalCenter: parent.verticalCenter
-                  anchors.leftMargin: Style.space(8)
-                  width: Math.max(Style.space(3), (parent.width - Style.space(16))
-                    * modelData.allocatedBytes / Math.max(1, root.visibleEntries[0].allocatedBytes))
-                  height: parent.height - Style.space(10)
+                onCountChanged: Qt.callLater(root.ensureListSelectionVisible)
+                onVisibleChanged: if (visible) Qt.callLater(root.ensureListSelectionVisible)
+
+                delegate: BorderSurface {
+                  required property var modelData
+                  required property int index
+                  width: entriesList.width
+                  height: Style.space(36)
+                  color: root.selectedPath === modelData.path
+                    ? Style.selectedFillFor(Color.popups.text, Color.accent)
+                    : (rowHover.hovered ? Style.hoverFillFor(Color.popups.text, Color.accent) : "transparent")
+                  borderSpec: root.selectedPath === modelData.path
+                    ? Border.controlSpec("focus", Color.popups.text, Color.accent)
+                    : Border.none()
                   radius: Style.cornerRadius
-                  color: Util.alpha(index === 0 ? Color.accent : Color.foreground, index === 0 ? 0.15 : 0.06)
-                }
 
-                Row {
-                  anchors.left: parent.left
-                  anchors.right: parent.right
-                  anchors.verticalCenter: parent.verticalCenter
-                  anchors.margins: Style.space(10)
-                  spacing: Style.space(10)
-
-                  Text {
-                    width: Style.space(18)
-                    text: modelData.kind === "directory" ? "▸" : "·"
-                    color: modelData.kind === "directory" ? Color.accent : Color.muted
-                    font.family: Style.font.family
-                    font.pixelSize: Style.font.body
-                    textFormat: Text.PlainText
+                  Rectangle {
+                    anchors.left: parent.left
+                    anchors.verticalCenter: parent.verticalCenter
+                    anchors.leftMargin: Style.space(8)
+                    width: Math.max(Style.space(3), (parent.width - Style.space(16))
+                      * modelData.allocatedBytes / Math.max(1, root.visibleEntries[0].allocatedBytes))
+                    height: parent.height - Style.space(10)
+                    radius: Style.cornerRadius
+                    color: Util.alpha(index === 0 ? Color.accent : Color.foreground, index === 0 ? 0.15 : 0.06)
                   }
 
-                  Text {
-                    width: parent.width - parent.children[0].width - rowBytes.width - Style.space(20)
-                    text: Model.safeLabel(modelData.name)
-                    color: Color.popups.text
-                    font.family: Style.font.family
-                    font.pixelSize: Style.font.body
-                    font.bold: index < 3
-                    elide: Text.ElideMiddle
-                    textFormat: Text.PlainText
+                  Row {
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    anchors.verticalCenter: parent.verticalCenter
+                    anchors.margins: Style.space(10)
+                    spacing: Style.space(10)
+
+                    Text {
+                      width: Style.space(18)
+                      text: modelData.kind === "directory" ? "▸" : "·"
+                      color: modelData.kind === "directory" ? Color.accent : Color.muted
+                      font.family: Style.font.family
+                      font.pixelSize: Style.font.body
+                      textFormat: Text.PlainText
+                    }
+
+                    Text {
+                      width: parent.width - parent.children[0].width - rowBytes.width - Style.space(20)
+                      text: Model.safeLabel(modelData.name)
+                      color: Color.popups.text
+                      font.family: Style.font.family
+                      font.pixelSize: Style.font.body
+                      font.bold: index < 3
+                      elide: Text.ElideMiddle
+                      textFormat: Text.PlainText
+                    }
+
+                    Text {
+                      id: rowBytes
+                      text: Model.formatBytes(modelData.allocatedBytes)
+                      color: Color.popups.text
+                      opacity: 0.74
+                      font.family: Style.font.family
+                      font.pixelSize: Style.font.bodySmall
+                      textFormat: Text.PlainText
+                    }
                   }
 
-                  Text {
-                    id: rowBytes
-                    text: Model.formatBytes(modelData.allocatedBytes)
-                    color: Color.popups.text
-                    opacity: 0.74
-                    font.family: Style.font.family
-                    font.pixelSize: Style.font.bodySmall
-                    textFormat: Text.PlainText
+                  HoverHandler { id: rowHover }
+                  MouseArea {
+                    anchors.fill: parent
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: root.selectedPath = modelData.path
+                    onDoubleClicked: root.drillInto(modelData)
                   }
-                }
 
-                HoverHandler { id: rowHover }
-                MouseArea {
-                  anchors.fill: parent
-                  cursorShape: Qt.PointingHandCursor
-                  onClicked: root.selectedPath = modelData.path
-                  onDoubleClicked: root.drillInto(modelData)
+                  Accessible.name: Model.safeLabel(modelData.name) + ", " + Model.formatBytes(modelData.allocatedBytes)
+                  Accessible.role: Accessible.ListItem
+                  Accessible.selected: root.selectedPath === modelData.path
                 }
+              }
 
-                Accessible.name: Model.safeLabel(modelData.name) + ", " + Model.formatBytes(modelData.allocatedBytes)
-                Accessible.role: Accessible.ListItem
+              Text {
+                anchors.centerIn: parent
+                visible: root.visibleEntries.length === 0
+                text: "No entries match these filters"
+                color: Color.muted
+                font.family: Style.font.family
+                font.pixelSize: Style.font.body
+                textFormat: Text.PlainText
               }
             }
 
@@ -1872,17 +1921,6 @@ BarWidget {
               color: Color.muted
               font.family: Style.font.family
               font.pixelSize: Style.font.caption
-              horizontalAlignment: Text.AlignHCenter
-              textFormat: Text.PlainText
-            }
-
-            Text {
-              visible: root.visibleEntries.length === 0
-              width: parent.width
-              text: "No entries match these filters"
-              color: Color.muted
-              font.family: Style.font.family
-              font.pixelSize: Style.font.body
               horizontalAlignment: Text.AlignHCenter
               textFormat: Text.PlainText
             }

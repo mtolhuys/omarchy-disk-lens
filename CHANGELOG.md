@@ -2,6 +2,16 @@
 
 All notable changes to Omarchy Disk Lens are documented here. The format follows Keep a Changelog and the project uses Semantic Versioning.
 
+## 0.6.1 — 2026-09-07
+
+### Fixed
+
+- Ranked-list keyboard selection (↑↓ / j k) now keeps the current row in view by scrolling only the list pane via `positionViewAtIndex`, with a thin overflow scrollbar and clipping so the outer panel does not scroll with the list.
+
+### Changed
+
+- Bumped the manifest and loaded service/widget identities for the `0.6.1` patch.
+
 ## 0.6.0 — 2026-09-07
 
 ### Added

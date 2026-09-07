@@ -118,6 +118,6 @@ Disk Lens is built specifically for Omarchy. It does not bundle, install, or dep
 
 ## Status
 
-The current public release is **0.6.0**. See [the release evidence](docs/RELEASE-EVIDENCE.md) for what has been tested and [the roadmap](docs/ROADMAP.md) for what is still planned before version 1.0.
+The current public release is **0.6.1**. See [the release evidence](docs/RELEASE-EVIDENCE.md) for what has been tested and [the roadmap](docs/ROADMAP.md) for what is still planned before version 1.0.
 
 MIT licensed. See [LICENSE](LICENSE).

@@ -32,7 +32,7 @@ The panel scrolls when content exceeds its fitted height, keeping small displays
 
 Both views are projections of one model. Treemap area represents allocated bytes and only renders a label when its rectangle is large enough. Pointer selection updates the shared inspector; an explicit **Drill in** action changes scope.
 
-The ranked list shows name, proportional bar, exact allocated size, and directory/file treatment. The 80-entry render bound is stated in the UI; filters expose a narrower result without changing stored scan totals. Control characters are repaired for display and invalid UTF-8 paths are not actionable.
+The ranked list shows name, proportional bar, exact allocated size, and directory/file treatment inside a fixed-height, clipped list pane with wheel and keyboard scrolling. Arrow / j k selection calls `positionViewAtIndex` so the current row stays visible without scrolling the outer panel. The 80-entry render bound is stated in the UI; filters expose a narrower result without changing stored scan totals. Control characters are repaired for display and invalid UTF-8 paths are not actionable.
 
 For an actionable selected directory, **Ask Omarchy** is visually primary without displacing **Drill in** or **Open**. Activating it closes the panel and opens the configured default agent with a read-only diagnostic question. Drilling pushes the prior scope into bounded history; Back restores its original scan timestamp and model when cached rather than silently remeasuring it.
 
