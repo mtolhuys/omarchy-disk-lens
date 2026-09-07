@@ -1,9 +1,9 @@
 import QtQuick
 
 // One vertical scanner stripe — GPU-animated x (no Canvas, no layered FBO).
-// Motion-relative radar glow: bright leading edge in the travel direction,
-// soft trail fading behind. Trail/lead flip with ping-pong via direction (±1).
-// Host is fully transparent; only stacked horizontal accent gradients paint.
+// Quiet motion-relative radar: soft trail behind, slightly brighter lead ahead.
+// Trail/lead flip with ping-pong via direction (±1). Transparent host only.
+// Single coherent gradient (no stacked-rect seams / banding / hard hairline).
 Item {
   id: root
 
@@ -15,13 +15,15 @@ Item {
   property real sweep: 0
   // +1 = sweeping right (trail left, lead right); -1 = sweeping left
   property int direction: 1
+  // Subtle opacity breathe — organic radar, not a static sliding stripe
+  property real breathe: 1.0
 
-  readonly property real gain: Math.max(0.18, Math.min(1.25, intensity))
-  // Wider traveler so the comet trail has room to fade
+  readonly property real gain: Math.max(0.16, Math.min(1.1, intensity)) * breathe
+  // Narrower traveler — whisper core with room for a soft trail
   readonly property real beamWidth: {
     if (width < 2)
-      return 110
-    return Math.max(88, Math.min(168, width * 0.34))
+      return 72
+    return Math.max(56, Math.min(112, width * 0.22))
   }
 
   implicitWidth: 240
@@ -36,6 +38,7 @@ Item {
     if (!running) {
       sweep = 0
       direction = 1
+      breathe = 1.0
     }
   }
 
@@ -45,21 +48,16 @@ Item {
     width: root.beamWidth
     height: parent.height
     x: -width + root.sweep * (parent.width + width)
+    opacity: root.gain
     transform: Scale {
       origin.x: beam.width * 0.5
       origin.y: beam.height * 0.5
       xScale: root.direction
     }
 
-    // Painted for direction=+1 (moving right): long trail ← left, hot lead → right
-
-    // Outermost trail wash (longest, faintest)
+    // Painted for direction=+1 (moving right): long trail ← left, soft lead → right
     Rectangle {
-      anchors.right: parent.right
-      anchors.rightMargin: parent.width * 0.04
-      width: parent.width * 1.05
-      height: parent.height
-      opacity: root.gain
+      anchors.fill: parent
       gradient: Gradient {
         orientation: Gradient.Horizontal
         GradientStop {
@@ -68,94 +66,31 @@ Item {
         }
         GradientStop {
           position: 0.22
-          color: Qt.rgba(root.accent.r, root.accent.g, root.accent.b, 0.025)
+          color: Qt.rgba(root.accent.r, root.accent.g, root.accent.b, 0.015)
         }
         GradientStop {
-          position: 0.55
-          color: Qt.rgba(root.accent.r, root.accent.g, root.accent.b, 0.07)
+          position: 0.48
+          color: Qt.rgba(root.accent.r, root.accent.g, root.accent.b, 0.04)
         }
         GradientStop {
-          position: 0.82
-          color: Qt.rgba(root.accent.r, root.accent.g, root.accent.b, 0.14)
+          position: 0.72
+          color: Qt.rgba(root.accent.r, root.accent.g, root.accent.b, 0.09)
         }
+        // Soft body peak just behind the lead — never white-hot / neon
         GradientStop {
-          position: 1.0
-          color: Qt.rgba(root.accent.r, root.accent.g, root.accent.b, 0.06)
-        }
-      }
-    }
-
-    // Mid trail → body ramp
-    Rectangle {
-      anchors.right: parent.right
-      width: parent.width * 0.78
-      height: parent.height
-      opacity: root.gain
-      gradient: Gradient {
-        orientation: Gradient.Horizontal
-        GradientStop {
-          position: 0.0
-          color: Qt.rgba(root.accent.r, root.accent.g, root.accent.b, 0)
-        }
-        GradientStop {
-          position: 0.28
-          color: Qt.rgba(root.accent.r, root.accent.g, root.accent.b, 0.08)
-        }
-        GradientStop {
-          position: 0.58
-          color: Qt.rgba(root.accent.r, root.accent.g, root.accent.b, 0.20)
-        }
-        GradientStop {
-          position: 0.84
-          color: Qt.rgba(root.accent.r, root.accent.g, root.accent.b, 0.36)
-        }
-        GradientStop {
-          position: 1.0
-          color: Qt.rgba(root.accent.r, root.accent.g, root.accent.b, 0.14)
-        }
-      }
-    }
-
-    // Hot leading core — sharp toward the travel direction, soft behind
-    Rectangle {
-      anchors.right: parent.right
-      anchors.verticalCenter: parent.verticalCenter
-      width: Math.max(28, parent.width * 0.34)
-      height: parent.height * 0.96
-      opacity: root.gain
-      gradient: Gradient {
-        orientation: Gradient.Horizontal
-        GradientStop {
-          position: 0.0
-          color: Qt.rgba(root.accent.r, root.accent.g, root.accent.b, 0)
-        }
-        GradientStop {
-          position: 0.30
-          color: Qt.rgba(root.accent.r, root.accent.g, root.accent.b, 0.22)
-        }
-        GradientStop {
-          position: 0.62
-          color: Qt.rgba(root.accent.r, root.accent.g, root.accent.b, 0.52)
-        }
-        GradientStop {
-          position: 0.86
-          color: Qt.rgba(1, 1, 1, 0.68)
-        }
-        GradientStop {
-          position: 1.0
+          position: 0.88
           color: Qt.rgba(root.accent.r, root.accent.g, root.accent.b, 0.18)
         }
+        // Quiet leading edge (motion cue without a hard hairline)
+        GradientStop {
+          position: 0.96
+          color: Qt.rgba(root.accent.r, root.accent.g, root.accent.b, 0.24)
+        }
+        GradientStop {
+          position: 1.0
+          color: Qt.rgba(root.accent.r, root.accent.g, root.accent.b, 0.03)
+        }
       }
-    }
-
-    // Crisp leading hairline at the leading edge
-    Rectangle {
-      anchors.right: parent.right
-      anchors.verticalCenter: parent.verticalCenter
-      width: 2
-      height: parent.height * 0.90
-      radius: 1
-      color: Qt.rgba(root.accent.r, root.accent.g, root.accent.b, 0.78 * root.gain)
     }
   }
 
@@ -168,8 +103,8 @@ Item {
     NumberAnimation {
       from: 0
       to: 1
-      duration: 2200
-      easing.type: Easing.InOutSine
+      duration: 2800
+      easing.type: Easing.InOutCubic
     }
     ScriptAction {
       script: root.direction = -1
@@ -177,7 +112,24 @@ Item {
     NumberAnimation {
       from: 1
       to: 0
-      duration: 2200
+      duration: 2800
+      easing.type: Easing.InOutCubic
+    }
+  }
+
+  SequentialAnimation on breathe {
+    loops: Animation.Infinite
+    running: root.running && root.visible
+    NumberAnimation {
+      from: 0.78
+      to: 1.0
+      duration: 1700
+      easing.type: Easing.InOutSine
+    }
+    NumberAnimation {
+      from: 1.0
+      to: 0.78
+      duration: 1700
       easing.type: Easing.InOutSine
     }
   }

@@ -2,6 +2,16 @@
 
 All notable changes to Omarchy Disk Lens are documented here. The format follows Keep a Changelog and the project uses Semantic Versioning.
 
+## 0.6.9 — 2026-09-07
+
+### Changed
+
+- Quieted the vertical scan beam into a **premium whisper**: lower opacity, thinner core, no neon white core or hard hairline.
+- Replaced stacked-gradient banding/seams with **one coherent soft beam** (single horizontal gradient; motion-relative lead/trail still flips on L↔R reverse).
+- Softened motion toward organic radar: gentler cubic ease, longer sweep, subtle opacity breathe — less static stripe sliding.
+- Kept the GPU-animated transparent host (no Canvas / no opaque box / no glowing pill) for hero empty-scan and compact refresh overlays.
+- Bumped the manifest and loaded service/widget identities for the `0.6.9` beam polish.
+
 ## 0.6.8 — 2026-09-07
 
 ### Changed

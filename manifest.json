@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "id": "io.github.mtolhuys.disk-lens",
   "name": "Omarchy Disk Lens",
-  "version": "0.6.8",
+  "version": "0.6.9",
   "author": "Maarten Tolhuijs",
   "description": "See exactly what is eating your disk right from the Omarchy bar.",
   "kinds": [

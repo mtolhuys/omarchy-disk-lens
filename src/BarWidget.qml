@@ -11,7 +11,7 @@ BarWidget {
 
   moduleName: "io.github.mtolhuys.disk-lens"
 
-  readonly property string buildIdentity: "disk-lens-widget-v0608"
+  readonly property string buildIdentity: "disk-lens-widget-v0609"
   readonly property var diskService: bar && bar.shell
     ? bar.shell.serviceFor("io.github.mtolhuys.disk-lens") : null
   readonly property var capacity: diskService ? diskService.capacity : Model.parseCapacity("")
