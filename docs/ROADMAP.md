@@ -22,7 +22,7 @@ The complete visual analysis journey stays inside Disk Lens. Secondary analyzer 
 
 ## M5 — Release hardening — in progress
 
-Completed work includes exact Plugin Lab evidence, same-path runtime updates, full enable/disable/re-enable/remove lifecycle, exact-working-tree development installation, synthetic screenshots, light/dark review, bar activity ring plus results-pane shimmer with literal status equivalents, deterministic README media, strict shallow-folder and scan protocols, cache-restored navigation, bounded scanner post-processing, and exact selected-item moves through a guarded desktop Trash boundary.
+Completed work includes exact Plugin Lab evidence, same-path runtime updates, full enable/disable/re-enable/remove lifecycle, exact-working-tree development installation, synthetic screenshots, light/dark review, bar activity ring plus full-pane horizontal accent wash with literal status equivalents, deterministic README media, strict shallow-folder and scan protocols, cache-restored navigation, bounded scanner post-processing, and exact selected-item moves through a guarded desktop Trash boundary.
 
 Still required before 1.0: a reproducible distribution artifact and SHA-256, clean-clone installation on a declared minimum Omarchy version, quantified performance and accessibility gates, and final stable-release notes.
 

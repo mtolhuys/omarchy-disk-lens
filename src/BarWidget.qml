@@ -11,7 +11,7 @@ BarWidget {
 
   moduleName: "io.github.mtolhuys.disk-lens"
 
-  readonly property string buildIdentity: "disk-lens-widget-v0603"
+  readonly property string buildIdentity: "disk-lens-widget-v0604"
   readonly property var diskService: bar && bar.shell
     ? bar.shell.serviceFor("io.github.mtolhuys.disk-lens") : null
   readonly property var capacity: diskService ? diskService.capacity : Model.parseCapacity("")
@@ -1382,18 +1382,29 @@ BarWidget {
           width: parent.width
           implicitHeight: root.diskService && root.diskService.entries.length > 0
             ? scanProgressCompact.implicitHeight + Style.space(20)
-            : Math.max(Style.space(160), scanProgressHero.implicitHeight + Style.space(36))
+            : Math.max(Style.space(200), scanProgressHero.implicitHeight + Style.space(48))
           color: Util.alpha(Color.accent, 0.08)
           borderSpec: Border.controlSpec("normal", Color.popups.text, Color.accent)
           radius: Style.cornerRadius
           clip: true
+
+          // Full-pane horizontal wash behind hero status copy
+          ScanRadar {
+            anchors.fill: parent
+            visible: !(root.diskService && root.diskService.entries.length > 0)
+            running: root.scanRunning && visible
+            accent: Color.accent
+            track: Util.alpha(Color.popups.text, 0.10)
+            intensity: 1.0
+          }
 
           Column {
             id: scanProgressHero
             visible: !(root.diskService && root.diskService.entries.length > 0)
             anchors.centerIn: parent
             width: parent.width - Style.space(40)
-            spacing: Style.space(14)
+            spacing: Style.space(8)
+            z: 1
 
             Text {
               width: parent.width
@@ -1405,14 +1416,6 @@ BarWidget {
               font.bold: true
               horizontalAlignment: Text.AlignHCenter
               textFormat: Text.PlainText
-            }
-
-            ScanRadar {
-              width: parent.width
-              height: Style.space(8)
-              running: root.scanRunning
-              accent: Color.accent
-              track: Util.alpha(Color.popups.text, 0.12)
             }
 
             Text {
@@ -1429,6 +1432,7 @@ BarWidget {
             }
           }
 
+          // Compact refresh: status strip only — wash overlays the results canvas below
           Column {
             id: scanProgressCompact
             visible: root.diskService && root.diskService.entries.length > 0
@@ -1436,40 +1440,28 @@ BarWidget {
             anchors.right: parent.right
             anchors.verticalCenter: parent.verticalCenter
             anchors.margins: Style.space(12)
-            spacing: Style.space(8)
+            spacing: Style.space(2)
+            z: 1
 
-            Column {
+            Text {
               width: parent.width
-              spacing: Style.space(2)
-
-              Text {
-                width: parent.width
-                text: root.diskService && root.diskService.scanState === "cancelling"
-                  ? "Stopping the scan safely…" : "Measuring allocated space…"
-                color: Color.popups.text
-                font.family: Style.font.family
-                font.pixelSize: Style.font.body
-                font.bold: true
-                textFormat: Text.PlainText
-              }
-
-              Text {
-                width: parent.width
-                text: "The last complete result stays intact until this scan finishes."
-                color: Color.muted
-                font.family: Style.font.family
-                font.pixelSize: Style.font.caption
-                elide: Text.ElideRight
-                textFormat: Text.PlainText
-              }
+              text: root.diskService && root.diskService.scanState === "cancelling"
+                ? "Stopping the scan safely…" : "Measuring allocated space…"
+              color: Color.popups.text
+              font.family: Style.font.family
+              font.pixelSize: Style.font.body
+              font.bold: true
+              textFormat: Text.PlainText
             }
 
-            ScanRadar {
+            Text {
               width: parent.width
-              height: Style.space(6)
-              running: root.scanRunning
-              accent: Color.accent
-              track: Util.alpha(Color.popups.text, 0.12)
+              text: "The last complete result stays intact until this scan finishes."
+              color: Color.muted
+              font.family: Style.font.family
+              font.pixelSize: Style.font.caption
+              elide: Text.ElideRight
+              textFormat: Text.PlainText
             }
           }
         }
@@ -1777,6 +1769,17 @@ BarWidget {
                 textFormat: Text.PlainText
               }
             }
+
+            // Soft full-frame wash over live results while a refresh runs
+            ScanRadar {
+              anchors.fill: parent
+              z: 8
+              enabled: false
+              running: root.scanRunning
+              accent: Color.accent
+              track: Util.alpha(Color.popups.text, 0.08)
+              intensity: 0.62
+            }
           }
 
           Column {
@@ -1898,6 +1901,17 @@ BarWidget {
                 font.family: Style.font.family
                 font.pixelSize: Style.font.body
                 textFormat: Text.PlainText
+              }
+
+              // Soft full-frame wash over the ranked list while a refresh runs
+              ScanRadar {
+                anchors.fill: parent
+                z: 8
+                enabled: false
+                running: root.scanRunning
+                accent: Color.accent
+                track: Util.alpha(Color.popups.text, 0.08)
+                intensity: 0.62
               }
             }
 

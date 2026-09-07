@@ -66,11 +66,11 @@
 
 ## D009 — Motion belongs only to live scan activity
 
-**Decision:** While the owned scan job is active, show one restrained rotating ring on the bar gauge and one soft full-width accent shimmer (left→right→left) in the results pane, duplicated in literal text, controls, and accessibility metadata.
+**Decision:** While the owned scan job is active, show one restrained rotating ring on the bar gauge and one soft full-pane horizontal accent wash (a vertical beam sweeping left→right→left) in the results pane, duplicated in literal text, controls, and accessibility metadata.
 
 **Why:** A recursive traversal otherwise looks stalled in the empty analysis area, while perpetual decorative motion adds noise.
 
-**Consequence:** Motion stops immediately when scanning completes, fails, or is cancelled. The shimmer spans the hero area on first measurement and a compact refresh strip when results already exist. Composed reduced-motion behavior remains a release gate.
+**Consequence:** Motion stops immediately when scanning completes, fails, or is cancelled. The wash fills the hero pane on first measurement and overlays the live list/treemap when refreshing an existing result. Composed reduced-motion behavior remains a release gate.
 
 ## D010 — Back restores bounded results; Refresh remeasures
 

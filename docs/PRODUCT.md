@@ -10,7 +10,7 @@ Omarchy Disk Lens makes Home-filesystem pressure understandable within seconds a
 2. Clicking the widget opens a theme-native panel without starting a recursive scan.
 3. Capacity is immediately available when `findmnt` succeeds; scan freshness is independently labelled.
 4. The user types an absolute or Home-relative path, or chooses one through the inline folder browser; neither action measures disk usage until the user opens that scope.
-5. The user explicitly starts or refreshes an immediate-child scan; a bounded bar activity ring plus a results-pane shimmer and status text stay visible until that job ends.
+5. The user explicitly starts or refreshes an immediate-child scan; a bounded bar activity ring plus a full-pane horizontal accent wash and status text stay visible until that job ends.
 6. A squarified treemap and ranked list reveal the largest entries from the same canonical model; hidden entries are included by default.
 7. Search and type, hidden-entry, minimum-size, and modification-age filters narrow only the visible projection.
 8. Selection exposes exact allocated size, type, modification time, and safe actions.
@@ -29,7 +29,7 @@ Omarchy Disk Lens makes Home-filesystem pressure understandable within seconds a
 ### Analysis panel
 
 - One explicit, cancellable scan at a time.
-- One purposeful live activity ring in the bar and a soft full-width shimmer in the results pane, without replacing the last completed result.
+- One purposeful live activity ring in the bar and a soft full-pane horizontal accent wash in the results pane, without replacing the last completed result.
 - Immediate children and total allocated bytes for one absolute, same-filesystem scope.
 - Editable absolute or `~/` scope input and an inline shallow folder browser.
 - Directory drill-down plus bounded history and in-memory result restoration for instant Back navigation.

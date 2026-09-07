@@ -14,7 +14,7 @@ Disk Lens feels precise, calm, and tactile: an instrument panel rather than a ge
 
 ## Bar widget and panel
 
-Every bar orientation uses one square slot containing a proportional pie gauge. The percentage is absent from the bar and remains available in the tooltip, accessibility name, and panel. While a scan runs, a thin activity ring orbits the gauge without changing its capacity meaning, and the results pane shows a soft full-width accent shimmer so the empty or refreshing analysis area stays alive. Middle-click refreshes capacity; ordinary click toggles the host-owned `KeyboardPanel` through the live bar pointer route.
+Every bar orientation uses one square slot containing a proportional pie gauge. The percentage is absent from the bar and remains available in the tooltip, accessibility name, and panel. While a scan runs, a thin activity ring orbits the gauge without changing its capacity meaning, and the results pane shows a soft full-pane horizontal accent wash so the empty or refreshing analysis area stays alive. Middle-click refreshes capacity; ordinary click toggles the host-owned `KeyboardPanel` through the live bar pointer route.
 
 The compact panel has five stable zones. Its header contains only the gauge, product name, pressure, and scan state. The active bar widget is the single visible panel toggle; Escape and an outside click remain additional dismissal routes. First focus goes to the editable scope on first use or search after results exist.
 
@@ -48,7 +48,7 @@ Current controls provide case-insensitive name search; files, directories, or al
 | --- | --- | --- |
 | First use | Capacity, editable scope, folder browser, and one scan action | Scan Home or choose another scope |
 | Choosing scope | Inline shallow folder list with editable path and hidden directories included | Browse, use folder, or cancel |
-| Scanning | Bar activity ring, results-pane shimmer, status text, and a Cancel affordance while the last completed result remains intact | Cancel or wait |
+| Scanning | Bar activity ring, full-pane horizontal accent wash, status text, and a Cancel affordance while the last completed result remains intact | Cancel or wait |
 | Ready | Timestamp, shared analysis model, filtered totals, and bounded history | Refresh, drill in, or go Back |
 | Partial | Warning count and first warning remain above usable results | Scan a narrower scope |
 | Cancelled | Last completed result remains when one exists | Refresh |
@@ -64,7 +64,7 @@ Current controls provide case-insensitive name search; files, directories, or al
 
 The bar has a semantic button role and descriptive name. Panel controls are keyboard-focusable, the search field is the initial focus target after results exist, Escape closes the inline folder browser before it closes the panel, and list/treemap information is duplicated in exact text and the inspector. The active bar widget toggles the panel without a duplicate header close control. The editable scope, inline browser, filtered-list input, and clear action have passed real-session QMP acceptance.
 
-Only an active scan uses custom looping motion (bar ring + results shimmer). The same state is always communicated through literal status text, control labels, and accessibility metadata. A muted **Keys · ?** control and `?` sheet document the in-panel shortcuts. Full keyboard traversal, treemap keyboard selection, screen-reader announcements, WCAG contrast, pointer targets, and composed reduced-motion behavior remain public-release gates.
+Only an active scan uses custom looping motion (bar ring + results wash). The same state is always communicated through literal status text, control labels, and accessibility metadata. A muted **Keys · ?** control and `?` sheet document the in-panel shortcuts. Full keyboard traversal, treemap keyboard selection, screen-reader announcements, WCAG contrast, pointer targets, and composed reduced-motion behavior remain public-release gates.
 
 ## Proven visual matrix and gaps
 

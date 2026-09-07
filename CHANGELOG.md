@@ -2,6 +2,14 @@
 
 All notable changes to Omarchy Disk Lens are documented here. The format follows Keep a Changelog and the project uses Semantic Versioning.
 
+## 0.6.4 — 2026-09-07
+
+### Changed
+
+- Replaced the thin results-pane shimmer strip with a marketing-grade full-pane horizontal accent wash: a soft vertical beam with glow trail sweeping left→right→left across the entire scan surface.
+- Hero empty-scan fills the clipped results pane behind readable status copy; compact refresh overlays the same wash on the live list/treemap while keeping the last complete result intact.
+- Bumped the manifest and loaded service/widget identities for the `0.6.4` motion polish.
+
 ## 0.6.3 — 2026-09-07
 
 ### Changed
