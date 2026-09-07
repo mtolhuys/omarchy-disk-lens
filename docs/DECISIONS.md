@@ -66,7 +66,7 @@
 
 ## D009 — Motion belongs only to live scan activity
 
-**Decision:** While the owned scan job is active, show one restrained rotating ring on the bar gauge and one soft vertical scanner stripe (sweeping left→right→left) in the results pane, duplicated in literal text, controls, and accessibility metadata.
+**Decision:** While the owned scan job is active, show one restrained rotating ring on the bar gauge and one soft vertical scanner stripe (sweeping left→right→left, motion-relative lead/trail glow) in the results pane, duplicated in literal text, controls, and accessibility metadata.
 
 **Why:** A recursive traversal otherwise looks stalled in the empty analysis area, while perpetual decorative motion adds noise.
 

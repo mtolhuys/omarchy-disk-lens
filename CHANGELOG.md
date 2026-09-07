@@ -2,6 +2,14 @@
 
 All notable changes to Omarchy Disk Lens are documented here. The format follows Keep a Changelog and the project uses Semantic Versioning.
 
+## 0.6.8 — 2026-09-07
+
+### Changed
+
+- Made the vertical scan beam **motion-relative**: bright leading edge in the travel direction with a soft comet trail fading behind; trail/lead flip when the L↔R ping-pong reverses.
+- Kept the GPU-animated transparent stripe (no Canvas / no opaque host box) for hero empty-scan and compact refresh overlays.
+- Bumped the manifest and loaded service/widget identities for the `0.6.8` radar-glow polish.
+
 ## 0.6.7 — 2026-09-07
 
 ### Changed
