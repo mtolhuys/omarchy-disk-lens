@@ -1,21 +1,22 @@
 import QtQuick
 
-// Soft radar sweep for the results pane while a scan is active.
-// Accent/track colors come from the host theme; motion stops with `running`.
+// Soft full-width accent shimmer while a scan is active.
+// Sweeps left→right→left; accent/track colors come from the host theme.
 Item {
   id: root
 
   property bool running: false
   property color accent: "#f5a524"
   property color track: "#24ffffff"
-  property real sweepAngle: 0
-  property real pulse: 0.55
+  // 0 = band anchored left, 1 = band anchored right
+  property real sweep: 0
 
-  implicitWidth: 160
-  implicitHeight: 160
+  implicitWidth: 240
+  implicitHeight: 8
   visible: running
+  clip: true
 
-  Accessible.name: running ? "Scan radar active" : "Scan radar"
+  Accessible.name: running ? "Scan shimmer active" : "Scan shimmer"
   Accessible.role: Accessible.ProgressBar
 
   function rgba(c, a) {
@@ -25,13 +26,10 @@ Item {
 
   onAccentChanged: canvas.requestPaint()
   onTrackChanged: canvas.requestPaint()
-  onSweepAngleChanged: canvas.requestPaint()
-  onPulseChanged: canvas.requestPaint()
+  onSweepChanged: canvas.requestPaint()
   onRunningChanged: {
-    if (!running) {
-      sweepAngle = 0
-      pulse = 0.55
-    }
+    if (!running)
+      sweep = 0
     canvas.requestPaint()
   }
 
@@ -45,108 +43,75 @@ Item {
 
     onPaint: {
       var ctx = getContext("2d")
-      var size = Math.min(width, height)
-      var cx = width / 2
-      var cy = height / 2
-      var radius = size * 0.42
+      var w = width
+      var h = height
+      var radius = h / 2
+      var bandW = Math.max(h * 2.5, w * 0.32)
+      var travel = Math.max(0, w - bandW)
+      var x = root.sweep * travel
       var i
-      var rings = 4
+      var stops = 24
 
-      ctx.clearRect(0, 0, width, height)
+      ctx.clearRect(0, 0, w, h)
 
-      var core = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius * 0.55)
-      core.addColorStop(0, root.rgba(root.accent, 0.22 * root.pulse))
-      core.addColorStop(0.55, root.rgba(root.accent, 0.08 * root.pulse))
+      // Soft track pill
+      ctx.beginPath()
+      ctx.moveTo(radius, 0)
+      ctx.lineTo(w - radius, 0)
+      ctx.arc(w - radius, radius, radius, -Math.PI / 2, Math.PI / 2, false)
+      ctx.lineTo(radius, h)
+      ctx.arc(radius, radius, radius, Math.PI / 2, -Math.PI / 2, false)
+      ctx.closePath()
+      ctx.fillStyle = String(root.track)
+      ctx.fill()
+
+      // Soft accent sheen across the track
+      var sheen = ctx.createLinearGradient(0, 0, w, 0)
+      sheen.addColorStop(0, root.rgba(root.accent, 0.04))
+      sheen.addColorStop(0.5, root.rgba(root.accent, 0.10))
+      sheen.addColorStop(1, root.rgba(root.accent, 0.04))
+      ctx.fillStyle = sheen
+      ctx.fill()
+
+      // Sweeping band: fade in / hot core / fade out
+      for (i = 0; i < stops; i++) {
+        var t0 = i / stops
+        var t1 = (i + 1) / stops
+        var mid = (t0 + t1) / 2
+        var edge = mid < 0.5 ? mid * 2 : (1 - mid) * 2
+        var alpha = 0.05 + edge * edge * 0.42
+        var x0 = x + bandW * t0
+        var x1 = x + bandW * t1
+        ctx.fillStyle = root.rgba(root.accent, alpha)
+        ctx.fillRect(x0, 0, Math.max(1, x1 - x0), h)
+      }
+
+      // Round the band ends by re-clipping to the pill (already clipped by Item)
+      // Highlight core line for a subtle instrument feel
+      var coreX = x + bandW * 0.5
+      var core = ctx.createLinearGradient(coreX - bandW * 0.08, 0, coreX + bandW * 0.08, 0)
+      core.addColorStop(0, root.rgba(root.accent, 0))
+      core.addColorStop(0.5, root.rgba(root.accent, 0.55))
       core.addColorStop(1, root.rgba(root.accent, 0))
       ctx.fillStyle = core
-      ctx.beginPath()
-      ctx.arc(cx, cy, radius * 0.55, 0, Math.PI * 2)
-      ctx.fill()
-
-      ctx.lineWidth = Math.max(1, size * 0.008)
-      for (i = 1; i <= rings; i++) {
-        var r = radius * (i / rings)
-        var ringAlpha = 0.12 + (i / rings) * 0.16 * root.pulse
-        ctx.beginPath()
-        ctx.arc(cx, cy, r, 0, Math.PI * 2)
-        ctx.strokeStyle = root.rgba(root.accent, ringAlpha * 0.55)
-        ctx.stroke()
-        ctx.beginPath()
-        ctx.arc(cx, cy, r, 0, Math.PI * 2)
-        ctx.strokeStyle = String(root.track)
-        ctx.globalAlpha = 0.35 + 0.15 * (i / rings)
-        ctx.stroke()
-        ctx.globalAlpha = 1
-      }
-
-      ctx.strokeStyle = root.rgba(root.accent, 0.22)
-      ctx.lineWidth = Math.max(1, size * 0.006)
-      var tick = radius * 0.08
-      ctx.beginPath()
-      ctx.moveTo(cx - radius - tick * 0.2, cy)
-      ctx.lineTo(cx - radius + tick, cy)
-      ctx.moveTo(cx + radius - tick, cy)
-      ctx.lineTo(cx + radius + tick * 0.2, cy)
-      ctx.moveTo(cx, cy - radius - tick * 0.2)
-      ctx.lineTo(cx, cy - radius + tick)
-      ctx.moveTo(cx, cy + radius - tick)
-      ctx.lineTo(cx, cy + radius + tick * 0.2)
-      ctx.stroke()
-
-      var start = root.sweepAngle - Math.PI / 2
-      var span = Math.PI * 0.55
-      var steps = 28
-      for (i = 0; i < steps; i++) {
-        var t0 = start - span * ((i + 1) / steps)
-        var t1 = start - span * (i / steps)
-        var a = (1 - i / steps)
-        a = a * a * (0.08 + 0.42 * root.pulse)
-        ctx.beginPath()
-        ctx.moveTo(cx, cy)
-        ctx.arc(cx, cy, radius, t0, t1, false)
-        ctx.closePath()
-        ctx.fillStyle = root.rgba(root.accent, a)
-        ctx.fill()
-      }
-
-      ctx.beginPath()
-      ctx.moveTo(cx, cy)
-      ctx.lineTo(cx + Math.cos(start) * radius, cy + Math.sin(start) * radius)
-      ctx.strokeStyle = root.rgba(root.accent, 0.85)
-      ctx.lineWidth = Math.max(1.5, size * 0.012)
-      ctx.lineCap = "round"
-      ctx.stroke()
-
-      var tipX = cx + Math.cos(start) * radius
-      var tipY = cy + Math.sin(start) * radius
-      var tip = ctx.createRadialGradient(tipX, tipY, 0, tipX, tipY, size * 0.045)
-      tip.addColorStop(0, "rgba(255, 255, 255, 0.75)")
-      tip.addColorStop(0.35, root.rgba(root.accent, 0.7))
-      tip.addColorStop(1, root.rgba(root.accent, 0))
-      ctx.fillStyle = tip
-      ctx.beginPath()
-      ctx.arc(tipX, tipY, size * 0.045, 0, Math.PI * 2)
-      ctx.fill()
-
-      ctx.beginPath()
-      ctx.arc(cx, cy, Math.max(2, size * 0.018), 0, Math.PI * 2)
-      ctx.fillStyle = root.rgba(root.accent, 0.9)
-      ctx.fill()
+      ctx.fillRect(coreX - bandW * 0.08, h * 0.15, bandW * 0.16, h * 0.7)
     }
   }
 
-  NumberAnimation on sweepAngle {
-    from: 0
-    to: Math.PI * 2
-    duration: 2400
+  SequentialAnimation on sweep {
     loops: Animation.Infinite
     running: root.running && root.visible
-  }
-
-  SequentialAnimation on pulse {
-    loops: Animation.Infinite
-    running: root.running && root.visible
-    NumberAnimation { from: 0.42; to: 1.0; duration: 1100; easing.type: Easing.InOutSine }
-    NumberAnimation { from: 1.0; to: 0.42; duration: 1100; easing.type: Easing.InOutSine }
+    NumberAnimation {
+      from: 0
+      to: 1
+      duration: 1800
+      easing.type: Easing.InOutSine
+    }
+    NumberAnimation {
+      from: 1
+      to: 0
+      duration: 1800
+      easing.type: Easing.InOutSine
+    }
   }
 }

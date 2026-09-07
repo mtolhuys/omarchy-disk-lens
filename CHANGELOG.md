@@ -2,6 +2,14 @@
 
 All notable changes to Omarchy Disk Lens are documented here. The format follows Keep a Changelog and the project uses Semantic Versioning.
 
+## 0.6.3 — 2026-09-07
+
+### Changed
+
+- Replaced the results-pane radar glow with a simpler full-width accent shimmer that sweeps left→right→left while a scan runs (hero empty state and compact refresh strip).
+- Kept the “Scanning for the heavy branch…” status copy and the bar activity ring.
+- Bumped the manifest and loaded service/widget identities for the `0.6.3` motion polish.
+
 ## 0.6.2 — 2026-09-07
 
 ### Changed

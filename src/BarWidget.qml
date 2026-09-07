@@ -11,7 +11,7 @@ BarWidget {
 
   moduleName: "io.github.mtolhuys.disk-lens"
 
-  readonly property string buildIdentity: "disk-lens-widget-v0602"
+  readonly property string buildIdentity: "disk-lens-widget-v0603"
   readonly property var diskService: bar && bar.shell
     ? bar.shell.serviceFor("io.github.mtolhuys.disk-lens") : null
   readonly property var capacity: diskService ? diskService.capacity : Model.parseCapacity("")
@@ -1382,37 +1382,18 @@ BarWidget {
           width: parent.width
           implicitHeight: root.diskService && root.diskService.entries.length > 0
             ? scanProgressCompact.implicitHeight + Style.space(20)
-            : Math.max(Style.space(220), scanProgressHero.implicitHeight + Style.space(36))
+            : Math.max(Style.space(160), scanProgressHero.implicitHeight + Style.space(36))
           color: Util.alpha(Color.accent, 0.08)
           borderSpec: Border.controlSpec("normal", Color.popups.text, Color.accent)
           radius: Style.cornerRadius
           clip: true
-
-          // Ambient glow behind the radar
-          Rectangle {
-            anchors.centerIn: parent
-            width: Math.min(parent.width * 0.72, Style.space(260))
-            height: width
-            radius: width / 2
-            visible: !(root.diskService && root.diskService.entries.length > 0)
-            color: Util.alpha(Color.accent, 0.06)
-          }
 
           Column {
             id: scanProgressHero
             visible: !(root.diskService && root.diskService.entries.length > 0)
             anchors.centerIn: parent
             width: parent.width - Style.space(40)
-            spacing: Style.space(10)
-
-            ScanRadar {
-              anchors.horizontalCenter: parent.horizontalCenter
-              width: Style.space(148)
-              height: width
-              running: root.scanRunning
-              accent: Color.accent
-              track: Util.alpha(Color.popups.text, 0.14)
-            }
+            spacing: Style.space(14)
 
             Text {
               width: parent.width
@@ -1424,6 +1405,14 @@ BarWidget {
               font.bold: true
               horizontalAlignment: Text.AlignHCenter
               textFormat: Text.PlainText
+            }
+
+            ScanRadar {
+              width: parent.width
+              height: Style.space(8)
+              running: root.scanRunning
+              accent: Color.accent
+              track: Util.alpha(Color.popups.text, 0.12)
             }
 
             Text {
@@ -1440,27 +1429,17 @@ BarWidget {
             }
           }
 
-          Row {
+          Column {
             id: scanProgressCompact
             visible: root.diskService && root.diskService.entries.length > 0
             anchors.left: parent.left
             anchors.right: parent.right
             anchors.verticalCenter: parent.verticalCenter
             anchors.margins: Style.space(12)
-            spacing: Style.space(12)
-
-            ScanRadar {
-              width: Style.space(42)
-              height: width
-              anchors.verticalCenter: parent.verticalCenter
-              running: root.scanRunning
-              accent: Color.accent
-              track: Util.alpha(Color.popups.text, 0.14)
-            }
+            spacing: Style.space(8)
 
             Column {
-              width: parent.width - parent.children[0].width - Style.space(12)
-              anchors.verticalCenter: parent.verticalCenter
+              width: parent.width
               spacing: Style.space(2)
 
               Text {
@@ -1483,6 +1462,14 @@ BarWidget {
                 elide: Text.ElideRight
                 textFormat: Text.PlainText
               }
+            }
+
+            ScanRadar {
+              width: parent.width
+              height: Style.space(6)
+              running: root.scanRunning
+              accent: Color.accent
+              track: Util.alpha(Color.popups.text, 0.12)
             }
           }
         }

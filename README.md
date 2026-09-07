@@ -15,7 +15,7 @@ Nothing is scanned in the background. Opening the panel shows disk capacity. A f
 * Opens a selected entry in the file manager or scans deeper into it.
 * Sends a selected folder to **Ask Omarchy** with its measured size and instructions to investigate without making changes.
 * Moves one selected entry to desktop Trash after an explicit confirmation.
-* Shows scan activity on the bar pie and as a radar sweep in the results pane.
+* Shows scan activity on the bar pie and as a soft full-width shimmer in the results pane.
 
 The scanner stays on the selected filesystem and preserves the last complete result if a refresh is cancelled. Unreadable paths are reported as a partial scan instead of being quietly omitted.
 
