@@ -4,13 +4,13 @@
 
 Omarchy Disk Lens makes Home-filesystem pressure understandable within seconds and provides a clear, fully native route from “the disk is filling up” to “this directory deserves investigation.”
 
-## Implemented `0.5.2` journey
+## Implemented `0.6.0` journey
 
 1. The bar shows used capacity for the filesystem backing Home as a compact proportional pie gauge.
 2. Clicking the widget opens a theme-native panel without starting a recursive scan.
 3. Capacity is immediately available when `findmnt` succeeds; scan freshness is independently labelled.
 4. The user types an absolute or Home-relative path, or chooses one through the inline folder browser; neither action measures disk usage until the user opens that scope.
-5. The user explicitly starts or refreshes an immediate-child scan; one bounded bar activity ring and status text stay visible until that job ends.
+5. The user explicitly starts or refreshes an immediate-child scan; a bounded bar activity ring plus a results-pane radar sweep and status text stay visible until that job ends.
 6. A squarified treemap and ranked list reveal the largest entries from the same canonical model; hidden entries are included by default.
 7. Search and type, hidden-entry, minimum-size, and modification-age filters narrow only the visible projection.
 8. Selection exposes exact allocated size, type, modification time, and safe actions.
@@ -29,7 +29,7 @@ Omarchy Disk Lens makes Home-filesystem pressure understandable within seconds a
 ### Analysis panel
 
 - One explicit, cancellable scan at a time.
-- One purposeful live activity ring in the bar without replacing the last completed result.
+- One purposeful live activity ring in the bar and a radar sweep in the results pane, without replacing the last completed result.
 - Immediate children and total allocated bytes for one absolute, same-filesystem scope.
 - Editable absolute or `~/` scope input and an inline shallow folder browser.
 - Directory drill-down plus bounded history and in-memory result restoration for instant Back navigation.
@@ -38,6 +38,7 @@ Omarchy Disk Lens makes Home-filesystem pressure understandable within seconds a
 - Freshness, filtered totals, warning count, and partial-result labelling.
 - First-use, scanning, ready, partial, cancelled, failed, empty, and filtered-empty states.
 - Safe native actions: Back, choose folder, drill in, open in file manager, refresh, cancel, clear filters, Ask Omarchy, and a confirmed move to desktop Trash.
+- Optional **Super+Alt+D** panel toggle and in-panel Keys sheet (`?`) for scan, navigation, filter focus, view toggle, and cancel.
 
 ### Recoverable removal
 
@@ -64,7 +65,7 @@ Omarchy Disk Lens makes Home-filesystem pressure understandable within seconds a
 - **Self-contained:** the full visual analysis flow needs no additional graphical package.
 - **Private by default:** capacity and directory analysis stay local. The explicit agent hand-off delegates path and size data to the user's configured agent, whose provider and network behavior are outside Disk Lens.
 
-## Non-goals for `0.5.2`
+## Non-goals for `0.6.0`
 
 - Automatic cleanup, permanent deletion, empty-Trash management, bulk actions, or scripted recipes.
 - Root scanning, a privileged GUI, or privilege handling inside Disk Lens.

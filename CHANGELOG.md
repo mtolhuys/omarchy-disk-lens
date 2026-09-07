@@ -2,6 +2,19 @@
 
 All notable changes to Omarchy Disk Lens are documented here. The format follows Keep a Changelog and the project uses Semantic Versioning.
 
+## 0.6.0 — 2026-09-07
+
+### Added
+
+- Added a theme-native radar sweep in the results pane while a scan is active: a full hero radar on first measurement, and a compact radar strip when refreshing an existing result. The bar activity ring remains.
+- Added in-panel keyboard shortcuts via the stock `PanelKeyCatcher` pattern, a muted **Keys · ?** hint, and a compact shortcut sheet.
+- Documented optional Hyprland **Super+Alt+D** panel toggle (same Omarchy bind pattern as Plugin Pulse).
+
+### Changed
+
+- Bumped the manifest and loaded service/widget identities for the `0.6.0` release.
+- Scanning status copy in the empty results area now reads as an instrument panel (“Scanning for the heavy branch…”) with the live radar.
+
 ## 0.5.2 — 2026-09-01
 
 ### Changed

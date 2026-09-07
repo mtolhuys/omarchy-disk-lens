@@ -11,7 +11,7 @@ BarWidget {
 
   moduleName: "io.github.mtolhuys.disk-lens"
 
-  readonly property string buildIdentity: "disk-lens-widget-v0502"
+  readonly property string buildIdentity: "disk-lens-widget-v0600"
   readonly property var diskService: bar && bar.shell
     ? bar.shell.serviceFor("io.github.mtolhuys.disk-lens") : null
   readonly property var capacity: diskService ? diskService.capacity : Model.parseCapacity("")
@@ -68,6 +68,108 @@ BarWidget {
   property string folderPickerWarning: ""
   property bool trashConfirmOpen: false
   property var trashConfirmEntry: null
+  property bool keysHelpOpen: false
+
+  readonly property bool typingInField: (typeof scopeField !== "undefined" && scopeField.activeFocus)
+    || (typeof searchField !== "undefined" && searchField.activeFocus)
+    || (typeof folderPickerField !== "undefined" && folderPickerField.activeFocus)
+  readonly property bool panelKeysEnabled: popupOpen && !typingInField && !trashConfirmOpen && !folderPickerOpen
+  readonly property var keysHelpModel: [
+    { keys: "Esc", action: "back" },
+    { keys: "r/s", action: "scan" },
+    { keys: "⇧H", action: "home" },
+    { keys: "c", action: "cancel" },
+    { keys: "↑↓", action: "select" },
+    { keys: "⏎", action: "open" },
+    { keys: "⌫/←", action: "up" },
+    { keys: "f /", action: "filter" },
+    { keys: "v", action: "list/map" },
+    { keys: "o", action: "files" },
+    { keys: "q", action: "close" },
+    { keys: "?", action: "keys" }
+  ]
+
+  function toggleKeysHelp() {
+    keysHelpOpen = !keysHelpOpen
+  }
+
+  function handleEscape() {
+    if (trashConfirmOpen) cancelTrashSelected()
+    else if (keysHelpOpen) keysHelpOpen = false
+    else if (folderPickerOpen) closeFolderPicker()
+    else if (typingInField) {
+      if (typeof scopeField !== "undefined") scopeField.focus = false
+      if (typeof searchField !== "undefined") searchField.focus = false
+      if (typeof folderPickerField !== "undefined") folderPickerField.focus = false
+      if (typeof keyCatcher !== "undefined") keyCatcher.forceActiveFocus()
+    }
+    else close()
+  }
+
+  function focusFilter() {
+    if (typeof searchField !== "undefined" && searchField.enabled) {
+      searchField.forceActiveFocus()
+      searchField.selectAll()
+      return true
+    }
+    return false
+  }
+
+  function focusScopeField() {
+    if (typeof scopeField !== "undefined" && scopeField.enabled) {
+      scopeField.forceActiveFocus()
+      scopeField.selectAll()
+      return true
+    }
+    return false
+  }
+
+  function boundedEntries() {
+    return visibleEntries.slice(0, 80)
+  }
+
+  function selectedListIndex() {
+    var list = boundedEntries()
+    var value = String(selectedPath || "")
+    for (var i = 0; i < list.length; i++) {
+      if (list[i] && list[i].path === value) return i
+    }
+    return -1
+  }
+
+  function moveSelection(delta) {
+    var list = boundedEntries()
+    if (!list.length) return false
+    var idx = selectedListIndex()
+    if (idx < 0) idx = delta > 0 ? -1 : 0
+    var next = Math.max(0, Math.min(list.length - 1, idx + delta))
+    selectedPath = list[next].path
+    return true
+  }
+
+  function activateSelected() {
+    if (!selectedEntry) {
+      if (boundedEntries().length > 0) {
+        selectedPath = boundedEntries()[0].path
+        return true
+      }
+      return false
+    }
+    if (selectedEntry.kind === "directory" && selectedEntry.actionable === true) {
+      drillInto(selectedEntry)
+      return true
+    }
+    openInFileManager()
+    return true
+  }
+
+  function scanHome() {
+    return requestScan(Quickshell.env("HOME"))
+  }
+
+  function toggleViewMode() {
+    viewMode = viewMode === "treemap" ? "list" : "treemap"
+  }
 
   function entryForPath(path) {
     var value = String(path || "")
@@ -117,11 +219,21 @@ BarWidget {
 
   function open() {
     popupOpen = true
+    keysHelpOpen = false
     if (diskService) diskService.refreshCapacity()
+    Qt.callLater(function() {
+      if (!root.popupOpen) return
+      if (root.folderPickerOpen) return
+      if (typeof searchField !== "undefined" && searchField.enabled)
+        searchField.forceActiveFocus()
+      else if (typeof scopeField !== "undefined")
+        scopeField.forceActiveFocus()
+    })
   }
 
   function close() {
     cancelTrashSelected()
+    keysHelpOpen = false
     popupOpen = false
   }
   function closeForPopoutSwitch() { close() }
@@ -379,9 +491,11 @@ BarWidget {
       scanActionCount: (scanButton.visible ? 1 : 0) + (firstUseSurface.visible ? 1 : 0),
       headerCloseActionPresent: false,
       headerAvailableWidth: panelHeaderRow.width,
-      headerContentWidth: headerGauge.width + headerCopy.width + panelHeaderRow.spacing,
+      headerContentWidth: headerGauge.width + headerCopy.width + headerActions.width + Style.space(18),
       scanIndicatorRunning: scanRunning,
-      activityIndicatorCount: scanRunning ? 1 : 0,
+      activityIndicatorCount: scanRunning ? 2 : 0,
+      panelRadarVisible: scanRunning,
+      keysHelpOpen: keysHelpOpen,
       trashState: diskService ? diskService.trashState : "unavailable",
       trashConfirmOpen: trashConfirmOpen,
       trashConfirmPath: trashConfirmEntry ? trashConfirmEntry.path : "",
@@ -490,92 +604,250 @@ BarWidget {
     bar: root.bar
     owner: root
     open: root.popupOpen
-    focusTarget: root.folderPickerOpen ? folderPickerField
-      : (searchField.enabled ? searchField : scopeField)
+    focusTarget: keyCatcher
     contentWidth: popup.fittedContentWidth(Style.space(520))
     contentHeight: popup.fittedContentHeight(Math.min(panelColumn.implicitHeight, Style.space(640)))
 
-    Flickable {
-      id: panelScroll
+    // Stock Omarchy KeyboardPanel pattern: PanelKeyCatcher as focusTarget.
+    PanelKeyCatcher {
+      id: keyCatcher
       anchors.fill: parent
-      contentWidth: width
-      contentHeight: panelColumn.implicitHeight
-      clip: true
-      boundsBehavior: Flickable.StopAtBounds
-      interactive: contentHeight > height
-      QQC.ScrollBar.vertical: QQC.ScrollBar { policy: QQC.ScrollBar.AsNeeded }
-      Keys.onPressed: function(event) {
-        if (root.trashConfirmOpen && trashConfirm.handleKey(event)) event.accepted = true
+      blocked: root.typingInField || root.trashConfirmOpen
+
+      onCloseRequested: root.handleEscape()
+
+      onMoveRequested: function(dx, dy) {
+        if (!root.panelKeysEnabled) return
+        if (dy !== 0) {
+          root.moveSelection(dy)
+          return
+        }
+        if (dx < 0) root.goBack()
+        else if (dx > 0) root.activateSelected()
       }
 
-      Shortcut {
-        sequence: "Escape"
-        context: Qt.WindowShortcut
-        onActivated: {
-          if (root.trashConfirmOpen) root.cancelTrashSelected()
-          else if (root.folderPickerOpen) root.closeFolderPicker()
-          else root.close()
+      onActivateRequested: {
+        if (!root.panelKeysEnabled) return
+        root.activateSelected()
+      }
+
+      onReturnRequested: {
+        // activateRequested already handles Enter
+      }
+
+      onTextKey: function(t) {
+        if (!root.popupOpen || root.typingInField || root.trashConfirmOpen) return
+        if (t === "?") {
+          root.toggleKeysHelp()
+          return
+        }
+        if (root.folderPickerOpen) return
+        if (t === "/" || t === "f" || t === "F") {
+          root.keysHelpOpen = false
+          root.focusFilter()
+          return
+        }
+        if (t === "r" || t === "R" || t === "s" || t === "S") {
+          root.keysHelpOpen = false
+          root.scanOrCancel()
+          return
+        }
+        if (t === "c" || t === "C") {
+          if (root.scanRunning && root.diskService) root.diskService.cancelScan()
+          return
+        }
+        if (t === "v" || t === "V") {
+          root.keysHelpOpen = false
+          root.toggleViewMode()
+          return
+        }
+        if (t === "o" || t === "O") {
+          root.openInFileManager()
+          return
+        }
+        if (t === "q" || t === "Q") {
+          root.close()
+          return
         }
       }
+
+      Flickable {
+        id: panelScroll
+        anchors.fill: parent
+        contentWidth: width
+        contentHeight: panelColumn.implicitHeight
+        clip: true
+        boundsBehavior: Flickable.StopAtBounds
+        interactive: contentHeight > height
+        QQC.ScrollBar.vertical: QQC.ScrollBar { policy: QQC.ScrollBar.AsNeeded }
+        Keys.onPressed: function(event) {
+          if (root.trashConfirmOpen && trashConfirm.handleKey(event)) event.accepted = true
+        }
+
+        Shortcut {
+          sequence: "Escape"
+          context: Qt.WindowShortcut
+          onActivated: root.handleEscape()
+        }
+
+        Shortcut {
+          sequence: "Shift+H"
+          enabled: root.panelKeysEnabled
+          context: Qt.WindowShortcut
+          onActivated: { root.keysHelpOpen = false; root.scanHome() }
+        }
+
+        Shortcut {
+          sequence: "Backspace"
+          enabled: root.panelKeysEnabled && !root.keysHelpOpen
+          context: Qt.WindowShortcut
+          onActivated: root.goBack()
+        }
 
       Column {
         id: panelColumn
         width: panelScroll.width
         spacing: Style.space(9)
 
-        Row {
+        Item {
           id: panelHeaderRow
           width: parent.width
-          spacing: Style.space(10)
+          height: Math.max(headerGauge.height, headerCopy.height, headerActions.height)
 
-          BorderSurface {
-            id: headerGauge
-            width: Style.space(36)
-            height: width
-            color: Style.selectedFillFor(root.stateColor(), Color.accent)
-            borderSpec: Border.controlSpec("normal", root.stateColor(), Color.accent)
-            radius: Style.cornerRadius
-
-            PieGauge {
-              width: parent.width * 0.5
-              height: width
-              anchors.centerIn: parent
-              value: root.capacityReady ? root.capacity.percent : 0
-              available: root.capacityReady
-              fillColor: root.stateColor()
-              trackColor: Util.alpha(Color.popups.text, 0.14)
-              outlineColor: root.stateColor()
-            }
-
-          }
-
-          Column {
-            id: headerCopy
-            width: parent.width - headerGauge.width - panelHeaderRow.spacing
+          Row {
+            id: headerLeft
+            anchors.left: parent.left
+            anchors.right: headerActions.left
+            anchors.rightMargin: Style.space(8)
             anchors.verticalCenter: parent.verticalCenter
-            spacing: Style.space(2)
+            spacing: Style.space(10)
 
-            Text {
-              width: parent.width
-              text: "Disk Lens"
-              color: Color.popups.text
-              font.family: Style.font.family
-              font.pixelSize: Style.font.title
-              font.bold: true
-              textFormat: Text.PlainText
+            BorderSurface {
+              id: headerGauge
+              width: Style.space(36)
+              height: width
+              color: Style.selectedFillFor(root.stateColor(), Color.accent)
+              borderSpec: Border.controlSpec("normal", root.stateColor(), Color.accent)
+              radius: Style.cornerRadius
+
+              PieGauge {
+                width: parent.width * 0.5
+                height: width
+                anchors.centerIn: parent
+                value: root.capacityReady ? root.capacity.percent : 0
+                available: root.capacityReady
+                fillColor: root.stateColor()
+                trackColor: Util.alpha(Color.popups.text, 0.14)
+                outlineColor: root.stateColor()
+              }
             }
 
-            Text {
-              width: parent.width
-              text: root.pressureLabel() + " · " + root.scanStateLabel()
-              color: root.stateColor()
-              font.family: Style.font.family
-              font.pixelSize: Style.font.bodySmall
-              elide: Text.ElideRight
-              textFormat: Text.PlainText
+            Column {
+              id: headerCopy
+              width: Math.max(0, headerLeft.width - headerGauge.width - Style.space(10))
+              anchors.verticalCenter: parent.verticalCenter
+              spacing: Style.space(2)
+
+              Text {
+                width: parent.width
+                text: "Disk Lens"
+                color: Color.popups.text
+                font.family: Style.font.family
+                font.pixelSize: Style.font.title
+                font.bold: true
+                textFormat: Text.PlainText
+              }
+
+              Text {
+                width: parent.width
+                text: root.pressureLabel() + " · " + root.scanStateLabel()
+                color: root.stateColor()
+                font.family: Style.font.family
+                font.pixelSize: Style.font.bodySmall
+                elide: Text.ElideRight
+                textFormat: Text.PlainText
+              }
             }
           }
 
+          Row {
+            id: headerActions
+            anchors.right: parent.right
+            anchors.verticalCenter: parent.verticalCenter
+            spacing: Style.space(6)
+
+            Item {
+              id: keysHint
+              width: keysHintLabel.implicitWidth + Style.space(6)
+              height: Style.space(22)
+              anchors.verticalCenter: parent.verticalCenter
+              Accessible.role: Accessible.Button
+              Accessible.name: root.keysHelpOpen
+                ? "Hide keyboard shortcuts"
+                : "Show keyboard shortcuts"
+              Accessible.onPressAction: root.toggleKeysHelp()
+
+              Text {
+                id: keysHintLabel
+                anchors.centerIn: parent
+                text: root.keysHelpOpen ? "Keys ▾" : "Keys · ?"
+                color: keysHintHover.hovered || root.keysHelpOpen
+                  ? Color.popups.text
+                  : Util.alpha(Color.popups.text, 0.45)
+                font.family: Style.font.family
+                font.pixelSize: Style.font.caption
+                textFormat: Text.PlainText
+              }
+
+              HoverHandler { id: keysHintHover }
+              PanelToolTip {
+                visible: keysHintHover.hovered
+                text: root.keysHelpOpen ? "Hide shortcuts (?)" : "Show shortcuts (?)"
+                fontFamily: Style.font.family
+              }
+              MouseArea {
+                anchors.fill: parent
+                cursorShape: Qt.PointingHandCursor
+                onClicked: root.toggleKeysHelp()
+              }
+            }
+          }
+        }
+
+        Flow {
+          id: keysHelpSheet
+          visible: root.keysHelpOpen
+          width: parent.width
+          spacing: Style.space(4)
+          Accessible.role: Accessible.StaticText
+          Accessible.name: "Keyboard shortcuts"
+
+          Repeater {
+            model: root.keysHelpModel
+            delegate: Row {
+              required property var modelData
+              required property int index
+              spacing: Style.space(4)
+
+              Text {
+                anchors.verticalCenter: parent.verticalCenter
+                text: modelData.keys
+                color: Color.popups.text
+                font.family: Style.font.family
+                font.pixelSize: Style.font.caption
+                textFormat: Text.PlainText
+              }
+
+              Text {
+                anchors.verticalCenter: parent.verticalCenter
+                text: modelData.action + (index < root.keysHelpModel.length - 1 ? " ·" : "")
+                color: Util.alpha(Color.popups.text, 0.45)
+                font.family: Style.font.family
+                font.pixelSize: Style.font.caption
+                textFormat: Text.PlainText
+              }
+            }
+          }
         }
 
         BorderSurface {
@@ -1095,40 +1367,112 @@ BarWidget {
         }
 
         BorderSurface {
+          id: scanRadarSurface
           visible: !root.folderPickerOpen && root.diskService && root.scanRunning
           width: parent.width
-          implicitHeight: scanProgressRow.implicitHeight + Style.space(24)
+          implicitHeight: root.diskService && root.diskService.entries.length > 0
+            ? scanProgressCompact.implicitHeight + Style.space(20)
+            : Math.max(Style.space(220), scanProgressHero.implicitHeight + Style.space(36))
           color: Util.alpha(Color.accent, 0.08)
           borderSpec: Border.controlSpec("normal", Color.popups.text, Color.accent)
           radius: Style.cornerRadius
+          clip: true
+
+          // Ambient glow behind the radar
+          Rectangle {
+            anchors.centerIn: parent
+            width: Math.min(parent.width * 0.72, Style.space(260))
+            height: width
+            radius: width / 2
+            visible: !(root.diskService && root.diskService.entries.length > 0)
+            color: Util.alpha(Color.accent, 0.06)
+          }
 
           Column {
-            id: scanProgressRow
-            anchors.left: parent.left
-            anchors.right: parent.right
-            anchors.verticalCenter: parent.verticalCenter
-            anchors.margins: Style.space(12)
-            spacing: Style.space(2)
+            id: scanProgressHero
+            visible: !(root.diskService && root.diskService.entries.length > 0)
+            anchors.centerIn: parent
+            width: parent.width - Style.space(40)
+            spacing: Style.space(10)
+
+            ScanRadar {
+              anchors.horizontalCenter: parent.horizontalCenter
+              width: Style.space(148)
+              height: width
+              running: root.scanRunning
+              accent: Color.accent
+              track: Util.alpha(Color.popups.text, 0.14)
+            }
 
             Text {
               width: parent.width
               text: root.diskService && root.diskService.scanState === "cancelling"
-                ? "Stopping the scan safely…" : "Measuring allocated space…"
+                ? "Stopping the scan safely…" : "Scanning for the heavy branch…"
               color: Color.popups.text
               font.family: Style.font.family
-              font.pixelSize: Style.font.body
+              font.pixelSize: Style.font.subtitle
               font.bold: true
+              horizontalAlignment: Text.AlignHCenter
               textFormat: Text.PlainText
             }
 
             Text {
               width: parent.width
-              text: "The last complete result stays intact until this scan finishes."
+              text: root.diskService
+                ? Model.safeLabel(root.diskService.scanPath) + " · cancel anytime"
+                : "Cancel anytime"
               color: Color.muted
               font.family: Style.font.family
               font.pixelSize: Style.font.caption
-              elide: Text.ElideRight
+              wrapMode: Text.WordWrap
+              horizontalAlignment: Text.AlignHCenter
               textFormat: Text.PlainText
+            }
+          }
+
+          Row {
+            id: scanProgressCompact
+            visible: root.diskService && root.diskService.entries.length > 0
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.verticalCenter: parent.verticalCenter
+            anchors.margins: Style.space(12)
+            spacing: Style.space(12)
+
+            ScanRadar {
+              width: Style.space(42)
+              height: width
+              anchors.verticalCenter: parent.verticalCenter
+              running: root.scanRunning
+              accent: Color.accent
+              track: Util.alpha(Color.popups.text, 0.14)
+            }
+
+            Column {
+              width: parent.width - parent.children[0].width - Style.space(12)
+              anchors.verticalCenter: parent.verticalCenter
+              spacing: Style.space(2)
+
+              Text {
+                width: parent.width
+                text: root.diskService && root.diskService.scanState === "cancelling"
+                  ? "Stopping the scan safely…" : "Measuring allocated space…"
+                color: Color.popups.text
+                font.family: Style.font.family
+                font.pixelSize: Style.font.body
+                font.bold: true
+                textFormat: Text.PlainText
+              }
+
+              Text {
+                width: parent.width
+                text: "The last complete result stays intact until this scan finishes."
+                color: Color.muted
+                font.family: Style.font.family
+                font.pixelSize: Style.font.caption
+                elide: Text.ElideRight
+                textFormat: Text.PlainText
+              }
             }
           }
         }
@@ -1658,6 +2002,8 @@ BarWidget {
         }
       }
 
+      } // panelScroll
+
       ConfirmDialog {
         id: trashConfirm
 
@@ -1680,8 +2026,8 @@ BarWidget {
         onCanceled: root.cancelTrashSelected()
         onConfirmed: root.confirmTrashSelected()
       }
-    }
-  }
+    } // keyCatcher
+  } // popup
 
   IpcHandler {
     target: "disk-lens"

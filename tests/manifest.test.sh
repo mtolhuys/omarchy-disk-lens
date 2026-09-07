@@ -9,7 +9,7 @@ readonly manifest="$project_root/manifest.json"
 jq -e '
   .schemaVersion == 1
   and .id == "io.github.mtolhuys.disk-lens"
-  and .version == "0.5.2"
+  and .version == "0.6.0"
   and (.kinds | sort == ["bar-widget", "service"])
   and .entryPoints.service == "src/Service.qml"
   and .entryPoints.barWidget == "src/BarWidget.qml"
@@ -23,12 +23,16 @@ while IFS= read -r entry_point; do
   [[ -f $project_root/$entry_point ]]
 done < <(jq -r '.entryPoints[]' "$manifest")
 
-rg -F 'disk-lens-service-v0502' "$project_root/src/Service.qml" >/dev/null
-rg -F 'disk-lens-widget-v0502' "$project_root/src/BarWidget.qml" >/dev/null
+rg -F 'disk-lens-service-v0600' "$project_root/src/Service.qml" >/dev/null
+rg -F 'disk-lens-widget-v0600' "$project_root/src/BarWidget.qml" >/dev/null
 [[ -x $project_root/scripts/disk-lens-trash ]]
 
 rg -F 'else root.toggle()' "$project_root/src/BarWidget.qml" >/dev/null
-rg -F 'else root.close()' "$project_root/src/BarWidget.qml" >/dev/null
+rg -F 'onCloseRequested: root.handleEscape()' "$project_root/src/BarWidget.qml" >/dev/null
+rg -F 'function handleEscape()' "$project_root/src/BarWidget.qml" >/dev/null
+rg -F 'PanelKeyCatcher' "$project_root/src/BarWidget.qml" >/dev/null
+rg -F 'ScanRadar' "$project_root/src/BarWidget.qml" >/dev/null
+[[ -f $project_root/src/ScanRadar.qml ]]
 if rg -n 'id: closeButton|Close Disk Lens' "$project_root/src/BarWidget.qml"; then
   echo "panel header must not duplicate the bar toggle's close action" >&2
   exit 1

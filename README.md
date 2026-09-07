@@ -15,7 +15,7 @@ Nothing is scanned in the background. Opening the panel shows disk capacity. A f
 * Opens a selected entry in the file manager or scans deeper into it.
 * Sends a selected folder to **Ask Omarchy** with its measured size and instructions to investigate without making changes.
 * Moves one selected entry to desktop Trash after an explicit confirmation.
-* Keeps scan activity in one place: the pie icon in the bar.
+* Shows scan activity on the bar pie and as a radar sweep in the results pane.
 
 The scanner stays on the selected filesystem and preserves the last complete result if a refresh is cancelled. Unreadable paths are reported as a partial scan instead of being quietly omitted.
 
@@ -44,6 +44,46 @@ Disk Lens requires Omarchy Quattro with support for third party `schemaVersion: 
 Disk Lens never permanently deletes files. The Trash action handles one exact selection at a time, begins on **Cancel**, and leaves the item untouched if the desktop Trash operation is unsupported. Disk space is reclaimed only after Trash is emptied.
 
 The plugin cannot remove files with elevated privileges, clean up multiple entries at once, or empty Trash.
+
+
+## Keyboard
+
+### Global (Hyprland)
+
+Optional shortcut (add to `~/.config/hypr/bindings.lua`):
+
+```lua
+o.bind("SUPER + ALT + D", "Omarchy Disk Lens", "omarchy-shell shell toggle io.github.mtolhuys.disk-lens")
+```
+
+Then `hyprctl reload`.
+
+| Shortcut | Action |
+| --- | --- |
+| **Super + Alt + D** | Toggle the Disk Lens panel |
+
+`Super + K` lists global binds only — in-panel keys below are local to the open panel.
+
+### In panel
+
+A muted **Keys · ?** control sits in the header. Press **?** (or click it) for a compact shortcut sheet.
+
+| Shortcut | Action |
+| --- | --- |
+| **Esc** | Close help → folder picker → blur field → close panel |
+| **r / s** | Scan / Refresh, or Cancel while scanning |
+| **Shift + H** | Scan Home |
+| **c** | Cancel the active scan |
+| **↑ / ↓** (or **j / k**) | Move selection in the ranked list / treemap model |
+| **Enter / →** | Drill into a folder, or open the selected item |
+| **Backspace / ←** | Go back through scan history |
+| **f** or **/** | Focus the filter field |
+| **v** | Toggle List / Map view |
+| **o** | Open the selection (or current scope) in the file manager |
+| **q** | Close the panel |
+| **?** | Toggle the Keys sheet |
+
+Letter shortcuts are ignored while typing in the scope, filter, or folder-browser fields.
 
 ## Development
 
@@ -78,6 +118,6 @@ Disk Lens is built specifically for Omarchy. It does not bundle, install, or dep
 
 ## Status
 
-The current public release is **0.5.2**. See [the release evidence](docs/RELEASE-EVIDENCE.md) for what has been tested and [the roadmap](docs/ROADMAP.md) for what is still planned before version 1.0.
+The current public release is **0.6.0**. See [the release evidence](docs/RELEASE-EVIDENCE.md) for what has been tested and [the roadmap](docs/ROADMAP.md) for what is still planned before version 1.0.
 
 MIT licensed. See [LICENSE](LICENSE).

@@ -1,6 +1,6 @@
 # Support
 
-Omarchy Disk Lens `0.5.2` is the current public pre-1.0 release. Interfaces may still evolve, and formal compatibility guarantees remain release-hardening work.
+Omarchy Disk Lens `0.6.0` is the current public pre-1.0 release. Interfaces may still evolve, and formal compatibility guarantees remain release-hardening work.
 
 Development feedback should include:
 
