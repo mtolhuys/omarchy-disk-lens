@@ -15,7 +15,7 @@ Nothing is scanned in the background. Opening the panel shows disk capacity. A f
 * Opens a selected entry in the file manager or scans deeper into it.
 * Sends a selected folder to **Ask Omarchy** with its measured size and instructions to investigate without making changes.
 * Moves one selected entry to desktop Trash after an explicit confirmation.
-* Shows scan activity on the bar pie and as a full-pane horizontal accent wash in the results pane.
+* Shows scan activity on the bar pie and as a smooth vertical scanner stripe in the results pane.
 
 The scanner stays on the selected filesystem and preserves the last complete result if a refresh is cancelled. Unreadable paths are reported as a partial scan instead of being quietly omitted.
 
@@ -80,6 +80,8 @@ A muted **Keys · ?** control sits in the header. Press **?** (or click it) for 
 | **f** or **/** | Focus the filter field |
 | **v** | Toggle List / Map view |
 | **o** | Open the selection (or current scope) in the file manager |
+| **a** | Ask Omarchy about the selected folder |
+| **x** | Move the selection to Trash (opens Cancel-first confirm) |
 | **q** | Close the panel |
 | **?** | Toggle the Keys sheet |
 

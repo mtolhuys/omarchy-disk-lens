@@ -1,17 +1,17 @@
 import QtQuick
 
-// Full-pane horizontal scan wash: a soft vertical accent beam sweeps
-// left→right→left across the entire clipped host surface (hero or overlay).
-// Status copy sits above; accent/track colors come from the host theme.
+// One vertical scanner stripe that ping-pongs left↔right.
+// Soft horizontal glow falloff via LinearGradient only — never a horizontal
+// pill/blob, never discrete vertical strip banding.
 Item {
   id: root
 
   property bool running: false
   property color accent: "#f5a524"
   property color track: "#24ffffff"
-  // 1.0 = hero empty pane; ~0.55–0.7 = translucent overlay on live results
+  // 1.0 = hero empty pane; ~0.55–0.8 = translucent overlay on live results
   property real intensity: 1.0
-  // 0 = beam at left edge, 1 = beam at right edge
+  // 0 = stripe near left edge, 1 = stripe near right edge
   property real sweep: 0
 
   implicitWidth: 240
@@ -19,16 +19,12 @@ Item {
   visible: running
   clip: true
 
-  Accessible.name: running ? "Scan wash active" : "Scan wash"
+  Accessible.name: running ? "Scan beam active" : "Scan beam"
   Accessible.role: Accessible.ProgressBar
 
   function rgba(c, a) {
     return "rgba(" + Math.round(c.r * 255) + ", " + Math.round(c.g * 255) + ", "
       + Math.round(c.b * 255) + ", " + a + ")"
-  }
-
-  function clamp01(v) {
-    return Math.max(0, Math.min(1, v))
   }
 
   onAccentChanged: canvas.requestPaint()
@@ -46,6 +42,7 @@ Item {
   Canvas {
     id: canvas
     anchors.fill: parent
+    antialiasing: true
 
     onWidthChanged: requestPaint()
     onHeightChanged: requestPaint()
@@ -55,94 +52,82 @@ Item {
       var ctx = getContext("2d")
       var w = width
       var h = height
-      var i
-      var stops
-      var gain = Math.max(0.15, Math.min(1.35, root.intensity))
+      var gain = Math.max(0.18, Math.min(1.25, root.intensity))
 
       ctx.clearRect(0, 0, w, h)
-      if (w < 2 || h < 2)
+      if (w < 4 || h < 4)
         return
 
-      // Quiet full-pane veil so the wash reads as an instrument field
-      var veil = ctx.createLinearGradient(0, 0, w, 0)
-      veil.addColorStop(0, root.rgba(root.accent, 0.02 * gain))
-      veil.addColorStop(0.5, root.rgba(root.accent, 0.055 * gain))
-      veil.addColorStop(1, root.rgba(root.accent, 0.02 * gain))
-      ctx.fillStyle = veil
+      // Quiet field so the beam reads against dark UI (not a full wash)
+      var field = ctx.createLinearGradient(0, 0, w, 0)
+      field.addColorStop(0, root.rgba(root.accent, 0.015 * gain))
+      field.addColorStop(0.5, root.rgba(root.accent, 0.04 * gain))
+      field.addColorStop(1, root.rgba(root.accent, 0.015 * gain))
+      ctx.fillStyle = field
       ctx.fillRect(0, 0, w, h)
 
-      // Soft track sheen (theme-derived, barely there)
       ctx.fillStyle = String(root.track)
-      ctx.globalAlpha = 0.22 * gain
+      ctx.globalAlpha = 0.12 * gain
       ctx.fillRect(0, 0, w, h)
       ctx.globalAlpha = 1
 
-      // Beam geometry: wide translucent column with a hot vertical core
-      var beamW = Math.max(48, Math.min(w * 0.42, h * 1.15))
+      // Vertical stripe geometry: tall beam, modest width, soft horizontal falloff
+      var beamW = Math.max(36, Math.min(72, w * 0.14))
       var travel = w + beamW
       var cx = -beamW * 0.5 + root.sweep * travel
       var left = cx - beamW * 0.5
-      var right = cx + beamW * 0.5
+      // Slight inset so the beam feels instrumented, not edge-flush debug fill
+      var top = h * 0.04
+      var bodyH = h * 0.92
 
-      // Outer bloom / glow trail — taller soft body across full height
-      var bloomW = beamW * 1.55
-      var bloomLeft = cx - bloomW * 0.5
-      stops = 36
-      for (i = 0; i < stops; i++) {
-        var t0 = i / stops
-        var t1 = (i + 1) / stops
-        var mid = (t0 + t1) / 2
-        // Smooth raised-cosine falloff from center
-        var edge = 0.5 + 0.5 * Math.cos((mid - 0.5) * Math.PI * 2)
-        edge = root.clamp01(edge)
-        var alpha = edge * edge * 0.10 * gain
-        if (alpha < 0.002)
-          continue
-        var x0 = bloomLeft + bloomW * t0
-        var x1 = bloomLeft + bloomW * t1
-        ctx.fillStyle = root.rgba(root.accent, alpha)
-        ctx.fillRect(x0, 0, Math.max(0.5, x1 - x0), h)
-      }
+      // Outer soft halo (wider, fainter) — single LinearGradient, no strips
+      var haloW = beamW * 2.1
+      var halo = ctx.createLinearGradient(cx - haloW * 0.5, 0, cx + haloW * 0.5, 0)
+      halo.addColorStop(0.0, root.rgba(root.accent, 0))
+      halo.addColorStop(0.18, root.rgba(root.accent, 0.03 * gain))
+      halo.addColorStop(0.35, root.rgba(root.accent, 0.08 * gain))
+      halo.addColorStop(0.5, root.rgba(root.accent, 0.12 * gain))
+      halo.addColorStop(0.65, root.rgba(root.accent, 0.08 * gain))
+      halo.addColorStop(0.82, root.rgba(root.accent, 0.03 * gain))
+      halo.addColorStop(1.0, root.rgba(root.accent, 0))
+      ctx.fillStyle = halo
+      ctx.fillRect(cx - haloW * 0.5, top, haloW, bodyH)
 
-      // Main wash column — translucent accent body
-      stops = 40
-      for (i = 0; i < stops; i++) {
-        var u0 = i / stops
-        var u1 = (i + 1) / stops
-        var umid = (u0 + u1) / 2
-        var lobe = Math.cos((umid - 0.5) * Math.PI)
-        lobe = Math.max(0, lobe)
-        lobe = lobe * lobe
-        var a = (0.04 + lobe * 0.28) * gain
-        var bx0 = left + beamW * u0
-        var bx1 = left + beamW * u1
-        ctx.fillStyle = root.rgba(root.accent, a)
-        ctx.fillRect(bx0, 0, Math.max(0.5, bx1 - bx0), h)
-      }
+      // Main vertical beam body
+      var body = ctx.createLinearGradient(left, 0, left + beamW, 0)
+      body.addColorStop(0.0, root.rgba(root.accent, 0))
+      body.addColorStop(0.15, root.rgba(root.accent, 0.08 * gain))
+      body.addColorStop(0.32, root.rgba(root.accent, 0.22 * gain))
+      body.addColorStop(0.5, root.rgba(root.accent, 0.36 * gain))
+      body.addColorStop(0.68, root.rgba(root.accent, 0.22 * gain))
+      body.addColorStop(0.85, root.rgba(root.accent, 0.08 * gain))
+      body.addColorStop(1.0, root.rgba(root.accent, 0))
+      ctx.fillStyle = body
+      ctx.fillRect(left, top, beamW, bodyH)
 
-      // Hot vertical core with a soft white tip for instrument drama
-      var coreHalf = Math.max(3, beamW * 0.045)
-      var core = ctx.createLinearGradient(cx - coreHalf * 3, 0, cx + coreHalf * 3, 0)
-      core.addColorStop(0, root.rgba(root.accent, 0))
-      core.addColorStop(0.35, root.rgba(root.accent, 0.35 * gain))
-      core.addColorStop(0.5, "rgba(255, 255, 255, " + (0.42 * gain) + ")")
-      core.addColorStop(0.65, root.rgba(root.accent, 0.45 * gain))
-      core.addColorStop(1, root.rgba(root.accent, 0))
+      // Hot vertical core (still a line, not a blob)
+      var coreHalf = Math.max(2.5, beamW * 0.07)
+      var core = ctx.createLinearGradient(cx - coreHalf * 3.2, 0, cx + coreHalf * 3.2, 0)
+      core.addColorStop(0.0, root.rgba(root.accent, 0))
+      core.addColorStop(0.30, root.rgba(root.accent, 0.28 * gain))
+      core.addColorStop(0.5, "rgba(255, 255, 255, " + (0.38 * gain) + ")")
+      core.addColorStop(0.70, root.rgba(root.accent, 0.32 * gain))
+      core.addColorStop(1.0, root.rgba(root.accent, 0))
       ctx.fillStyle = core
-      ctx.fillRect(cx - coreHalf * 3, 0, coreHalf * 6, h)
+      ctx.fillRect(cx - coreHalf * 3.2, top + bodyH * 0.02, coreHalf * 6.4, bodyH * 0.96)
 
-      // Hairline leading edge — crisp but never loud
-      ctx.fillStyle = root.rgba(root.accent, 0.55 * gain)
-      ctx.fillRect(cx - 0.75, h * 0.06, 1.5, h * 0.88)
+      // Crisp leading hairline — reads as a scanner, not a flare
+      ctx.fillStyle = root.rgba(root.accent, 0.50 * gain)
+      ctx.fillRect(cx - 0.75, top + bodyH * 0.05, 1.5, bodyH * 0.90)
 
-      // Top/bottom vignette so the beam feels clipped to the pane
-      var vig = ctx.createLinearGradient(0, 0, 0, h)
-      vig.addColorStop(0, "rgba(0, 0, 0, " + (0.10 * gain) + ")")
-      vig.addColorStop(0.18, "rgba(0, 0, 0, 0)")
-      vig.addColorStop(0.82, "rgba(0, 0, 0, 0)")
-      vig.addColorStop(1, "rgba(0, 0, 0, " + (0.10 * gain) + ")")
+      // Soft top/bottom fade so the stripe eases into the pane
+      var vig = ctx.createLinearGradient(0, top, 0, top + bodyH)
+      vig.addColorStop(0.0, "rgba(0, 0, 0, " + (0.22 * gain) + ")")
+      vig.addColorStop(0.12, "rgba(0, 0, 0, 0)")
+      vig.addColorStop(0.88, "rgba(0, 0, 0, 0)")
+      vig.addColorStop(1.0, "rgba(0, 0, 0, " + (0.22 * gain) + ")")
       ctx.fillStyle = vig
-      ctx.fillRect(Math.min(left, bloomLeft), 0, Math.max(beamW, bloomW), h)
+      ctx.fillRect(cx - haloW * 0.5, top, haloW, bodyH)
     }
   }
 

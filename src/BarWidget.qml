@@ -11,7 +11,7 @@ BarWidget {
 
   moduleName: "io.github.mtolhuys.disk-lens"
 
-  readonly property string buildIdentity: "disk-lens-widget-v0604"
+  readonly property string buildIdentity: "disk-lens-widget-v0606"
   readonly property var diskService: bar && bar.shell
     ? bar.shell.serviceFor("io.github.mtolhuys.disk-lens") : null
   readonly property var capacity: diskService ? diskService.capacity : Model.parseCapacity("")
@@ -80,11 +80,13 @@ BarWidget {
     { keys: "⇧H", action: "home" },
     { keys: "c", action: "cancel" },
     { keys: "↑↓", action: "select" },
-    { keys: "⏎", action: "open" },
+    { keys: "⏎/→", action: "drill" },
     { keys: "⌫/←", action: "up" },
     { keys: "f /", action: "filter" },
     { keys: "v", action: "list/map" },
     { keys: "o", action: "files" },
+    { keys: "a", action: "ask" },
+    { keys: "x", action: "trash" },
     { keys: "q", action: "close" },
     { keys: "?", action: "keys" }
   ]
@@ -475,6 +477,12 @@ BarWidget {
 
   function stateSnapshot() {
     var trashCenter = trashButton.mapToGlobal(trashButton.width / 2, trashButton.height / 2)
+    var askCenter = askButton.visible
+      ? askButton.mapToGlobal(askButton.width / 2, askButton.height / 2)
+      : Qt.point(0, 0)
+    var openCenter = openButton.visible
+      ? openButton.mapToGlobal(openButton.width / 2, openButton.height / 2)
+      : Qt.point(0, 0)
     return {
       buildIdentity: buildIdentity,
       opened: opened,
@@ -512,7 +520,11 @@ BarWidget {
       trashConfirmSelectedIndex: trashConfirm.selectedIndex,
       trashMoveCount: diskService ? diskService.trashMoveCount : 0,
       trashButtonCenterX: Math.round(trashCenter.x),
-      trashButtonCenterY: Math.round(trashCenter.y)
+      trashButtonCenterY: Math.round(trashCenter.y),
+      askButtonCenterX: Math.round(askCenter.x),
+      askButtonCenterY: Math.round(askCenter.y),
+      openButtonCenterX: Math.round(openCenter.x),
+      openButtonCenterY: Math.round(openCenter.y)
     }
   }
 
@@ -645,6 +657,12 @@ BarWidget {
         // activateRequested already handles Enter
       }
 
+      onDeleteRequested: {
+        if (!root.panelKeysEnabled) return
+        root.keysHelpOpen = false
+        root.requestTrashSelected()
+      }
+
       onTextKey: function(t) {
         if (!root.popupOpen || root.typingInField || root.trashConfirmOpen) return
         if (t === "?") {
@@ -672,7 +690,13 @@ BarWidget {
           return
         }
         if (t === "o" || t === "O") {
+          root.keysHelpOpen = false
           root.openInFileManager()
+          return
+        }
+        if (t === "a" || t === "A") {
+          root.keysHelpOpen = false
+          root.askOmarchyAboutSelected()
           return
         }
         if (t === "q" || t === "Q") {
@@ -1382,13 +1406,13 @@ BarWidget {
           width: parent.width
           implicitHeight: root.diskService && root.diskService.entries.length > 0
             ? scanProgressCompact.implicitHeight + Style.space(20)
-            : Math.max(Style.space(200), scanProgressHero.implicitHeight + Style.space(48))
+            : Math.max(Style.space(188), scanProgressHero.implicitHeight + Style.space(48))
           color: Util.alpha(Color.accent, 0.08)
           borderSpec: Border.controlSpec("normal", Color.popups.text, Color.accent)
           radius: Style.cornerRadius
           clip: true
 
-          // Full-pane horizontal wash behind hero status copy
+          // Vertical scanner stripe behind hero status copy
           ScanRadar {
             anchors.fill: parent
             visible: !(root.diskService && root.diskService.entries.length > 0)
@@ -1404,7 +1428,7 @@ BarWidget {
             anchors.centerIn: parent
             width: parent.width - Style.space(40)
             spacing: Style.space(8)
-            z: 1
+            z: 2
 
             Text {
               width: parent.width
@@ -1414,6 +1438,7 @@ BarWidget {
               font.family: Style.font.family
               font.pixelSize: Style.font.subtitle
               font.bold: true
+              wrapMode: Text.WordWrap
               horizontalAlignment: Text.AlignHCenter
               textFormat: Text.PlainText
             }
@@ -1423,7 +1448,7 @@ BarWidget {
               text: root.diskService
                 ? Model.safeLabel(root.diskService.scanPath) + " · cancel anytime"
                 : "Cancel anytime"
-              color: Color.muted
+              color: Util.alpha(Color.popups.text, 0.86)
               font.family: Style.font.family
               font.pixelSize: Style.font.caption
               wrapMode: Text.WordWrap
@@ -1432,7 +1457,7 @@ BarWidget {
             }
           }
 
-          // Compact refresh: status strip only — wash overlays the results canvas below
+          // Compact refresh: status strip — vertical stripe overlays results below
           Column {
             id: scanProgressCompact
             visible: root.diskService && root.diskService.entries.length > 0
@@ -1440,7 +1465,7 @@ BarWidget {
             anchors.right: parent.right
             anchors.verticalCenter: parent.verticalCenter
             anchors.margins: Style.space(12)
-            spacing: Style.space(2)
+            spacing: Style.space(3)
             z: 1
 
             Text {
@@ -1457,7 +1482,7 @@ BarWidget {
             Text {
               width: parent.width
               text: "The last complete result stays intact until this scan finishes."
-              color: Color.muted
+              color: Util.alpha(Color.popups.text, 0.80)
               font.family: Style.font.family
               font.pixelSize: Style.font.caption
               elide: Text.ElideRight
@@ -1770,7 +1795,7 @@ BarWidget {
               }
             }
 
-            // Soft full-frame wash over live results while a refresh runs
+            // Soft vertical scanner stripe over live results while a refresh runs
             ScanRadar {
               anchors.fill: parent
               z: 8
@@ -1778,7 +1803,7 @@ BarWidget {
               running: root.scanRunning
               accent: Color.accent
               track: Util.alpha(Color.popups.text, 0.08)
-              intensity: 0.62
+              intensity: 0.72
             }
           }
 
@@ -1903,7 +1928,7 @@ BarWidget {
                 textFormat: Text.PlainText
               }
 
-              // Soft full-frame wash over the ranked list while a refresh runs
+              // Soft vertical scanner stripe over the ranked list while a refresh runs
               ScanRadar {
                 anchors.fill: parent
                 z: 8
@@ -1911,7 +1936,7 @@ BarWidget {
                 running: root.scanRunning
                 accent: Color.accent
                 track: Util.alpha(Color.popups.text, 0.08)
-                intensity: 0.62
+                intensity: 0.72
               }
             }
 
@@ -1931,7 +1956,7 @@ BarWidget {
         BorderSurface {
           visible: !root.folderPickerOpen && root.selectedEntry !== null
           width: parent.width
-          implicitHeight: inspectorColumn.implicitHeight + Style.space(18)
+          implicitHeight: inspectorColumn.implicitHeight + Style.space(20)
           color: Style.selectedFillFor(Color.popups.text, Color.accent)
           borderSpec: Border.controlSpec("normal", Color.popups.text, Color.accent)
           radius: Style.cornerRadius
@@ -1939,15 +1964,16 @@ BarWidget {
           Column {
             id: inspectorColumn
             anchors.fill: parent
-            anchors.margins: Style.space(9)
-            spacing: Style.space(6)
+            anchors.margins: Style.space(10)
+            spacing: Style.space(8)
 
             Row {
               width: parent.width
+              spacing: Style.space(8)
 
               Column {
-                width: parent.width - inspectorBytes.width
-                spacing: Style.space(2)
+                width: Math.max(0, parent.width - inspectorBytes.width - Style.space(8))
+                spacing: Style.space(3)
 
                 Text {
                   width: parent.width
@@ -1968,16 +1994,18 @@ BarWidget {
                         ? Qt.formatDateTime(new Date(root.selectedEntry.mtime * 1000), "MMM d, yyyy")
                         : "DATE UNKNOWN")
                     : ""
-                  color: Color.muted
+                  color: Util.alpha(Color.popups.text, 0.72)
                   font.family: Style.font.family
-                  font.pixelSize: Style.font.caption
+                  font.pixelSize: Style.font.bodySmall
                   font.bold: true
+                  elide: Text.ElideRight
                   textFormat: Text.PlainText
                 }
               }
 
               Text {
                 id: inspectorBytes
+                anchors.verticalCenter: parent.verticalCenter
                 text: root.selectedEntry ? Model.formatBytes(root.selectedEntry.allocatedBytes) : ""
                 color: Color.popups.text
                 font.family: Style.font.family
@@ -1987,43 +2015,40 @@ BarWidget {
               }
             }
 
-            Row {
+            // Primary actions only — Enter/→ already drills directories.
+            Flow {
               width: parent.width
               spacing: Style.space(6)
 
               Button {
-                visible: root.selectedEntry && root.selectedEntry.kind === "directory" && root.selectedEntry.actionable
-                text: "Drill in"
-                iconText: "→"
-                bordered: true
-                focusable: true
-                onClicked: root.drillInto(root.selectedEntry)
-              }
-
-              Button {
-                text: "Open"
+                id: openButton
+                text: "Open · o"
                 iconText: "↗"
+                bordered: true
                 focusable: true
                 enabled: root.selectedEntry && root.selectedEntry.actionable
                 opacity: enabled ? 1 : 0.35
+                tooltipText: "Open in the file manager (o)"
+                Accessible.name: "Open the selection in the file manager"
                 onClicked: root.openInFileManager()
               }
 
               Button {
+                id: askButton
                 visible: root.selectedEntry && root.selectedEntry.kind === "directory" && root.selectedEntry.actionable
-                text: "Ask Omarchy"
+                text: "Ask Omarchy · a"
                 iconText: "✦"
                 bordered: true
                 selected: true
                 focusable: true
-                tooltipText: "Ask your default Omarchy agent to inspect this folder read-only"
+                tooltipText: "Ask your default Omarchy agent to inspect this folder read-only (a)"
                 Accessible.name: "Ask Omarchy about the selected folder"
                 onClicked: root.askOmarchyAboutSelected()
               }
 
               Button {
                 id: trashButton
-                text: "Trash"
+                text: "Trash · x"
                 iconText: "⌫"
                 bordered: true
                 focusable: true
@@ -2031,11 +2056,10 @@ BarWidget {
                 accent: Color.urgent
                 enabled: root.selectedEntry && root.selectedEntry.actionable && !root.actionBusy
                 opacity: enabled ? 1 : 0.35
-                tooltipText: "Move the selected item to Trash"
+                tooltipText: "Move the selected item to Trash (x)"
                 Accessible.name: "Move the selected item to Trash"
                 onClicked: root.requestTrashSelected()
               }
-
             }
           }
         }
@@ -2087,6 +2111,9 @@ BarWidget {
     function select(path: string): string {
       root.selectedPath = root.entryForPath(path) ? path : ""
       return root.selectedPath ? "selected" : "unknown"
+    }
+    function activate(): string {
+      return root.activateSelected() ? "activated" : "rejected"
     }
   }
 }

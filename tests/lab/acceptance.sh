@@ -21,7 +21,7 @@ omarchy_host_test() {
   local project_dir lab_root plugin_dir geometry icon_x icon_y widget_width widget_height
   local screen_width screen_height scan_total runtime_before runtime_after
   local scan_button_x scan_button_y view_button_x search_x filter_y clear_x agent_x agent_y
-  local back_button_x folder_picker_x scope_field_x drill_x fixture_scanned_at
+  local back_button_x folder_picker_x scope_field_x fixture_scanned_at
   local agent_pid agent_sid scanned_before long_scope hostile_path_b64 trash_x trash_y partial_warning_count
   project_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/../.." && pwd)"
   lab_root="${OMARCHY_PLUGIN_LAB_ROOT:?Set OMARCHY_PLUGIN_LAB_ROOT to the disposable Plugin Lab checkout}"
@@ -69,8 +69,8 @@ omarchy_host_test() {
 
   wait_for_guest_state "service and widget load with matching candidate identity" 25 ssh_session \
     "omarchy-plugin-list --json | jq -e 'any(.[]; .id == \"io.github.mtolhuys.disk-lens\" and .enabled == true)' && \
-     omarchy-shell disk-lens-service state | jq -e '.buildIdentity == \"disk-lens-service-v0602\" and (.capacityState == \"ready\" or .capacityState == \"loading\")' && \
-     omarchy-shell disk-lens state | jq -e '.buildIdentity == \"disk-lens-widget-v0602\" and .opened == false'" || {
+     omarchy-shell disk-lens-service state | jq -e '.buildIdentity == \"disk-lens-service-v0606\" and (.capacityState == \"ready\" or .capacityState == \"loading\")' && \
+     omarchy-shell disk-lens state | jq -e '.buildIdentity == \"disk-lens-widget-v0606\" and .opened == false'" || {
     ssh_session "omarchy-shell shell listPlugins || true; journalctl --user --since '-3 minutes' --no-pager \
       | grep -Ei 'quickshell|qml|disk-lens|segmentation|fatal|core dumped' | tail -n 240" || true
     return 1
@@ -99,7 +99,6 @@ omarchy_host_test() {
   back_button_x=$((screen_width - 494))
   folder_picker_x=$((screen_width - 36))
   scope_field_x=$((screen_width - 290))
-  drill_x=$((screen_width - 451))
   qmp_pointer_tap "$screen_width" "$screen_height" "$icon_x" "$icon_y" left
   wait_for_guest_state "real bar pointer opens the first-use panel" 12 ssh_session \
     "omarchy-shell disk-lens state | jq -e \
@@ -154,8 +153,8 @@ omarchy_host_test() {
     "omarchy-shell disk-lens state | jq -e '.selectedPath == \"/tmp/disk-lens-fixture/Archive\"'" || return 1
 
   fixture_scanned_at=$(ssh_session "omarchy-shell disk-lens-service state | jq -r .scannedAt")
-  qmp_pointer_tap "$screen_width" "$screen_height" "$drill_x" "$agent_y" left
-  wait_for_guest_state "rendered Drill in opens the selected directory" 15 ssh_session \
+  ssh_session "test \"\$(omarchy-shell disk-lens activate)\" = activated"
+  wait_for_guest_state "Enter/activate drills the selected directory" 15 ssh_session \
     "omarchy-shell disk-lens state | jq -e \
        '.scope == \"/tmp/disk-lens-fixture/Archive\" and .historyDepth == 1 and .entryCount == 1'" || return 1
   qmp_pointer_tap "$screen_width" "$screen_height" "$back_button_x" "$scan_button_y" left
@@ -180,6 +179,8 @@ omarchy_host_test() {
       | base64 -d >\"\$codex_path\" && \
     chmod 755 \"\$codex_path\" && printf 'codex\n' >\"\$HOME/.config/omarchy/defaults/agent\" && \
     rm -f /tmp/disk-lens-agent-argv"
+  read -r agent_x agent_y < <(ssh_session "omarchy-shell disk-lens state | jq -r '[.askButtonCenterX,.askButtonCenterY] | @tsv'")
+  [[ $agent_x -gt 0 && $agent_y -gt 0 ]] || return 1
   qmp_pointer_tap "$screen_width" "$screen_height" "$agent_x" "$agent_y" left
   wait_for_guest_state "public Ask Omarchy action launches the default agent with a constrained selected-folder prompt" 20 ssh_session \
     "omarchy-shell disk-lens state | jq -e \
@@ -352,6 +353,8 @@ omarchy_host_test() {
   wait_for_guest_state "treemap pointer selects the scanner-derived hostile path" 10 ssh_session \
     "test \"\$(omarchy-shell disk-lens state | jq -r '.selectedPath | @base64')\" = '$hostile_path_b64'" || return 1
   ssh_session "rm -f /tmp/disk-lens-agent-argv"
+  read -r agent_x agent_y < <(ssh_session "omarchy-shell disk-lens state | jq -r '[.askButtonCenterX,.askButtonCenterY] | @tsv'")
+  [[ $agent_x -gt 0 && $agent_y -gt 0 ]] || return 1
   qmp_pointer_tap "$screen_width" "$screen_height" "$agent_x" "$agent_y" left
   wait_for_guest_state "Ask Omarchy strips injected lines and places untrusted path data after its guardrails" 20 ssh_session \
     "omarchy-shell disk-lens state | jq -e '.opened == false and .agentLaunchCount == 2' && \
@@ -380,17 +383,17 @@ omarchy_host_test() {
      ! hyprctl -j clients | jq -e 'any(.[]; .class == \"org.omarchy.agent\" and .mapped == true)'" || return 1
 
   log "Applying a same-path runtime edit through the public update flow"
-  ssh_guest "sed -i 's/disk-lens-service-v0602/disk-lens-service-v0602-labupdate/' \
+  ssh_guest "sed -i 's/disk-lens-service-v0606/disk-lens-service-v0606-labupdate/' \
       /home/omarchy/.cache/omarchy-disk-lens/development-source/src/Service.qml && \
-    sed -i 's/disk-lens-widget-v0602/disk-lens-widget-v0602-labupdate/' \
+    sed -i 's/disk-lens-widget-v0606/disk-lens-widget-v0606-labupdate/' \
       /home/omarchy/.cache/omarchy-disk-lens/development-source/src/BarWidget.qml && \
     git -C /home/omarchy/.cache/omarchy-disk-lens/development-source add src/Service.qml src/BarWidget.qml && \
     git -C /home/omarchy/.cache/omarchy-disk-lens/development-source \
       -c user.name=DiskLensLab -c user.email=lab@invalid commit -qm runtime-update"
   ssh_session "omarchy-plugin-update io.github.mtolhuys.disk-lens --yes"
   wait_for_guest_state "same-path update replaces service and widget runtime identities" 30 ssh_session \
-    "omarchy-shell disk-lens-service state | jq -e '.buildIdentity == \"disk-lens-service-v0602-labupdate\"' && \
-     omarchy-shell disk-lens state | jq -e '.buildIdentity == \"disk-lens-widget-v0602-labupdate\"'" || {
+    "omarchy-shell disk-lens-service state | jq -e '.buildIdentity == \"disk-lens-service-v0606-labupdate\"' && \
+     omarchy-shell disk-lens state | jq -e '.buildIdentity == \"disk-lens-widget-v0606-labupdate\"'" || {
     ssh_session "omarchy-shell disk-lens-service state; omarchy-shell disk-lens state; journalctl --user --since '-3 minutes' --no-pager | tail -n 220" || true
     return 1
   }
@@ -404,8 +407,8 @@ omarchy_host_test() {
 
   ssh_session "omarchy-plugin-enable io.github.mtolhuys.disk-lens"
   wait_for_guest_state "re-enable restores one service and one widget" 25 ssh_session \
-    "omarchy-shell disk-lens-service state | jq -e '.buildIdentity == \"disk-lens-service-v0602-labupdate\"' && \
-     omarchy-shell disk-lens state | jq -e '.buildIdentity == \"disk-lens-widget-v0602-labupdate\"'" || return 1
+    "omarchy-shell disk-lens-service state | jq -e '.buildIdentity == \"disk-lens-service-v0606-labupdate\"' && \
+     omarchy-shell disk-lens state | jq -e '.buildIdentity == \"disk-lens-widget-v0606-labupdate\"'" || return 1
 
   ssh_session "omarchy-plugin-remove io.github.mtolhuys.disk-lens --yes"
   wait_for_guest_state "remove unloads Disk Lens without touching synthetic user data" 25 ssh_session \

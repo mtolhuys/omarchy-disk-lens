@@ -14,7 +14,7 @@ Disk Lens feels precise, calm, and tactile: an instrument panel rather than a ge
 
 ## Bar widget and panel
 
-Every bar orientation uses one square slot containing a proportional pie gauge. The percentage is absent from the bar and remains available in the tooltip, accessibility name, and panel. While a scan runs, a thin activity ring orbits the gauge without changing its capacity meaning, and the results pane shows a soft full-pane horizontal accent wash so the empty or refreshing analysis area stays alive. Middle-click refreshes capacity; ordinary click toggles the host-owned `KeyboardPanel` through the live bar pointer route.
+Every bar orientation uses one square slot containing a proportional pie gauge. The percentage is absent from the bar and remains available in the tooltip, accessibility name, and panel. While a scan runs, a thin activity ring orbits the gauge without changing its capacity meaning, and the results pane shows a soft vertical scanner stripe so the empty or refreshing analysis area stays alive. Middle-click refreshes capacity; ordinary click toggles the host-owned `KeyboardPanel` through the live bar pointer route.
 
 The compact panel has five stable zones. Its header contains only the gauge, product name, pressure, and scan state. The active bar widget is the single visible panel toggle; Escape and an outside click remain additional dismissal routes. First focus goes to the editable scope on first use or search after results exist.
 
@@ -22,7 +22,7 @@ The compact panel has five stable zones. Its header contains only the gauge, pro
 2. condensed Home-filesystem capacity rail with exact values;
 3. editable scope, inline folder browser, Back, refresh/cancel, search, view, and filter controls;
 4. first-use/status surface or the analysis canvas;
-5. a focused selection inspector with **Drill in**, **Open**, **Ask Omarchy**, and **Trash**.
+5. a focused selection inspector with bordered **Open · o**, **Ask Omarchy · a**, and **Trash · x** actions (**Enter / →** drills folders).
 
 The ordinary scope row contains a history Back control, an editable absolute or `~/` path, a compact folder-browser trigger, and one contextual Open/Refresh/Cancel action. First use exposes only one scan action. The inline folder browser lists immediate subdirectories without measuring them, includes hidden folders, accepts an editable path, and keeps the user inside the themed panel.
 
@@ -30,11 +30,11 @@ The panel scrolls when content exceeds its fitted height, keeping small displays
 
 ## Treemap and ranked list
 
-Both views are projections of one model. Treemap area represents allocated bytes and only renders a label when its rectangle is large enough. Pointer selection updates the shared inspector; an explicit **Drill in** action changes scope.
+Both views are projections of one model. Treemap area represents allocated bytes and only renders a label when its rectangle is large enough. Pointer selection updates the shared inspector; **Enter / →**, double-click, or an IPC activate drills into an actionable directory.
 
 The ranked list shows name, proportional bar, exact allocated size, and directory/file treatment inside a fixed-height, clipped list pane with wheel and keyboard scrolling. Arrow / j k selection calls `positionViewAtIndex` so the current row stays visible without scrolling the outer panel. The 80-entry render bound is stated in the UI; filters expose a narrower result without changing stored scan totals. Control characters are repaired for display and invalid UTF-8 paths are not actionable.
 
-For an actionable selected directory, **Ask Omarchy** is visually primary without displacing **Drill in** or **Open**. Activating it closes the panel and opens the configured default agent with a read-only diagnostic question. Drilling pushes the prior scope into bounded history; Back restores its original scan timestamp and model when cached rather than silently remeasuring it.
+For an actionable selected directory, **Ask Omarchy · a** is visually primary beside bordered **Open · o**. Activating it closes the panel and opens the configured default agent with a read-only diagnostic question. Drilling pushes the prior scope into bounded history; Back restores its original scan timestamp and model when cached rather than silently remeasuring it.
 
 **Trash** is deliberately urgent but secondary. It opens a modal containing the selected path and allocated size, with keyboard focus reset to **Cancel**. Confirmation moves only that current immediate child through desktop Trash. Success clears selection, invalidates cached views, remeasures the scope, and states that Trash must be emptied before space is reclaimed. A platform refusal becomes a dismissible inline error while the entry remains visible.
 
@@ -48,7 +48,7 @@ Current controls provide case-insensitive name search; files, directories, or al
 | --- | --- | --- |
 | First use | Capacity, editable scope, folder browser, and one scan action | Scan Home or choose another scope |
 | Choosing scope | Inline shallow folder list with editable path and hidden directories included | Browse, use folder, or cancel |
-| Scanning | Bar activity ring, full-pane horizontal accent wash, status text, and a Cancel affordance while the last completed result remains intact | Cancel or wait |
+| Scanning | Bar activity ring, vertical scanner stripe, status text, and a Cancel affordance while the last completed result remains intact | Cancel or wait |
 | Ready | Timestamp, shared analysis model, filtered totals, and bounded history | Refresh, drill in, or go Back |
 | Partial | Warning count and first warning remain above usable results | Scan a narrower scope |
 | Cancelled | Last completed result remains when one exists | Refresh |
@@ -64,7 +64,7 @@ Current controls provide case-insensitive name search; files, directories, or al
 
 The bar has a semantic button role and descriptive name. Panel controls are keyboard-focusable, the search field is the initial focus target after results exist, Escape closes the inline folder browser before it closes the panel, and list/treemap information is duplicated in exact text and the inspector. The active bar widget toggles the panel without a duplicate header close control. The editable scope, inline browser, filtered-list input, and clear action have passed real-session QMP acceptance.
 
-Only an active scan uses custom looping motion (bar ring + results wash). The same state is always communicated through literal status text, control labels, and accessibility metadata. A muted **Keys · ?** control and `?` sheet document the in-panel shortcuts. Full keyboard traversal, treemap keyboard selection, screen-reader announcements, WCAG contrast, pointer targets, and composed reduced-motion behavior remain public-release gates.
+Only an active scan uses custom looping motion (bar ring + vertical scanner stripe). The same state is always communicated through literal status text, control labels, and accessibility metadata. A muted **Keys · ?** control and `?` sheet document the in-panel shortcuts. Full keyboard traversal, treemap keyboard selection, screen-reader announcements, WCAG contrast, pointer targets, and composed reduced-motion behavior remain public-release gates.
 
 ## Proven visual matrix and gaps
 

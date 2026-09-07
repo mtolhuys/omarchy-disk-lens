@@ -2,6 +2,17 @@
 
 All notable changes to Omarchy Disk Lens are documented here. The format follows Keep a Changelog and the project uses Semantic Versioning.
 
+## 0.6.6 — 2026-09-07
+
+### Changed
+
+- Rebuilt scan loading as one smooth vertical scanner stripe that ping-pongs left→right→left across the results pane (soft gradient edges, no banded trail, no horizontal pill/blob).
+- Hero empty-scan keeps readable status copy over the beam; compact refresh overlays the same vertical stripe on the live list/treemap.
+- Redesigned the selection inspector action strip: consistent bordered controls, visible keyboard hints (**Open · o**, **Ask Omarchy · a**, **Trash · x**), and stronger DIRECTORY/date contrast.
+- Removed the redundant **Drill in** button — **Enter / →** already drills folders; Ask Omarchy stays the primary directory action.
+- Documented the new inspector shortcuts in the Keys sheet and README, and exposed ask/open button centers for lab pointer acceptance.
+- Bumped the manifest and loaded service/widget identities for the `0.6.6` release.
+
 ## 0.6.4 — 2026-09-07
 
 ### Changed

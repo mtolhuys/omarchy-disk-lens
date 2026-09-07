@@ -27,7 +27,7 @@ cd "$OMARCHY_PLUGIN_LAB_ROOT"
 1. interrupted-add recovery, source tests, manifest validation, catalog discovery, registration, and loaded identities;
 2. real bar geometry and QMP pointer routing into the real panel, including the absence of a duplicate header close action and two consecutive bar-pointer toggles that close and reopen the panel;
 3. exactly one first-use scan action, hidden entries shown by default, the rendered inline folder browser, Escape recovery, typed scope entry, exact synthetic count and total, and explicit refresh;
-4. treemap selection, rendered Drill in, Back restoring the exact prior timestamp without a scanner process, plus rendered list, search, and clear interaction;
+4. treemap selection, Enter/activate drill, Back restoring the exact prior timestamp without a scanner process, plus rendered list, search, and clear interaction;
 5. visible **Ask Omarchy** closing the panel and launching an `org.omarchy.agent` terminal with the bounded path value, size, read-only constraint, untrusted-data boundary, and confirmation boundary captured by a guest-only shim, including a scanner-derived newline-injection fixture;
 6. rendered **Trash** opening an exact-target modal on Cancel, cancel preserving data, explicit keyboard confirmation, an unsupported internal mount retaining its item with a visible error, and a user-home entry moving to desktop Trash before an automatic fresh scan;
 7. maintained light and dark themes without state loss or compositor errors;
