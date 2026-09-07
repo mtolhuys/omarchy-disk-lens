@@ -9,7 +9,7 @@ readonly manifest="$project_root/manifest.json"
 jq -e '
   .schemaVersion == 1
   and .id == "io.github.mtolhuys.disk-lens"
-  and .version == "0.6.6"
+  and .version == "0.6.7"
   and (.kinds | sort == ["bar-widget", "service"])
   and .entryPoints.service == "src/Service.qml"
   and .entryPoints.barWidget == "src/BarWidget.qml"
@@ -23,8 +23,8 @@ while IFS= read -r entry_point; do
   [[ -f $project_root/$entry_point ]]
 done < <(jq -r '.entryPoints[]' "$manifest")
 
-rg -F 'disk-lens-service-v0606' "$project_root/src/Service.qml" >/dev/null
-rg -F 'disk-lens-widget-v0606' "$project_root/src/BarWidget.qml" >/dev/null
+rg -F 'disk-lens-service-v0607' "$project_root/src/Service.qml" >/dev/null
+rg -F 'disk-lens-widget-v0607' "$project_root/src/BarWidget.qml" >/dev/null
 [[ -x $project_root/scripts/disk-lens-trash ]]
 
 rg -F 'else root.toggle()' "$project_root/src/BarWidget.qml" >/dev/null

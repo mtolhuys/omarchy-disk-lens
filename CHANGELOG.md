@@ -2,6 +2,13 @@
 
 All notable changes to Omarchy Disk Lens are documented here. The format follows Keep a Changelog and the project uses Semantic Versioning.
 
+## 0.6.7 — 2026-09-07
+
+### Changed
+
+- Replaced the Canvas sweep redraw with a GPU-animated vertical scanner stripe (stacked translucent gradients, `x` ping-pong) so the beam stays transparent with no opaque bounding box or frame jank.
+- Bumped the manifest and loaded service/widget identities for the `0.6.7` scan motion fix.
+
 ## 0.6.6 — 2026-09-07
 
 ### Changed
