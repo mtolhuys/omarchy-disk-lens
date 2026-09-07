@@ -9,7 +9,7 @@ readonly manifest="$project_root/manifest.json"
 jq -e '
   .schemaVersion == 1
   and .id == "io.github.mtolhuys.disk-lens"
-  and .version == "0.6.9"
+  and .version == "0.6.10"
   and (.kinds | sort == ["bar-widget", "service"])
   and .entryPoints.service == "src/Service.qml"
   and .entryPoints.barWidget == "src/BarWidget.qml"
@@ -23,9 +23,12 @@ while IFS= read -r entry_point; do
   [[ -f $project_root/$entry_point ]]
 done < <(jq -r '.entryPoints[]' "$manifest")
 
-rg -F 'disk-lens-service-v0609' "$project_root/src/Service.qml" >/dev/null
-rg -F 'disk-lens-widget-v0609' "$project_root/src/BarWidget.qml" >/dev/null
+rg -F 'disk-lens-service-v0610' "$project_root/src/Service.qml" >/dev/null
+rg -F 'disk-lens-widget-v0610' "$project_root/src/BarWidget.qml" >/dev/null
 [[ -x $project_root/scripts/disk-lens-trash ]]
+[[ -x $project_root/scripts/disk-lens-open ]]
+rg -F 'openHelperPath' "$project_root/src/BarWidget.qml" >/dev/null
+rg -F 'scripts/disk-lens-open' "$project_root/src/BarWidget.qml" >/dev/null
 
 rg -F 'else root.toggle()' "$project_root/src/BarWidget.qml" >/dev/null
 rg -F 'onCloseRequested: root.handleEscape()' "$project_root/src/BarWidget.qml" >/dev/null

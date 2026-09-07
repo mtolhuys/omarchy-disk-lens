@@ -11,7 +11,7 @@ BarWidget {
 
   moduleName: "io.github.mtolhuys.disk-lens"
 
-  readonly property string buildIdentity: "disk-lens-widget-v0609"
+  readonly property string buildIdentity: "disk-lens-widget-v0610"
   readonly property var diskService: bar && bar.shell
     ? bar.shell.serviceFor("io.github.mtolhuys.disk-lens") : null
   readonly property var capacity: diskService ? diskService.capacity : Model.parseCapacity("")
@@ -46,6 +46,8 @@ BarWidget {
   readonly property bool scopeDraftChanged: scopeDraftPath !== "" && scopeDraftPath !== currentScope
   readonly property string folderListerPath: diskService && diskService.sourceDir
     ? diskService.sourceDir + "/scripts/disk-lens-folders" : ""
+  readonly property string openHelperPath: diskService && diskService.sourceDir
+    ? diskService.sourceDir + "/scripts/disk-lens-open" : ""
 
   property bool popupOpen: false
   property bool includeHidden: true
@@ -69,6 +71,7 @@ BarWidget {
   property bool trashConfirmOpen: false
   property var trashConfirmEntry: null
   property bool keysHelpOpen: false
+  property double lastOpenAtMs: 0
 
   readonly property bool typingInField: (typeof scopeField !== "undefined" && scopeField.activeFocus)
     || (typeof searchField !== "undefined" && searchField.activeFocus)
@@ -383,7 +386,14 @@ BarWidget {
 
   function openInFileManager() {
     if (trashRunning) return
-    Quickshell.execDetached(["uwsm-app", "--", "xdg-open", selectedActionPath()])
+    var now = Date.now()
+    // KeyCatcher repeats held keys; debounce Open/o and the inspector button.
+    if (now - lastOpenAtMs < 500) return
+    lastOpenAtMs = now
+
+    var path = selectedActionPath()
+    if (!path || !openHelperPath) return
+    Quickshell.execDetached([openHelperPath, "--", path])
   }
 
   function askOmarchyAboutSelected() {
@@ -2028,8 +2038,8 @@ BarWidget {
                 focusable: true
                 enabled: root.selectedEntry && root.selectedEntry.actionable
                 opacity: enabled ? 1 : 0.35
-                tooltipText: "Open in the file manager (o)"
-                Accessible.name: "Open the selection in the file manager"
+                tooltipText: "Open or reveal in the file manager (o)"
+                Accessible.name: "Open or reveal the selection in the file manager"
                 onClicked: root.openInFileManager()
               }
 

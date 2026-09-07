@@ -1,0 +1,8 @@
+#!/bin/bash
+set -euo pipefail
+: "${DISK_LENS_TEST_OPEN_LOG:?}"
+{
+  printf 'flea'
+  printf '\t%s' "$@"
+  printf '\n'
+} >>"$DISK_LENS_TEST_OPEN_LOG"

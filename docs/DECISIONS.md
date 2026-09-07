@@ -95,3 +95,11 @@
 **Why:** A single serial `du --max-depth=1` walk left deep Home scopes wait on one thread of filesystem traversal. Per-entry process startup separately dominated dense shallow scopes. Parallel per-child directory work cuts wall time on multi-core hosts while preserving NUL-safe records, cancellation of every owned worker, and the existing NDJSON protocol.
 
 **Consequence:** Listed sizes match `du -s -- child` for each entry. Cross-directory hard links may therefore contribute to more than one child total, unlike a single shared-inode `du` invocation; the ranked and treemap views still answer “how large is this child?” Total allocated bytes equal the sum of measured children. A source regression enforces bounded `stat`/`jq`/`iconv` counts for 1,024 entries; invalid UTF-8 retains its isolated slower path. Noise directories are not skipped—they are primary analysis targets.
+
+## D013 — Reveal binaries; never browser-download via Open
+
+**Decision:** Route **Open / o** through `scripts/disk-lens-open`. Directories and ordinary document/image MIME types use `xdg-open`. Executables, `application/octet-stream`, and unknown binaries are revealed in the file manager (prefer Flea `--select` when it is the inode/directory handler; otherwise `org.freedesktop.FileManager1.ShowItems`; else open the parent). Debounce Open activations by 500ms.
+
+**Why:** On Omarchy, `xdg-open` for `application/x-pie-executable` often falls through to the default web browser, which downloads `file://` binaries. KeyCatcher key-repeat then multiplies the downloads into `deno`, `deno (1)`, …
+
+**Consequence:** Open never executes binaries and never hands bare executables to a browser. A separate Run action would require its own product and security review.

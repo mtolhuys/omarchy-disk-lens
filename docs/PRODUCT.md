@@ -14,7 +14,7 @@ Omarchy Disk Lens makes Home-filesystem pressure understandable within seconds a
 6. A squarified treemap and ranked list reveal the largest entries from the same canonical model; hidden entries are included by default.
 7. Search and type, hidden-entry, minimum-size, and modification-age filters narrow only the visible projection.
 8. Selection exposes exact allocated size, type, modification time, and safe actions.
-9. An actionable directory can be drilled into, opened in the file manager, or sent to the configured Omarchy agent with a read-only explanation request. Back restores a bounded in-memory result instead of rescanning when that scope remains cached.
+9. An actionable directory can be drilled into, opened or revealed in the file manager, or sent to the configured Omarchy agent with a read-only explanation request. Back restores a bounded in-memory result instead of rescanning when that scope remains cached.
 10. One actionable selected file or directory can be moved to desktop Trash after an exact-target confirmation that starts on Cancel. Success invalidates stale snapshots and remeasures the current scope; failure leaves the entry untouched and visible.
 11. The agent prompt includes a control-free, length-bounded path value and measured allocation after a fixed read-only trust boundary, then asks why the directory is large, whether it is necessary, what may be reclaimable, and whether deletion is safe.
 

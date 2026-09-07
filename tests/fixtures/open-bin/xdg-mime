@@ -1,0 +1,44 @@
+#!/bin/bash
+set -euo pipefail
+# Minimal xdg-mime for open-helper tests.
+if [[ ${1:-} == query && ${2:-} == filetype ]]; then
+  path=${3:-}
+  if [[ -d $path && ! -L $path ]]; then
+    printf 'inode/directory\n'
+    exit 0
+  fi
+  # Honor DISK_LENS_TEST_MIME override for a specific basename.
+  base=$(basename -- "$path")
+  if [[ -n ${DISK_LENS_TEST_MIME_BY_NAME:-} ]]; then
+    # format: name=mime;name2=mime2
+    IFS=';' read -r -a pairs <<<"$DISK_LENS_TEST_MIME_BY_NAME"
+    for pair in "${pairs[@]}"; do
+      name=${pair%%=*}
+      mime=${pair#*=}
+      if [[ $base == "$name" ]]; then
+        printf '%s\n' "$mime"
+        exit 0
+      fi
+    done
+  fi
+  if [[ -L $path && -d $path ]]; then
+    printf 'inode/directory\n'
+    exit 0
+  fi
+  if [[ -x $path && -f $path ]]; then
+    printf 'application/x-pie-executable\n'
+    exit 0
+  fi
+  case $base in
+    *.txt) printf 'text/plain\n' ;;
+    *.png) printf 'image/png\n' ;;
+    *.bin) printf 'application/octet-stream\n' ;;
+    *) printf 'application/octet-stream\n' ;;
+  esac
+  exit 0
+fi
+if [[ ${1:-} == query && ${2:-} == default && ${3:-} == inode/directory ]]; then
+  printf '%s\n' "${DISK_LENS_TEST_DIR_HANDLER:-com.thisisgm.flea.desktop}"
+  exit 0
+fi
+exit 1

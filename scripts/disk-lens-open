@@ -1,0 +1,162 @@
+#!/bin/bash
+
+set -uo pipefail
+
+# Open a selected Disk Lens path safely:
+# - directories and ordinary documents → xdg-open
+# - executables / application/octet-stream / unknown binaries → reveal in the
+#   file manager (never hand bare binaries to a browser via xdg-open)
+
+fail() {
+  printf '%s\n' "$1" >&2
+  exit "${2:-1}"
+}
+
+if (( EUID == 0 )); then
+  fail "Opening items must run as the desktop user." 77
+fi
+
+if (( $# != 2 )) || [[ $1 != "--" ]]; then
+  fail "Expected exactly -- ABSOLUTE-PATH." 64
+fi
+
+target_path=$2
+if [[ $target_path != /* ]]; then
+  fail "The selected item must use an absolute path." 64
+fi
+
+if ! printf '%s' "$target_path" | iconv -f UTF-8 -t UTF-8 >/dev/null 2>&1; then
+  fail "The selected item is not valid UTF-8." 66
+fi
+
+[[ -e $target_path || -L $target_path ]] \
+  || fail "The selected item no longer exists." 66
+
+# Prefer launching desktop apps through uwsm when available (Omarchy session).
+run_detached() {
+  if command -v uwsm-app >/dev/null 2>&1; then
+    exec uwsm-app -- "$@"
+  fi
+  exec "$@"
+}
+
+file_uri_from_path() {
+  local path=$1
+  local out="file://"
+  local i c hex
+  local LC_ALL=C
+  for (( i = 0; i < ${#path}; i++ )); do
+    c=${path:i:1}
+    case $c in
+      [A-Za-z0-9._~/-]) out+=$c ;;
+      *)
+        printf -v hex '%%%02X' "'$c"
+        out+=$hex
+        ;;
+    esac
+  done
+  printf '%s\n' "$out"
+}
+
+mime_type_for() {
+  local path=$1
+  local mime=""
+  # Paths are absolute (start with /), so option-injection is not possible.
+  if command -v xdg-mime >/dev/null 2>&1; then
+    mime=$(xdg-mime query filetype "$path" 2>/dev/null || true)
+  fi
+  if [[ -z $mime ]] && command -v file >/dev/null 2>&1; then
+    mime=$(file --brief --dereference --mime-type -- "$path" 2>/dev/null || true)
+  fi
+  printf '%s\n' "$mime"
+}
+
+should_reveal_binary() {
+  local path=$1
+  local mime=$2
+
+  case $mime in
+    inode/directory)
+      return 1
+      ;;
+    application/octet-stream|\
+    application/x-executable|\
+    application/x-pie-executable|\
+    application/x-sharedlib|\
+    application/x-elf|\
+    application/x-object|\
+    application/x-binary|\
+    application/x-mach-binary|\
+    application/vnd.microsoft.portable-executable|\
+    application/x-msdos-program|\
+    application/x-ms-dos-executable|\
+    application/x-msdownload)
+      return 0
+      ;;
+    "")
+      # Unknown type: never risk a browser download of a bare binary.
+      if [[ -f $path || -L $path ]]; then
+        return 0
+      fi
+      return 1
+      ;;
+  esac
+  return 1
+}
+
+reveal_in_file_manager() {
+  local path=$1
+  local parent=${path%/*}
+  [[ -n $parent ]] || parent="/"
+
+  local dir_handler=""
+  if command -v xdg-mime >/dev/null 2>&1; then
+    dir_handler=$(xdg-mime query default inode/directory 2>/dev/null || true)
+  fi
+
+  # Omarchy's default file manager (Flea) supports selecting the item.
+  if [[ $dir_handler == *flea* ]] && command -v flea >/dev/null 2>&1; then
+    run_detached flea --gui --select "$path"
+  fi
+
+  # Portable FreeDesktop reveal (often Nautilus when FileManager1 is present).
+  if command -v gdbus >/dev/null 2>&1; then
+    local uri
+    uri=$(file_uri_from_path "$path")
+    if [[ -n $uri ]] && gdbus call --session \
+        --dest org.freedesktop.FileManager1 \
+        --object-path /org/freedesktop/FileManager1 \
+        --method org.freedesktop.FileManager1.ShowItems \
+        "['${uri}']" "" >/dev/null 2>&1; then
+      exit 0
+    fi
+  fi
+
+  # Last resort: open the parent directory only (never the bare binary).
+  if command -v xdg-open >/dev/null 2>&1; then
+    run_detached xdg-open "$parent"
+  fi
+  fail "No file manager is available to reveal the selected item." 69
+}
+
+if [[ -d $target_path && ! -L $target_path ]]; then
+  command -v xdg-open >/dev/null 2>&1 \
+    || fail "The desktop open command is unavailable." 69
+  run_detached xdg-open "$target_path"
+fi
+
+# Symlink-to-directory: open the link path with xdg-open (file manager).
+if [[ -L $target_path && -d $target_path ]]; then
+  command -v xdg-open >/dev/null 2>&1 \
+    || fail "The desktop open command is unavailable." 69
+  run_detached xdg-open "$target_path"
+fi
+
+mime=$(mime_type_for "$target_path")
+if should_reveal_binary "$target_path" "$mime"; then
+  reveal_in_file_manager "$target_path"
+fi
+
+command -v xdg-open >/dev/null 2>&1 \
+  || fail "The desktop open command is unavailable." 69
+run_detached xdg-open "$target_path"

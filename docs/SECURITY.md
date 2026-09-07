@@ -21,6 +21,7 @@ Disk Lens inspects filenames, metadata, and allocated sizes on local filesystems
 - The last completed result is not replaced by a cancelled or protocol-invalid attempt.
 - Navigation cache snapshots are accepted only after strict scan parsing, remain memory-only, and are bounded to eight scopes and 12,000 total entries.
 - The file manager receives selected paths as individual process arguments.
+- **Open** never passes executables, `application/octet-stream`, or unknown binaries to `xdg-open` (browsers commonly download those `file://` targets). Those paths are revealed in the file manager instead. Directories and ordinary document/image MIME types still use `xdg-open`. Open is debounced so key-repeat cannot multiply launches.
 - The Trash service accepts only an actionable exact entry in the current validated scan. The helper independently requires its resolved parent to equal that scope and passes the target as one `gio trash --` argument.
 - `omarchy agent prompt` receives the complete fixed-format question as one process argument. Before a selected path enters that question, C0 and DEL control characters are removed and the value is capped at 4,096 characters. Selected paths never become shell source.
 - Disk Lens exposes no permanent deletion, empty-Trash, bulk cleanup, permission changes, package management, snapshot actions, privileged helper, destructive IPC route, or generic command runner.

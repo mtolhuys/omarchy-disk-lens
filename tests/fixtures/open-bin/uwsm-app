@@ -1,0 +1,15 @@
+#!/bin/bash
+set -euo pipefail
+: "${DISK_LENS_TEST_OPEN_LOG:?}"
+# uwsm-app -- cmd args... → run cmd through PATH (still our fakes)
+if [[ ${1:-} != "--" ]]; then
+  echo "uwsm-app fixture expected --" >&2
+  exit 64
+fi
+shift
+{
+  printf 'uwsm-app'
+  printf '\t%s' "$@"
+  printf '\n'
+} >>"$DISK_LENS_TEST_OPEN_LOG"
+exec "$@"

@@ -2,6 +2,18 @@
 
 All notable changes to Omarchy Disk Lens are documented here. The format follows Keep a Changelog and the project uses Semantic Versioning.
 
+## 0.6.10 — 2026-09-07
+
+### Fixed
+
+- **Open / `o` no longer browser-downloads executables.** Selecting a binary such as `/usr/bin/deno` and pressing **o** previously handed the path to `xdg-open`, whose fallback handler is often the web browser — which then downloaded `file://` copies on every key-repeat.
+- Open now routes through a guarded `scripts/disk-lens-open` helper: directories and ordinary documents still use `xdg-open`; executables, `application/octet-stream`, and unknown binaries are **revealed** in the file manager (`flea --select` when Flea is the directory handler, otherwise FreeDesktop `FileManager1.ShowItems`, else the parent folder).
+- Debounced Open / `o` and the inspector Open button (~500ms) so held key-repeat cannot spawn a storm of opens.
+
+### Changed
+
+- Bumped the manifest and loaded service/widget identities for the `0.6.10` open-safety fix.
+
 ## 0.6.9 — 2026-09-07
 
 ### Changed

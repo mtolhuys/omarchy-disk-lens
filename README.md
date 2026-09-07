@@ -79,7 +79,7 @@ A muted **Keys · ?** control sits in the header. Press **?** (or click it) for 
 | **Backspace / ←** | Go back through scan history |
 | **f** or **/** | Focus the filter field |
 | **v** | Toggle List / Map view |
-| **o** | Open the selection (or current scope) in the file manager |
+| **o** | Open the selection (or current scope) in the file manager; binaries are revealed, not downloaded |
 | **a** | Ask Omarchy about the selected folder |
 | **x** | Move the selection to Trash (opens Cancel-first confirm) |
 | **q** | Close the panel |

@@ -1,0 +1,10 @@
+#!/bin/bash
+set -euo pipefail
+: "${DISK_LENS_TEST_OPEN_LOG:?}"
+{
+  printf 'gdbus'
+  printf '\t%s' "$@"
+  printf '\n'
+} >>"$DISK_LENS_TEST_OPEN_LOG"
+# Pretend ShowItems succeeded when asked.
+exit 0

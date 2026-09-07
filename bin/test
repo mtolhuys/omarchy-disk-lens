@@ -9,6 +9,7 @@ readonly project_root
 "$project_root/tests/scan.test.sh"
 "$project_root/tests/folders.test.sh"
 "$project_root/tests/trash.test.sh"
+"$project_root/tests/open.test.sh"
 "$project_root/tests/scanner-efficiency.test.sh"
 node "$project_root/tests/model.test.js"
 "$project_root/tests/english.test.sh"
@@ -21,11 +22,13 @@ if command -v shellcheck >/dev/null; then
     "$project_root/scripts/disk-lens-folders" \
     "$project_root/scripts/disk-lens-scan" \
     "$project_root/scripts/disk-lens-trash" \
+    "$project_root/scripts/disk-lens-open" \
     "$project_root/tests/english.test.sh" \
     "$project_root/tests/manifest.test.sh" \
     "$project_root/tests/scan.test.sh" \
     "$project_root/tests/folders.test.sh" \
     "$project_root/tests/trash.test.sh" \
+    "$project_root/tests/open.test.sh" \
     "$project_root/tests/scanner-efficiency.test.sh" \
     "$project_root/tests/lab/acceptance.sh" \
     "$project_root/tests/lab/public-install.sh" \
@@ -33,6 +36,11 @@ if command -v shellcheck >/dev/null; then
     "$project_root/tests/fixtures/slow-bin/du" \
     "$project_root/tests/fixtures/locale-bin/stat" \
     "$project_root/tests/fixtures/trash-bin/gio" \
+    "$project_root/tests/fixtures/open-bin/xdg-open" \
+    "$project_root/tests/fixtures/open-bin/flea" \
+    "$project_root/tests/fixtures/open-bin/gdbus" \
+    "$project_root/tests/fixtures/open-bin/uwsm-app" \
+    "$project_root/tests/fixtures/open-bin/xdg-mime" \
     "$project_root/tests/fixtures/counting-bin/base64" \
     "$project_root/tests/fixtures/counting-bin/iconv" \
     "$project_root/tests/fixtures/counting-bin/jq" \
