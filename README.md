@@ -1,6 +1,6 @@
 # Omarchy Disk Lens
 
-![Omarchy Disk Lens — quiet scan beam, treemap with Open · Ask Omarchy · Trash, and list or Keys](docs/media/disk-lens-banner.png)
+![Omarchy Disk Lens across Tokyo Night, Catppuccin Latte, and Matte Black](docs/media/disk-lens-banner.png)
 
 Disk Lens is a disk usage viewer for the Omarchy bar. If you have used [WinDirStat](https://windirstat.net/) on Windows or [QDirStat](https://github.com/shundhammer/qdirstat) on Linux, you already know the idea: scan a folder and see what is taking up the space. Disk Lens shows the result as either a proportional map or a ranked list. Hidden folders are included by default, so Steam libraries and other large hidden directories are not missed.
 

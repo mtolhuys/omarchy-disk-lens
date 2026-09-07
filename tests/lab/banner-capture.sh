@@ -104,7 +104,7 @@ omarchy_host_test() {
   # Keys · ? sits in the panel header actions; List/Map toggle shares the filter row.
   view_button_x=$((screen_width - 55))
   filter_y=218
-  printf '%s\n' "{\"viewport\":[${screen_width},${screen_height}],\"version\":\"0.6.12\",\"theme\":\"tokyo-night\"}" \
+  printf '%s\n' "{\"viewport\":[${screen_width},${screen_height}],\"version\":\"0.6.12\",\"themes\":[\"Tokyo Night\",\"Catppuccin Latte\",\"Matte Black\"],\"layout\":\"dark-light-dark\"}" \
     >"$RUN_DIR/disk-lens-banner-geometry.json"
 
   qmp_pointer_tap "$screen_width" "$screen_height" "$icon_x" "$icon_y" left
@@ -195,6 +195,51 @@ omarchy_host_test() {
   park_pointer_outside_panel || return 1
   capture_console "success-disk-lens-banner-04-list-selection"
 
+  # --- Theme triptych: keep Tokyo Night frames above; add light hero + second dark ---
+  # Return to treemap with Archive selected so the light theme shows the polished map.
+  ssh_session "omarchy-shell disk-lens state | jq -e '.viewMode == \"treemap\"'" || {
+    qmp_pointer_tap "$screen_width" "$screen_height" "$view_button_x" "$filter_y" left
+    wait_for_guest_state "return to treemap before theme walk" 8 ssh_session \
+      "omarchy-shell disk-lens state | jq -e '.viewMode == \"treemap\"'" || return 1
+  }
+  ssh_session "omarchy-shell disk-lens state | jq -e \
+    '.selectedPath == \"/tmp/disk-lens-fixture/Archive\" and .askButtonCenterX > 0'" || {
+    qmp_pointer_tap "$screen_width" "$screen_height" $((screen_width - 400)) 400 left
+    wait_for_guest_state "reselect Archive before theme walk" 10 ssh_session \
+      "omarchy-shell disk-lens state | jq -e \
+        '.selectedPath == \"/tmp/disk-lens-fixture/Archive\" and .askButtonCenterX > 0'" || return 1
+  }
+
+  log "Catppuccin Latte light theme for center hero panel"
+  ssh_session "omarchy-theme-set 'Catppuccin Latte'"
+  wait_for_guest_state "Catppuccin Latte applies with panel intact" 20 ssh_session \
+    "omarchy-shell disk-lens state | jq -e \
+      '.opened == true and .viewMode == \"treemap\" and .entryCount >= 6 and .selectedPath != \"\"' && \
+     test -z \"\$(hyprctl configerrors)\"" || return 1
+  sleep 0.55
+  park_pointer_outside_panel || return 1
+  capture_console "success-disk-lens-banner-05-latte-treemap"
+
+  log "Matte Black second dark theme for right panel"
+  ssh_session "omarchy-theme-set 'Matte Black'"
+  wait_for_guest_state "Matte Black applies with panel intact" 20 ssh_session \
+    "omarchy-shell disk-lens state | jq -e \
+      '.opened == true and .entryCount >= 6' && \
+     test -z \"\$(hyprctl configerrors)\"" || return 1
+  qmp_pointer_tap "$screen_width" "$screen_height" "$view_button_x" "$filter_y" left
+  wait_for_guest_state "list view under Matte Black" 10 ssh_session \
+    "omarchy-shell disk-lens state | jq -e '.viewMode == \"list\" and .visibleCount >= 6'" || return 1
+  ssh_session "omarchy-shell disk-lens state | jq -e '.selectedPath != \"\"'" || {
+    press down
+    wait_for_guest_state "list row selected under Matte Black" 8 ssh_session \
+      "omarchy-shell disk-lens state | jq -e '.selectedPath != \"\"'" || return 1
+  }
+  sleep 0.5
+  park_pointer_outside_panel || return 1
+  capture_console "success-disk-lens-banner-06-matte-list"
+
+  ssh_session "omarchy-theme-set 'Tokyo Night'" >/dev/null || true
+
   ssh_session "omarchy-plugin-remove io.github.mtolhuys.disk-lens --yes" >/dev/null || true
   wait_for_guest_state "banner candidate removes cleanly" 20 ssh_session \
     "test ! -e \"$plugin_dir\" && \
@@ -203,5 +248,5 @@ omarchy_host_test() {
   ssh_session "journalctl --user --since '@$start_epoch' --no-pager" \
     >"$RUN_DIR/disk-lens-banner-journal.log" || true
 
-  printf 'ok - Disk Lens banner frames captured (beam, treemap selection, Keys, list)\n'
+  printf 'ok - Disk Lens banner frames captured (Tokyo Night, Catppuccin Latte, Matte Black)\n'
 }

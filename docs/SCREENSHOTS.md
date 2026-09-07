@@ -19,16 +19,18 @@ The GIF leads with visual analysis, then presents capacity, in-place folder choi
 
 ## Current provenance
 
-Banner source frames come from green `0.6.12` Plugin Lab run `20260907-191623`, which exercised the current working-tree candidate through `tests/lab/banner-capture.sh` in a disposable guest. Frames:
+Banner source frames come from green `0.6.12` Plugin Lab run `20260907-193518`, which exercised the current working-tree candidate through `tests/lab/banner-capture.sh` in a disposable guest. The capture walks three stock Omarchy themes for a dark | light | dark README triptych:
 
-- `success-disk-lens-banner-01-scanning-beam.png` — quiet motion-relative beam over a live synthetic treemap;
-- `success-disk-lens-banner-02-treemap-selection.png` — Archive selected with **Open · o** / **Ask Omarchy · a** / **Trash · x**;
-- `success-disk-lens-banner-03-keys-sheet.png` — in-panel Keys sheet;
-- `success-disk-lens-banner-04-list-selection.png` — ranked list with the same selection footer.
+- `success-disk-lens-banner-01-scanning-beam.png` · Tokyo Night · quiet motion-relative beam over a live synthetic treemap;
+- `success-disk-lens-banner-02-treemap-selection.png` · Tokyo Night · Archive selected with **Open · o** / **Ask Omarchy · a** / **Trash · x**;
+- `success-disk-lens-banner-03-keys-sheet.png` · Tokyo Night · in-panel Keys sheet;
+- `success-disk-lens-banner-04-list-selection.png` · Tokyo Night · ranked list with the same selection footer;
+- `success-disk-lens-banner-05-latte-treemap.png` · Catppuccin Latte · light-theme hero treemap with selection actions;
+- `success-disk-lens-banner-06-matte-list.png` · Matte Black · ranked list with selection footer.
 
-The composed `disk-lens-banner.png` is `1600x986`. Pointer parking kept the virtual cursor outside the panel before each publication capture. Paths are synthetic (`/tmp/disk-lens-fixture/...`) only.
+The composed `disk-lens-banner.png` is `1600x986` with Tokyo Night on the left, Catppuccin Latte centered as the hero, and Matte Black on the right. Overlay copy uses middots and spaces only (no em dash, no hyphen). Pointer parking kept the virtual cursor outside the panel before each publication capture. Paths are synthetic (`/tmp/disk-lens-fixture/...`) only.
 
-`disk-lens-scanning.png`, `disk-lens-treemap.png`, and `disk-lens-filtered-list.png` were refreshed from the same `20260907-191623` frames. Older first-use, folder-picker, trash, and agent captures remain from green `0.5.2` Plugin Lab run `20260901-121313` until those scenes are re-shot.
+`disk-lens-scanning.png`, `disk-lens-treemap.png`, and `disk-lens-filtered-list.png` were refreshed from the same `20260907-193518` Tokyo Night frames. Older first-use, folder-picker, trash, and agent captures remain from green `0.5.2` Plugin Lab run `20260901-121313` until those scenes are re-shot.
 
 The rebuilt `0.6.12` showcase is `1000x563`, 184 frames, 2820833 bytes, with SHA-256 `521d3f183b4586774c6e890a87fb1df3f034d2e00606b172cb7462a47cfc134c`. The 165658-byte marketplace preview has SHA-256 `e5bc209e98cce454959034d062ef0233445f7413b94384d4cb1b5cb5b0f7871e`.
 
