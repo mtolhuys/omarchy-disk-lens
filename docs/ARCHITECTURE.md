@@ -3,12 +3,14 @@
 ```text
 Omarchy shell
   ├─ Disk Lens service (kept loaded)
-  │    ├─ findmnt capacity process, every 60 seconds
+  │    ├─ findmnt disk discovery + capacity process, on mount events and every 60 seconds
+  │    ├─ one long-lived findmnt --poll mount watcher
+  │    ├─ selected disk persisted to XDG state
   │    ├─ one disk-lens-scan process
   │    ├─ at most one guarded disk-lens-trash process
   │    └─ bounded in-memory result cache with Home retention
   └─ Disk Lens bar widget + KeyboardPanel
-       ├─ pie gauge, one activity ring, capacity rail, and editable scope controls
+       ├─ pie gauge, one activity ring, stacked disk cards, and editable scope controls
        ├─ one shallow disk-lens-folders process while browsing
        ├─ shared filters and selection
        ├─ treemap or ranked list
@@ -37,7 +39,13 @@ Service and widget expose stable IPC state plus independent build identities. Pl
 
 ## Capacity adapter
 
-The service runs locale-independent `findmnt --json --bytes --target "$HOME"` with explicit fields for source, target, filesystem type, size, used, available, and use percentage. `Model.parseCapacity` accepts exactly one usable filesystem object and normalizes numbers before UI use.
+The service runs locale-independent `findmnt --json --bytes --list` with explicit fields for source, target, filesystem type, size, used, available, and use percentage. `Model.parseDisks` keeps local block filesystems only: FUSE (including rclone), network, tmpfs, squashfs, overlay, and pseudo filesystems are dropped, as are mounts under `/boot`, `/efi`, `/proc`, `/sys`, `/dev`, `/snap`, `/var/lib/docker`, and `/run` except `/run/media`, where udisks mounts removable media (`/media` and `/mnt` are kept too). Loop-backed filesystems are kept when their type is a regular local filesystem; snap images are dropped as squashfs. Btrfs subvolume sources such as `/dev/mapper/root[/@home]` are stripped of their bracketed suffix and collapsed into one disk that keeps every mount target. At most 16 disks are listed. The disk holding `$HOME` comes first and uses `$HOME` as its scan root; every other disk uses its shortest mount target.
+
+The selected disk drives the bar pie, tooltip, and panel analysis scope. Selecting a disk restores its cached result when one exists and otherwise returns the analysis area to first use at that disk's scan root; it never starts a recursive scan. Scanning or restoring a path keeps the selection on the disk whose mount target is the longest prefix of that path. The choice is stored as `{"source", "target"}` in `${XDG_STATE_HOME:-~/.local/state}/omarchy-disk-lens/selected-disk.json` through a Quickshell `FileView` after a structural `mkdir -p`. At service start the saved disk is matched by source and target, then by source alone, then falls back to the Home disk; a fallback does not overwrite the saved choice, so a temporarily unplugged disk is selected again when it returns. A long-lived `findmnt --poll --list --noheadings --output ACTION,TARGET` process reports mount table changes. Each event line restarts a 400 ms debounce that runs one discovery, so a plugged-in or removed disk updates within about half a second; the 60-second timer remains a fallback. If the watcher exits unexpectedly it restarts with exponential backoff (1 s doubling to 60 s, reset after 30 s of uptime) and triggers a discovery for missed events. The service stops it on destruction, so plugin disablement and shell restarts leave no watcher behind.
+
+When a disk disappears, cached results under its mount targets are dropped because the remounted contents may differ, and a scan running on it is cancelled. If it was selected, the panel falls back to the Home disk, shows a one-line notice, and keeps the saved selection; when the saved disk is mounted again it is selected automatically. Explicitly choosing a disk, or scanning a path on another disk, replaces the saved selection. Disks that appear after start are marked **NEW** for eight seconds.
+
+Omarchy's per-widget settings API was not used because it rewrites the user's `shell.json` for what is runtime state owned by the service.
 
 Capacity refreshes at service start, panel open, middle-click, explicit IPC request, and every 60 seconds. None of these paths starts a recursive directory scan.
 
@@ -61,7 +69,7 @@ The browser stays inside the Omarchy panel. A native `QtQuick.Dialogs`/GTK folde
 
 One active in-memory entry array drives both projections. Filters are pure projections over name, kind, hidden status, minimum allocated bytes, and maximum modification age. Hidden entries are included by default. Filtered bytes are labelled independently from scanned totals. Treemap geometry is bounded to the 48 largest visible entries; the ranked view renders at most 80 and directs the user to filters for further narrowing.
 
-Drilling into an actionable directory pushes the prior scope into a 16-step widget history and starts a new immediate-child scan only when that target has no cache entry. The service retains at most eight completed scopes and 12,000 total entries, with the Home result retained when it fits alongside the active result. Back promotes the cached snapshot atomically and preserves its original timestamp; explicit Refresh always starts a new scan. Version `0.5.2` does not persist scopes or results, so a shell reload returns to Home and first-use state.
+Drilling into an actionable directory pushes the prior scope into a 16-step widget history and starts a new immediate-child scan only when that target has no cache entry. The service retains at most eight completed scopes and 12,000 total entries, with the Home result retained when it fits alongside the active result. Back promotes the cached snapshot atomically and preserves its original timestamp; explicit Refresh always starts a new scan. Scopes and results are not persisted, so a shell reload returns to the selected disk's scan root in first-use state.
 
 `src/ActivityRing.qml` paints the single theme-derived scan ring around the bar gauge, exists visually only while its `running` property is true, and exposes progress semantics. Panel status and Cancel remain literal and static, so scan state stays available when motion cannot be perceived.
 

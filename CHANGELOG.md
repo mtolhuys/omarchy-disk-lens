@@ -2,6 +2,26 @@
 
 All notable changes to Omarchy Disk Lens are documented here. The format follows Keep a Changelog and the project uses Semantic Versioning.
 
+## 0.7.0 — 2026-11-05
+
+### Added
+
+- **Multi-disk overview.** The service discovers every local block filesystem with one `findmnt --json --bytes --list` call on the existing 60-second cadence. FUSE/rclone, network, tmpfs, squashfs, overlay, pseudo filesystems, `/boot` or `/efi`, and `/run` mounts other than `/run/media` are excluded; Btrfs subvolumes are collapsed into one disk per device.
+- The panel's single capacity card is now a tight stack of compact disk cards. The selected card uses the theme's selected fill and border; click a card or press **[ / ]** (or **d / Shift + D**) to switch.
+- Selecting a disk points the analysis at that disk (Home for the disk that holds it, otherwise its shortest mount target), restores its cached result when present, and otherwise shows first use. Selection never starts a recursive scan.
+- The bar pie and tooltip follow the selected disk. The selection persists in `${XDG_STATE_HOME:-~/.local/state}/omarchy-disk-lens/selected-disk.json` and falls back to the Home disk when the saved disk is absent.
+- **Hot-plug detection.** A long-lived `findmnt --poll` watcher triggers a debounced (400 ms) rediscovery on every mount event, so internal disks mounted later and USB drives automounted under `/run/media/$USER` appear within about half a second; the 60-second timer remains a fallback. The watcher restarts with backoff if it exits and is stopped when the service unloads.
+- Removing a disk drops its cached results, cancels a scan running on it, falls back to the Home disk with a notice, and keeps the saved selection so the disk is selected again when it returns. Newly appeared disks show a short-lived **NEW** marker.
+- `selectDisk` and `cycleDisk` IPC methods on both the service and widget targets; state snapshots expose `disks` / `diskCount` and `selectedDiskKey`.
+
+### Fixed
+
+- Scans no longer get rejected on Omarchy hosts that strip `__sourceDir` from third-party manifests; the service resolves its helper scripts relative to its own file.
+
+### Changed
+
+- Bumped the manifest and loaded service/widget identities for `0.7.0`.
+
 ## 0.6.12 — 2026-09-07
 
 ### Fixed

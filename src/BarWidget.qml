@@ -11,11 +11,15 @@ BarWidget {
 
   moduleName: "io.github.mtolhuys.disk-lens"
 
-  readonly property string buildIdentity: "disk-lens-widget-v0612"
+  readonly property string buildIdentity: "disk-lens-widget-v0700"
   readonly property var diskService: bar && bar.shell
     ? bar.shell.serviceFor("io.github.mtolhuys.disk-lens") : null
   readonly property var capacity: diskService ? diskService.capacity : Model.parseCapacity("")
   readonly property bool capacityReady: capacity && capacity.available === true
+  readonly property var disks: diskService && Array.isArray(diskService.disks) ? diskService.disks : []
+  readonly property string selectedDiskKey: diskService ? String(diskService.selectedDiskKey || "") : ""
+  // With no discovered disk, one placeholder card keeps the error visible.
+  readonly property var diskCards: disks.length > 0 ? disks : [capacity]
   readonly property bool scanRunning: diskService
     && (diskService.scanState === "scanning" || diskService.scanState === "cancelling")
   readonly property bool trashRunning: diskService && diskService.trashState === "moving"
@@ -100,6 +104,7 @@ BarWidget {
   property int agentLaunchCount: 0
   property string lastAgentPath: ""
   property string scopeDraft: Quickshell.env("HOME")
+  property string lastSyncedScope: Quickshell.env("HOME")
   property string scopeInputError: ""
   property var navigationHistory: []
   property bool folderPickerOpen: false
@@ -121,6 +126,7 @@ BarWidget {
     { keys: "Esc", action: "back" },
     { keys: "r/s", action: "scan" },
     { keys: "⇧H", action: "home" },
+    { keys: "[ ] d", action: "disk" },
     { keys: "c", action: "cancel" },
     { keys: "↑↓", action: "select" },
     { keys: "⏎/→", action: "drill" },
@@ -236,10 +242,35 @@ BarWidget {
   }
 
   function stateColor() {
-    if (!capacityReady) return Color.muted
-    if (capacity.percent >= 90) return Color.urgent
-    if (capacity.percent >= 75) return Color.accent
+    return stateColorFor(capacity)
+  }
+
+  function stateColorFor(disk) {
+    if (!disk || disk.available !== true) return Color.muted
+    if (disk.percent >= 90) return Color.urgent
+    if (disk.percent >= 75) return Color.accent
     return Color.foreground
+  }
+
+  function selectDisk(key) {
+    if (!diskService || actionBusy) return false
+    var value = String(key || "")
+    // Choosing the fallback card explicitly makes it the saved selection.
+    if (!value || (value === selectedDiskKey && !diskService.selectionFallback)) return value !== ""
+    if (diskService.lastScanPath && value !== selectedDiskKey) pushHistory(currentScope)
+    selectedPath = ""
+    scopeInputError = ""
+    if (folderPickerOpen) closeFolderPicker()
+    return diskService.selectDisk(value)
+  }
+
+  function cycleDisk(delta) {
+    if (disks.length < 2) return false
+    var index = 0
+    for (var i = 0; i < disks.length; i++) {
+      if (disks[i].key === selectedDiskKey) index = i
+    }
+    return selectDisk(disks[(index + delta + disks.length) % disks.length].key)
   }
 
   function pressureLabel() {
@@ -538,6 +569,9 @@ BarWidget {
       buildIdentity: buildIdentity,
       opened: opened,
       capacityPercent: capacityReady ? capacity.percent : -1,
+      diskCount: disks.length,
+      diskNotice: diskService ? String(diskService.diskNotice || "") : "",
+      selectedDiskKey: selectedDiskKey,
       pressure: pressureLabel(),
       scanState: diskService ? diskService.scanState : "unavailable",
       scope: currentScope,
@@ -589,7 +623,10 @@ BarWidget {
   }
 
   onCurrentScopeChanged: {
-    if (!scopeField.activeFocus) scopeDraft = currentScope
+    // Follow service-driven scope changes (disk switch or removal) unless the
+    // user is editing a different path in the focused field.
+    if (!scopeField.activeFocus || scopeDraft === lastSyncedScope) scopeDraft = currentScope
+    lastSyncedScope = currentScope
   }
 
   Connections {
@@ -740,6 +777,11 @@ BarWidget {
         }
         if (t === "c" || t === "C") {
           if (root.scanRunning && root.diskService) root.diskService.cancelScan()
+          return
+        }
+        if (t === "[" || t === "]" || t === "d" || t === "D") {
+          root.keysHelpOpen = false
+          root.cycleDisk(t === "[" || t === "D" ? -1 : 1)
           return
         }
         if (t === "v" || t === "V") {
@@ -951,79 +993,133 @@ BarWidget {
           }
         }
 
-        BorderSurface {
+        Column {
+          id: diskStack
           width: parent.width
-          implicitHeight: capacityColumn.implicitHeight + Style.space(18)
-          color: Style.normalFillFor(Color.popups.text, Color.accent)
-          borderSpec: Border.controlSpec("normal", Color.popups.text, Color.accent)
-          radius: Style.cornerRadius
+          spacing: Style.space(3)
+          Accessible.role: Accessible.List
+          Accessible.name: "Disks"
 
-          Column {
-            id: capacityColumn
-            anchors.left: parent.left
-            anchors.right: parent.right
-            anchors.verticalCenter: parent.verticalCenter
-            anchors.margins: Style.space(9)
-            spacing: Style.space(6)
+          Repeater {
+            model: root.diskCards
+            delegate: BorderSurface {
+              id: diskCard
+              required property var modelData
+              readonly property bool ready: modelData && modelData.available === true
+              readonly property bool selected: ready && modelData.key === root.selectedDiskKey
+              readonly property bool selectable: ready && root.disks.length > 1 && !root.actionBusy
+              readonly property bool fresh: ready && root.diskService
+                && Array.isArray(root.diskService.freshDiskKeys)
+                && root.diskService.freshDiskKeys.indexOf(modelData.key) >= 0
 
-            Row {
-              width: parent.width
+              width: diskStack.width
+              implicitHeight: diskColumn.implicitHeight + Style.space(14)
+              color: selected
+                ? Style.selectedFillFor(Color.popups.text, Color.accent)
+                : (diskHover.hovered && selectable
+                  ? Style.hoverFillFor(Color.popups.text, Color.accent)
+                  : Style.normalFillFor(Color.popups.text, Color.accent))
+              borderSpec: Border.controlSpec(selected ? "selected" : "normal", Color.popups.text, Color.accent)
+              radius: Style.cornerRadius
+              Accessible.role: Accessible.Button
+              Accessible.name: ready
+                ? "Disk " + Model.safeLabel(modelData.target) + ", " + modelData.percent + "% used"
+                  + (selected ? ", selected" : "")
+                : "Disk capacity unavailable"
 
               Column {
-                width: parent.width - capacityValue.width
-                spacing: Style.space(2)
+                id: diskColumn
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.verticalCenter: parent.verticalCenter
+                anchors.margins: Style.space(9)
+                spacing: Style.space(5)
 
-                Text {
+                Row {
                   width: parent.width
-                  text: root.capacityReady
-                    ? Model.safeLabel(root.capacity.target) + "  ·  " + String(root.capacity.fstype).toUpperCase()
-                    : "Home filesystem"
-                  color: Color.popups.text
-                  font.family: Style.font.family
-                  font.pixelSize: Style.font.body
-                  font.bold: true
-                  elide: Text.ElideMiddle
-                  textFormat: Text.PlainText
+
+                  Column {
+                    width: parent.width - diskValue.width
+                    spacing: Style.space(1)
+
+                    Text {
+                      width: parent.width
+                      text: diskCard.ready
+                        ? Model.safeLabel(diskCard.modelData.target) + "  ·  "
+                          + String(diskCard.modelData.fstype).toUpperCase()
+                          + (diskCard.modelData.holdsHome ? "  ·  HOME" : "")
+                          + (diskCard.fresh ? "  ·  NEW" : "")
+                        : "Local disks"
+                      color: diskCard.selected ? Color.popups.text : Util.alpha(Color.popups.text, 0.78)
+                      font.family: Style.font.family
+                      font.pixelSize: Style.font.body
+                      font.bold: diskCard.selected
+                      elide: Text.ElideMiddle
+                      textFormat: Text.PlainText
+                    }
+
+                    Text {
+                      width: parent.width
+                      text: diskCard.ready
+                        ? Model.formatBytes(diskCard.modelData.used) + " used  ·  "
+                          + Model.formatBytes(diskCard.modelData.avail) + " free  ·  "
+                          + Model.safeLabel(diskCard.modelData.source)
+                        : (root.diskService ? root.diskService.capacityError : "Waiting for the Disk Lens service")
+                      color: Color.muted
+                      font.family: Style.font.family
+                      font.pixelSize: Style.font.caption
+                      elide: Text.ElideRight
+                      textFormat: Text.PlainText
+                    }
+                  }
+
+                  Text {
+                    id: diskValue
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: diskCard.ready ? diskCard.modelData.percent + "%" : "—"
+                    color: root.stateColorFor(diskCard.modelData)
+                    font.family: Style.font.family
+                    font.pixelSize: diskCard.selected ? Style.font.title : Style.font.subtitle
+                    font.bold: true
+                    textFormat: Text.PlainText
+                  }
                 }
 
-                Text {
+                Rectangle {
                   width: parent.width
-                  text: root.capacityReady
-                    ? Model.formatBytes(root.capacity.used) + " used  ·  " + Model.formatBytes(root.capacity.avail) + " free"
-                    : (root.diskService ? root.diskService.capacityError : "Waiting for the Disk Lens service")
-                  color: Color.muted
-                  font.family: Style.font.family
-                  font.pixelSize: Style.font.caption
-                  elide: Text.ElideRight
-                  textFormat: Text.PlainText
+                  height: Style.space(diskCard.selected ? 4 : 3)
+                  radius: height / 2
+                  color: Util.alpha(Color.popups.text, 0.1)
+
+                  Rectangle {
+                    width: diskCard.ready ? parent.width * diskCard.modelData.percent / 100 : 0
+                    height: parent.height
+                    radius: height / 2
+                    color: root.stateColorFor(diskCard.modelData)
+                  }
                 }
               }
 
-              Text {
-                id: capacityValue
-                text: root.capacityReady ? root.capacity.percent + "%" : "—"
-                color: root.stateColor()
-                font.family: Style.font.family
-                font.pixelSize: Style.font.title
-                font.bold: true
-                textFormat: Text.PlainText
-              }
-            }
-
-            Rectangle {
-              width: parent.width
-              height: Style.space(4)
-              radius: height / 2
-              color: Util.alpha(Color.popups.text, 0.1)
-
-              Rectangle {
-                width: root.capacityReady ? parent.width * root.capacity.percent / 100 : 0
-                height: parent.height
-                radius: height / 2
-                color: root.stateColor()
+              HoverHandler { id: diskHover }
+              MouseArea {
+                anchors.fill: parent
+                enabled: diskCard.selectable
+                cursorShape: diskCard.selectable && !diskCard.selected ? Qt.PointingHandCursor : Qt.ArrowCursor
+                onClicked: root.selectDisk(diskCard.modelData.key)
               }
             }
           }
+        }
+
+        Text {
+          visible: text !== ""
+          width: parent.width
+          text: root.diskService ? Model.safeLabel(root.diskService.diskNotice) : ""
+          color: Color.muted
+          font.family: Style.font.family
+          font.pixelSize: Style.font.caption
+          elide: Text.ElideMiddle
+          textFormat: Text.PlainText
         }
 
         BorderSurface {
@@ -2191,6 +2287,8 @@ BarWidget {
     function scan(path: string): string { return root.requestScan(path) ? "started" : "rejected" }
     function navigate(path: string): string { return root.navigateTo(path) ? "opened" : "rejected" }
     function back(): string { return root.goBack() ? "opened" : "unavailable" }
+    function selectDisk(key: string): string { return root.selectDisk(key) ? "selected" : "rejected" }
+    function cycleDisk(delta: int): string { return root.cycleDisk(delta) ? root.selectedDiskKey : "rejected" }
     function cancel(): string { return root.diskService && root.diskService.cancelScan() ? "cancelling" : "idle" }
     function setFilter(query: string): string { root.query = query; return String(root.visibleEntries.length) }
     function setView(mode: string): string {

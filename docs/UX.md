@@ -19,7 +19,7 @@ Every bar orientation uses one square slot containing a proportional pie gauge. 
 The compact panel has five stable zones. Its header contains only the gauge, product name, pressure, and scan state. The active bar widget is the single visible panel toggle; Escape and an outside click remain additional dismissal routes. First focus goes to the editable scope on first use or search after results exist.
 
 1. slim header with the same pie gauge, pressure, and scan state;
-2. condensed Home-filesystem capacity rail with exact values;
+2. a tight stack of compact disk cards, one per local disk, each with mount target, filesystem type, used/free, device, percentage, and pressure-colored bar; the selected card uses the selected fill and border and drives the bar pie and analysis scope;
 3. editable scope, inline folder browser, Back, refresh/cancel, search, view, and filter controls;
 4. first-use/status surface or the analysis canvas;
 5. a focused selection inspector with bordered **Open · o**, **Ask Omarchy · a**, and **Trash · x** actions (**Enter / →** drills folders).
@@ -47,6 +47,8 @@ Current controls provide case-insensitive name search; files, directories, or al
 | State | Visible behavior | Recovery |
 | --- | --- | --- |
 | First use | Capacity, editable scope, folder browser, and one scan action | Scan Home or choose another scope |
+| Disk switched | Selected disk card highlighted; bar pie, tooltip, and scope follow it; its cached result or first use at its scan root | Scan, or select another disk |
+| Disk removed | Notice line under the disk stack; selection falls back to the Home disk; a scan on the removed disk is cancelled | Plug the disk back in (selection returns) or select another disk |
 | Choosing scope | Inline shallow folder list with editable path and hidden directories included | Browse, use folder, or cancel |
 | Scanning | Bar activity ring, vertical scanner stripe, status text, and a Cancel affordance while the last completed result remains intact | Cancel or wait |
 | Ready | Timestamp, shared analysis model, filtered totals, and bounded history | Refresh, drill in, or go Back |

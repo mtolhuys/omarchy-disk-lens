@@ -6,10 +6,11 @@
 
 Disk Lens is a disk usage viewer for the Omarchy bar. If you have used [WinDirStat](https://windirstat.net/) on Windows or [QDirStat](https://github.com/shundhammer/qdirstat) on Linux, you already know the idea: scan a folder and see what is taking up the space. Disk Lens shows the result as either a proportional map or a ranked list. Hidden folders are included by default, so Steam libraries and other large hidden directories are not missed.
 
-Nothing is scanned in the background. Opening the panel shows disk capacity. A folder scan starts only when you ask for one.
+Nothing is scanned in the background. Opening the panel shows the capacity of every local disk. A folder scan starts only when you ask for one.
 
 ## What it does
 
+* Lists every local disk as a stack of capacity cards; click a card (or press **[ / ]** or **d**) to analyse that disk. Disks that are mounted later, such as USB drives under `/run/media`, appear within a second; the choice is remembered across restarts and returns when an unplugged disk is plugged back in.
 * Shows the largest files and folders as a treemap or list.
 * Accepts typed paths and includes a folder picker.
 * Remembers recent results, so Back does not trigger another scan.
@@ -76,6 +77,7 @@ A muted **Keys · ?** control sits in the header. Press **?** (or click it) for 
 | **r / s** | Scan / Refresh, or Cancel while scanning |
 | **Shift + H** | Scan Home |
 | **c** | Cancel the active scan |
+| **[ / ]** (or **d / Shift + D**) | Select the previous / next disk |
 | **↑ / ↓** (or **j / k**) | Move selection in the ranked list / treemap model |
 | **Enter / →** | Drill into a folder, or open the selected item |
 | **Backspace / ←** | Go back through scan history |

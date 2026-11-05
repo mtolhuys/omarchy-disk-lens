@@ -26,6 +26,93 @@ assert.equal(Model.parseCapacity(JSON.stringify({
   filesystems: [{ size: 1000, used: 720, avail: 280, "use%": "72% full" }]
 })).available, false)
 
+const mountFixture = JSON.stringify({
+  filesystems: [
+    { source: "proc", target: "/proc", fstype: "proc", size: 0, used: 0, avail: 0, "use%": "-" },
+    { source: "/dev/mapper/root[/@]", target: "/", fstype: "btrfs", size: 1000, used: 420, avail: 580, "use%": "42%" },
+    { source: "tmpfs", target: "/tmp", fstype: "tmpfs", size: 500, used: 1, avail: 499, "use%": "1%" },
+    { source: "/dev/mapper/root[/@home]", target: "/home", fstype: "btrfs", size: 1000, used: 420, avail: 580, "use%": "42%" },
+    { source: "/dev/mapper/root[/@log]", target: "/var/log", fstype: "btrfs", size: 1000, used: 420, avail: 580, "use%": "42%" },
+    { source: "/dev/nvme0n1p1", target: "/boot", fstype: "vfat", size: 200, used: 80, avail: 120, "use%": "41%" },
+    { source: "/dev/nvme1n1p1", target: "/mnt/games", fstype: "ext4", size: 900, used: 560, avail: 340, "use%": "62%" },
+    { source: "gdrive{abc}:", target: "/home/user/GoogleDrive", fstype: "fuse.rclone", size: 16, used: 15, avail: 1, "use%": "94%" },
+    { source: "server:/export", target: "/mnt/nfs", fstype: "nfs4", size: 50, used: 5, avail: 45, "use%": "10%" },
+    { source: "/dev/loop3", target: "/snap/core/1", fstype: "squashfs", size: 60, used: 60, avail: 0, "use%": "100%" },
+    { source: "overlay", target: "/var/lib/docker/rootfs/overlayfs/x", fstype: "overlay", size: null, used: null, avail: null, "use%": null },
+    null
+  ]
+})
+const discovered = Model.parseDisks(mountFixture, "/home/user")
+assert.equal(discovered.ok, true)
+assert.equal(discovered.disks.length, 2)
+assert.equal(discovered.disks[0].key, "/dev/mapper/root")
+assert.equal(discovered.disks[0].holdsHome, true)
+assert.equal(discovered.disks[0].scanRoot, "/home/user")
+assert.equal(discovered.disks[0].target, "/")
+assert.deepEqual(discovered.disks[0].targets, ["/", "/home", "/var/log"])
+assert.equal(discovered.disks[0].percent, 42)
+assert.equal(discovered.disks[1].key, "/dev/nvme1n1p1")
+assert.equal(discovered.disks[1].fstype, "ext4")
+assert.equal(discovered.disks[1].scanRoot, "/mnt/games")
+assert.equal(discovered.disks[1].holdsHome, false)
+assert.equal(discovered.disks[1].available, true)
+assert.equal(Model.parseDisks("not json", "/home/user").ok, false)
+assert.equal(Model.parseDisks(JSON.stringify({ filesystems: [] }), "/home/user").ok, false)
+const shortestRoot = Model.parseDisks(JSON.stringify({
+  filesystems: [
+    { source: "/dev/sdb1[/@data]", target: "/srv/data/deep", fstype: "btrfs", size: 10, used: 1, avail: 9, "use%": "10%" },
+    { source: "/dev/sdb1[/@top]", target: "/srv/data", fstype: "btrfs", size: 10, used: 1, avail: 9, "use%": "10%" }
+  ]
+}), "/home/user")
+assert.equal(shortestRoot.disks.length, 1)
+assert.equal(shortestRoot.disks[0].scanRoot, "/srv/data")
+
+const removable = Model.parseDisks(JSON.stringify({
+  filesystems: [
+    { source: "/dev/mapper/root[/@home]", target: "/home", fstype: "btrfs", size: 1000, used: 420, avail: 580, "use%": "42%" },
+    { source: "/dev/sdb1", target: "/run/media/user/USB STICK", fstype: "exfat", size: 64, used: 8, avail: 56, "use%": "13%" },
+    { source: "/dev/loop0", target: "/run/media/user/DLTEST", fstype: "ext4", size: 57, used: 1, avail: 52, "use%": "0%" },
+    { source: "/dev/sdc1", target: "/media/backup", fstype: "ext4", size: 500, used: 100, avail: 400, "use%": "20%" },
+    { source: "/dev/sdd1", target: "/mnt/usb", fstype: "vfat", size: 32, used: 2, avail: 30, "use%": "7%" },
+    { source: "tmpfs", target: "/run/user/1000", fstype: "tmpfs", size: 300, used: 1, avail: 299, "use%": "0%" },
+    { source: "/dev/sde1", target: "/run/credentials/x", fstype: "ext4", size: 10, used: 1, avail: 9, "use%": "10%" },
+    { source: "portal", target: "/run/user/1000/doc", fstype: "fuse.portal", size: 0, used: 0, avail: 0, "use%": "-" },
+    { source: "/dev/sdf1", target: "/run/mediax/odd", fstype: "ext4", size: 10, used: 1, avail: 9, "use%": "10%" }
+  ]
+}), "/home/user")
+assert.deepEqual(removable.disks.map((disk) => disk.target),
+  ["/home", "/media/backup", "/mnt/usb", "/run/media/user/DLTEST", "/run/media/user/USB STICK"])
+assert.equal(Model.findDisk(removable.disks, "/dev/sdb1").scanRoot, "/run/media/user/USB STICK")
+
+const unplugged = removable.disks.filter((disk) => disk.key !== "/dev/sdb1")
+assert.deepEqual(Model.removedDisks(removable.disks, unplugged).map((disk) => disk.key), ["/dev/sdb1"])
+assert.deepEqual(Model.addedDiskKeys(unplugged, removable.disks), ["/dev/sdb1"])
+assert.deepEqual(Model.removedDisks(removable.disks, removable.disks), [])
+assert.deepEqual(Model.addedDiskKeys([], unplugged).length, unplugged.length)
+const removedStick = Model.removedDisks(removable.disks, unplugged)
+assert.equal(Model.diskForPath(removedStick, "/run/media/user/USB STICK/photos"), "/dev/sdb1")
+assert.equal(Model.diskForPath(removedStick, "/home/user"), "")
+// The saved removable disk falls back to Home while absent and returns when replugged.
+const savedStick = { source: "/dev/sdb1", target: "/run/media/user/USB STICK" }
+assert.equal(Model.chooseDisk(unplugged, savedStick), "/dev/mapper/root")
+assert.equal(Model.chooseDisk(removable.disks, savedStick), "/dev/sdb1")
+
+assert.equal(Model.diskForPath(discovered.disks, "/mnt/games/steam"), "/dev/nvme1n1p1")
+assert.equal(Model.diskForPath(discovered.disks, "/home/user/Downloads"), "/dev/mapper/root")
+assert.equal(Model.diskForPath(discovered.disks, "/mnt/gamesx"), "/dev/mapper/root")
+assert.equal(Model.diskForPath([], "/home"), "")
+assert.equal(Model.findDisk(discovered.disks, "/dev/nvme1n1p1").target, "/mnt/games")
+assert.equal(Model.findDisk(discovered.disks, "/dev/missing"), null)
+assert.equal(Model.chooseDisk(discovered.disks, { source: "/dev/nvme1n1p1", target: "/mnt/games" }), "/dev/nvme1n1p1")
+assert.equal(Model.chooseDisk(discovered.disks, { source: "/dev/nvme1n1p1", target: "/media/moved" }), "/dev/nvme1n1p1")
+assert.equal(Model.chooseDisk(discovered.disks, { source: "/dev/sdz1", target: "/media/usb" }), "/dev/mapper/root")
+assert.equal(Model.chooseDisk(discovered.disks, null), "/dev/mapper/root")
+assert.equal(Model.chooseDisk([], null), "")
+assert.deepEqual(Model.parseDiskSelection('{"source":"/dev/sda1","target":"/mnt/a"}'),
+  { source: "/dev/sda1", target: "/mnt/a" })
+assert.equal(Model.parseDiskSelection(""), null)
+assert.equal(Model.parseDiskSelection('{"source":1,"target":"/"}'), null)
+
 const scanOutput = [
   record({ type: "start", path: "/fixture" }),
   record({
@@ -307,4 +394,4 @@ assert.equal(Model.resultsViewHeight({
   minViewHeight: 0
 }), 153)
 
-console.log("ok - model, protocol, filters, formatting, treemap, and panel layout budget")
+console.log("ok - model, disk discovery, protocol, filters, formatting, treemap, and panel layout budget")

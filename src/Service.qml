@@ -12,16 +12,36 @@ Item {
   property var barWidgetRegistry: null
   property string omarchyPath: ""
 
-  readonly property string buildIdentity: "disk-lens-service-v0612"
+  readonly property string buildIdentity: "disk-lens-service-v0700"
   readonly property string homePath: Quickshell.env("HOME")
-  readonly property string sourceDir: manifest ? String(manifest.__sourceDir || "") : ""
+  // Newer Omarchy hosts strip __sourceDir from third-party manifests, so fall
+  // back to the plugin root resolved relative to this file.
+  readonly property string sourceDir: manifest && manifest.__sourceDir
+    ? String(manifest.__sourceDir)
+    : decodeURIComponent(String(Qt.resolvedUrl("..")).replace(/^file:\/\//, "").replace(/\/$/, ""))
   readonly property string scannerPath: sourceDir ? sourceDir + "/scripts/disk-lens-scan" : ""
   readonly property string trashHelperPath: sourceDir ? sourceDir + "/scripts/disk-lens-trash" : ""
+  readonly property string stateDir: (Quickshell.env("XDG_STATE_HOME") || homePath + "/.local/state")
+    + "/omarchy-disk-lens"
+  readonly property string selectionPath: stateDir + "/selected-disk.json"
 
   property var capacity: Model.parseCapacity("")
   property string capacityState: "loading"
   property string capacityError: ""
   property double capacityUpdatedAt: 0
+  property var disks: []
+  property string selectedDiskKey: ""
+  property bool diskSelectionRestored: false
+  property string pendingSelectionText: ""
+  property var savedSelection: null
+  property bool selectionFallback: false
+  property bool fallbackAfterCancel: false
+  property string diskNotice: ""
+  property var freshDiskKeys: []
+  property bool refreshPending: false
+  property bool mountWatcherStopping: false
+  property int mountWatcherRestarts: 0
+  property double mountWatcherStartedAt: 0
 
   property string scanState: "idle"
   property string scanPath: homePath
@@ -62,6 +82,153 @@ Item {
     return true
   }
 
+  function selectedDisk() {
+    return Model.findDisk(disks, selectedDiskKey)
+  }
+
+  function applyDisks(raw) {
+    var result = Model.parseDisks(raw, homePath)
+    if (!result.ok) {
+      disks = result.disks
+      capacity = Model.parseCapacity("")
+      capacityState = "failed"
+      capacityError = result.error
+      return
+    }
+
+    var previous = disks
+    disks = result.disks
+    capacityState = "ready"
+    capacityError = ""
+
+    if (!diskSelectionRestored) {
+      diskSelectionRestored = true
+      try {
+        savedSelection = Model.parseDiskSelection(selectionFile.text())
+      } catch (error) {
+        savedSelection = null
+      }
+      var initialKey = Model.chooseDisk(disks, savedSelection)
+      // A saved disk that is not mounted yet is selected once it appears.
+      selectionFallback = savedSelection !== null
+        && Model.findDisk(disks, initialKey).source !== savedSelection.source
+      setSelectedDisk(initialKey, false, false)
+      return
+    }
+
+    var added = Model.addedDiskKeys(previous, disks)
+    if (added.length > 0) {
+      freshDiskKeys = added
+      freshDiskTimer.restart()
+    }
+    var removed = Model.removedDisks(previous, disks)
+    var scopeRemoved = removed.length > 0 && Model.diskForPath(removed, lastScanPath || scanPath) !== ""
+    if (removed.length > 0) forgetRemovedDisks(removed)
+
+    if (!selectedDisk()) {
+      // The selected disk disappeared (for example, unplugged). Fall back
+      // without overwriting the saved choice so it returns when remounted.
+      selectionFallback = true
+      if (!diskNotice) diskNotice = "Disk " + Model.safeLabel(removed.length ? removed[0].target : "")
+        + " was removed."
+      setSelectedDisk(Model.chooseDisk(disks, savedSelection), false, true)
+      return
+    }
+
+    var savedKey = savedSelection ? Model.chooseDisk(disks, savedSelection) : ""
+    var savedDisk = Model.findDisk(disks, savedKey)
+    if (selectionFallback && savedDisk && savedDisk.source === savedSelection.source
+        && savedKey !== selectedDiskKey && !scanProcess.running && !trashProcess.running) {
+      // The saved disk returned: select it again without rewriting the file.
+      selectionFallback = false
+      diskNotice = ""
+      setSelectedDisk(savedKey, false, false)
+      return
+    }
+    capacity = selectedDisk()
+    if (scopeRemoved) setSelectedDisk(selectedDiskKey, false, true)
+  }
+
+  // Drops cached results that belong to unmounted disks (their contents may
+  // differ when remounted) and cancels a scan running on one of them.
+  function forgetRemovedDisks(removed) {
+    var kept = []
+    for (var index = 0; index < scanCache.length; index++) {
+      var snapshot = scanCache[index]
+      if (snapshot && !Model.diskForPath(removed, snapshot.path)) kept.push(snapshot)
+    }
+    scanCache = kept
+
+    if (scanProcess.running && Model.diskForPath(removed, scanPath)) {
+      fallbackAfterCancel = true
+      cancelScan()
+      diskNotice = "Disk " + Model.safeLabel(removed[0].target) + " was removed; its scan was cancelled."
+    }
+  }
+
+  // Selects a disk and points the analysis scope at its scan root. A cached
+  // result is restored; otherwise the analysis returns to first-use state.
+  // Selection never starts a recursive scan.
+  // force resets the analysis even when the current scope still resolves to
+  // this disk, which happens when the scope belonged to an unmounted disk.
+  function setSelectedDisk(key, persist, force) {
+    var disk = Model.findDisk(disks, key)
+    if (!disk) return false
+    selectedDiskKey = disk.key
+    capacity = disk
+    if (persist) saveDiskSelection(disk)
+    if (scanProcess.running || trashProcess.running) return true
+    if (!force && Model.diskForPath(disks, lastScanPath || scanPath) === disk.key) return true
+    if (restoreCachedScan(disk.scanRoot)) return true
+    entries = []
+    totalBytes = 0
+    warnings = []
+    warningCount = 0
+    partial = false
+    lastScanPath = ""
+    scanPath = disk.scanRoot
+    scannedAt = 0
+    scanState = "idle"
+    scanError = ""
+    resultFromCache = false
+    return true
+  }
+
+  function selectDisk(key) {
+    if (scanProcess.running || trashProcess.running) return false
+    if (!Model.findDisk(disks, String(key || ""))) return false
+    selectionFallback = false
+    diskNotice = ""
+    return setSelectedDisk(String(key || ""), true, false)
+  }
+
+  function cycleDisk(delta) {
+    if (disks.length < 2) return false
+    var index = 0
+    for (var i = 0; i < disks.length; i++) {
+      if (disks[i].key === selectedDiskKey) index = i
+    }
+    var next = (index + delta + disks.length) % disks.length
+    return selectDisk(disks[next].key)
+  }
+
+  // Keeps the capacity view on the disk that holds the analysed scope.
+  function syncDiskForPath(path) {
+    var key = Model.diskForPath(disks, path)
+    if (!key || key === selectedDiskKey) return
+    selectedDiskKey = key
+    capacity = selectedDisk()
+    selectionFallback = false
+    diskNotice = ""
+    saveDiskSelection(capacity)
+  }
+
+  function saveDiskSelection(disk) {
+    savedSelection = { source: disk.source, target: disk.target }
+    pendingSelectionText = JSON.stringify({ source: disk.source, target: disk.target }) + "\n"
+    if (!selectionDirProcess.running) selectionDirProcess.running = true
+  }
+
   function validScanPath(path) {
     var value = String(path || "")
     return value.length > 0 && value.length <= 4096 && value.charAt(0) === "/" && value.indexOf("\u0000") < 0
@@ -72,6 +239,7 @@ Item {
     if (scanProcess.running || trashProcess.running || !validScanPath(selectedPath) || !scannerPath) return false
 
     scanPath = selectedPath
+    syncDiskForPath(selectedPath)
     scanError = ""
     expectedStop = false
     scanOutput = ""
@@ -131,6 +299,7 @@ Item {
       scanError = ""
       resultFromCache = true
       cacheHitCount += 1
+      syncDiskForPath(snapshot.path)
 
       var refreshedCache = [snapshot]
       for (var cacheIndex = 0; cacheIndex < scanCache.length; cacheIndex++) {
@@ -217,6 +386,7 @@ Item {
     scanState = partial ? "partial" : "ready"
     scanError = ""
     resultFromCache = false
+    syncDiskForPath(lastScanPath)
     cacheResult({
       path: lastScanPath,
       entries: entries.slice(),
@@ -234,6 +404,14 @@ Item {
       buildIdentity: buildIdentity,
       capacityState: capacityState,
       capacity: capacity,
+      disks: disks,
+      selectedDiskKey: selectedDiskKey,
+      savedSelection: savedSelection,
+      selectionFallback: selectionFallback,
+      diskNotice: diskNotice,
+      freshDiskKeys: freshDiskKeys,
+      mountWatcherRunning: mountWatcher.running,
+      selectionPath: selectionPath,
       scanState: scanState,
       scanPath: scanPath,
       lastScanPath: lastScanPath,
@@ -257,7 +435,7 @@ Item {
 
   Process {
     id: capacityProcess
-    command: ["findmnt", "--json", "--bytes", "--target", root.homePath,
+    command: ["findmnt", "--json", "--bytes", "--list",
       "--output", "SOURCE,TARGET,FSTYPE,SIZE,USED,AVAIL,USE%"]
     stdout: StdioCollector {
       id: capacityStdout
@@ -273,11 +451,73 @@ Item {
         root.capacityError = Model.diagnosticText(capacityStderr.text, "Could not read filesystem capacity")
         return
       }
-      var parsed = Model.parseCapacity(capacityStdout.text)
-      root.capacity = parsed
-      root.capacityState = parsed.available ? "ready" : "failed"
-      root.capacityError = parsed.error
+      root.applyDisks(capacityStdout.text)
       root.capacityUpdatedAt = Date.now()
+    }
+    onRunningChanged: {
+      if (!running && root.refreshPending) {
+        root.refreshPending = false
+        Qt.callLater(root.refreshCapacity)
+      }
+    }
+  }
+
+  // Mount table watcher: each event line schedules one debounced discovery,
+  // so newly mounted or removed disks appear without waiting for the timer.
+  Process {
+    id: mountWatcher
+    command: ["findmnt", "--poll", "--list", "--noheadings", "--output", "ACTION,TARGET"]
+    stdout: SplitParser {
+      onRead: function(line) { mountEventTimer.restart() }
+    }
+    onRunningChanged: if (running) root.mountWatcherStartedAt = Date.now()
+    onExited: function(exitCode) {
+      if (root.mountWatcherStopping) return
+      if (Date.now() - root.mountWatcherStartedAt > 30000) root.mountWatcherRestarts = 0
+      mountWatcherRestartTimer.interval = Math.min(60000, 1000 * Math.pow(2, root.mountWatcherRestarts))
+      root.mountWatcherRestarts += 1
+      mountWatcherRestartTimer.restart()
+    }
+  }
+
+  Timer {
+    id: mountEventTimer
+    interval: 400
+    repeat: false
+    onTriggered: if (!root.refreshCapacity()) root.refreshPending = true
+  }
+
+  Timer {
+    id: mountWatcherRestartTimer
+    repeat: false
+    onTriggered: {
+      if (root.mountWatcherStopping) return
+      mountWatcher.running = true
+      // Events may have been missed while the watcher was down.
+      if (!root.refreshCapacity()) root.refreshPending = true
+    }
+  }
+
+  Timer {
+    id: freshDiskTimer
+    interval: 8000
+    repeat: false
+    onTriggered: root.freshDiskKeys = []
+  }
+
+  FileView {
+    id: selectionFile
+    path: root.selectionPath
+    blockLoading: true
+    watchChanges: false
+    printErrors: false
+  }
+
+  Process {
+    id: selectionDirProcess
+    command: ["mkdir", "-p", "--", root.stateDir]
+    onExited: function(exitCode) {
+      if (exitCode === 0 && root.pendingSelectionText) selectionFile.setText(root.pendingSelectionText)
     }
   }
 
@@ -341,6 +581,10 @@ Item {
         root.expectedStop = false
         root.scanState = "cancelled"
         root.scanError = ""
+        if (root.fallbackAfterCancel) {
+          root.fallbackAfterCancel = false
+          root.setSelectedDisk(root.selectedDiskKey, false, true)
+        }
         return
       }
 
@@ -378,6 +622,8 @@ Item {
 
     function state(): string { return JSON.stringify(root.stateSnapshot()) }
     function refreshCapacity(): string { return root.refreshCapacity() ? "started" : "busy" }
+    function selectDisk(key: string): string { return root.selectDisk(key) ? "selected" : "rejected" }
+    function cycleDisk(delta: int): string { return root.cycleDisk(delta) ? root.selectedDiskKey : "rejected" }
     function scan(path: string): string { return root.startScan(path) ? "started" : "rejected" }
     function restore(path: string): string { return root.restoreCachedScan(path) ? "restored" : "missing" }
     function cancel(): string { return root.cancelScan() ? "cancelling" : "idle" }
@@ -386,9 +632,12 @@ Item {
 
   Component.onCompleted: {
     refreshCapacity()
+    mountWatcher.running = true
   }
 
   Component.onDestruction: {
+    mountWatcherStopping = true
+    if (mountWatcher.running) mountWatcher.running = false
     if (scanProcess.running) {
       expectedStop = true
       scanProcess.running = false
