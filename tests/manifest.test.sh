@@ -9,7 +9,7 @@ readonly manifest="$project_root/manifest.json"
 jq -e '
   .schemaVersion == 1
   and .id == "io.github.mtolhuys.disk-lens"
-  and .version == "0.6.12"
+  and .version == "0.7.0"
   and (.kinds | sort == ["bar-widget", "service"])
   and .entryPoints.service == "src/Service.qml"
   and .entryPoints.barWidget == "src/BarWidget.qml"
@@ -23,8 +23,8 @@ while IFS= read -r entry_point; do
   [[ -f $project_root/$entry_point ]]
 done < <(jq -r '.entryPoints[]' "$manifest")
 
-rg -F 'disk-lens-service-v0612' "$project_root/src/Service.qml" >/dev/null
-rg -F 'disk-lens-widget-v0612' "$project_root/src/BarWidget.qml" >/dev/null
+rg -F 'disk-lens-service-v0700' "$project_root/src/Service.qml" >/dev/null
+rg -F 'disk-lens-widget-v0700' "$project_root/src/BarWidget.qml" >/dev/null
 [[ -x $project_root/scripts/disk-lens-trash ]]
 [[ -x $project_root/scripts/disk-lens-open ]]
 rg -F 'openHelperPath' "$project_root/src/BarWidget.qml" >/dev/null
@@ -59,6 +59,21 @@ if rg -n 'panelBudget: panelContentBudget' "$project_root/src/BarWidget.qml"; th
 fi
 if rg -n 'fittedContentHeight\(Math\.min\(panelColumn\.implicitHeight' "$project_root/src/BarWidget.qml"; then
   echo "panel height must use the two-argument fittedContentHeight cap" >&2
+  exit 1
+fi
+# Disk discovery stays one cheap structural findmnt call; selection persists
+# to a state file and never starts a recursive scan.
+rg -F '"findmnt", "--json", "--bytes", "--list",' "$project_root/src/Service.qml" >/dev/null
+rg -F 'Model.parseDisks(raw, homePath)' "$project_root/src/Service.qml" >/dev/null
+rg -F '/omarchy-disk-lens' "$project_root/src/Service.qml" >/dev/null
+rg -F 'selected-disk.json' "$project_root/src/Service.qml" >/dev/null
+rg -F 'id: diskStack' "$project_root/src/BarWidget.qml" >/dev/null
+rg -F '["findmnt", "--poll", "--list", "--noheadings", "--output", "ACTION,TARGET"]' \
+  "$project_root/src/Service.qml" >/dev/null
+sed -n '/Component.onDestruction: {/,/^  }$/p' "$project_root/src/Service.qml" \
+  | rg -F 'mountWatcher.running = false' >/dev/null
+if sed -n '/function setSelectedDisk(/,/^  }$/p' "$project_root/src/Service.qml" | rg -F 'startScan(' >/dev/null; then
+  echo "disk selection must not start a recursive scan" >&2
   exit 1
 fi
 rg -F 'ScanRadar' "$project_root/src/BarWidget.qml" >/dev/null

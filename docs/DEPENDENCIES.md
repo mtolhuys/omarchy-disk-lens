@@ -10,7 +10,7 @@ A public minimum supported Omarchy release has not yet been declared; clean-clon
 
 Runtime code uses commands supplied by the tested Omarchy/Arch environment:
 
-- `findmnt` from util-linux for byte-oriented Home-filesystem capacity;
+- `findmnt` from util-linux for byte-oriented local disk discovery and capacity;
 - GNU `du`, `find`, `stat`, `realpath`, `base64`, `nproc`, and `mktemp` for the bundled scan and folder-browser helpers;
 - `jq` and `iconv` for strict NDJSON records and UTF-8 classification;
 - `uwsm-app`, `xdg-open`, `xdg-mime`, `flea --select` or FreeDesktop `FileManager1.ShowItems` (via `gdbus`) for safe Open/reveal, `gio trash`, and `omarchy agent prompt` for desktop integration.

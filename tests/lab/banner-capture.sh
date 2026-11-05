@@ -3,7 +3,7 @@
 # README / marketplace banner capture for Omarchy Disk Lens.
 # Runs only in the disposable Omarchy Plugin Lab guest — never on the daily host.
 # Captures the quiet premium scan beam, selection detail actions, Keys sheet,
-# and list view from the CURRENT working-tree candidate (0.6.12+).
+# and list view from the CURRENT working-tree candidate (0.7.0+).
 
 park_pointer_outside_panel() {
   local response
@@ -74,12 +74,12 @@ omarchy_host_test() {
     rm -rf \"$plugin_dir\" && git clone -q /tmp/disk-lens-candidate \"$plugin_dir\""
   ssh_session "cd /tmp/disk-lens-candidate && make update"
 
-  wait_for_guest_state "Disk Lens 0.6.12 is installed and loaded" 25 ssh_session \
+  wait_for_guest_state "Disk Lens 0.7.0 is installed and loaded" 25 ssh_session \
     "omarchy-plugin-list --json | jq -e 'any(.[]; .id == \"io.github.mtolhuys.disk-lens\" and .enabled == true)' && \
-     jq -e '.version == \"0.6.12\"' \"$plugin_dir/manifest.json\" && \
+     jq -e '.version == \"0.7.0\"' \"$plugin_dir/manifest.json\" && \
      omarchy-shell disk-lens-service state | jq -e \
-       '.buildIdentity == \"disk-lens-service-v0612\" and (.capacityState == \"ready\" or .capacityState == \"loading\")' && \
-     omarchy-shell disk-lens state | jq -e '.buildIdentity == \"disk-lens-widget-v0612\" and .opened == false'" || {
+       '.buildIdentity == \"disk-lens-service-v0700\" and (.capacityState == \"ready\" or .capacityState == \"loading\")' && \
+     omarchy-shell disk-lens state | jq -e '.buildIdentity == \"disk-lens-widget-v0700\" and .opened == false'" || {
     ssh_session "omarchy-shell shell listPlugins || true; \
       jq . \"$plugin_dir/manifest.json\" || true; \
       omarchy-shell disk-lens-service state || true; \
@@ -104,7 +104,7 @@ omarchy_host_test() {
   # Keys · ? sits in the panel header actions; List/Map toggle shares the filter row.
   view_button_x=$((screen_width - 55))
   filter_y=218
-  printf '%s\n' "{\"viewport\":[${screen_width},${screen_height}],\"version\":\"0.6.12\",\"themes\":[\"Tokyo Night\",\"Catppuccin Latte\",\"Matte Black\"],\"layout\":\"dark-light-dark\"}" \
+  printf '%s\n' "{\"viewport\":[${screen_width},${screen_height}],\"version\":\"0.7.0\",\"themes\":[\"Tokyo Night\",\"Catppuccin Latte\",\"Matte Black\"],\"layout\":\"dark-light-dark\"}" \
     >"$RUN_DIR/disk-lens-banner-geometry.json"
 
   qmp_pointer_tap "$screen_width" "$screen_height" "$icon_x" "$icon_y" left

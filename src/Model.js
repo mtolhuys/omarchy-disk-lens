@@ -83,6 +83,186 @@ function parseCapacity(raw) {
   }
 }
 
+var MAX_DISKS = 16
+var EXCLUDED_DISK_FSTYPES = [
+  "tmpfs", "devtmpfs", "ramfs", "squashfs", "overlay", "autofs", "swap",
+  "nfs", "nfs4", "cifs", "smb3", "smbfs", "9p", "virtiofs", "ceph",
+  "glusterfs", "davfs", "afs", "efivarfs", "proc", "sysfs", "devpts",
+  "cgroup", "cgroup2", "nsfs", "iso9660"
+]
+var EXCLUDED_DISK_TARGETS = ["/boot", "/efi", "/proc", "/sys", "/dev", "/snap", "/var/lib/docker"]
+
+function pathWithin(path, parent) {
+  if (parent === "/") return path.charAt(0) === "/"
+  return path === parent || path.indexOf(parent + "/") === 0
+}
+
+function excludedDiskMount(fstype, target) {
+  if (fstype.indexOf("fuse") === 0 || EXCLUDED_DISK_FSTYPES.indexOf(fstype) >= 0) return true
+  for (var index = 0; index < EXCLUDED_DISK_TARGETS.length; index++) {
+    if (pathWithin(target, EXCLUDED_DISK_TARGETS[index])) return true
+  }
+  // udisks mounts removable media under /run/media/$USER; every other /run
+  // mount is runtime state.
+  return pathWithin(target, "/run") && !pathWithin(target, "/run/media")
+}
+
+// Parses `findmnt --json --bytes --list` output into one capacity record per
+// local block device. Btrfs subvolume mounts share one source device and are
+// collapsed; the record keeps every mount target for path lookups.
+function parseDisks(raw, homePath) {
+  var payload
+  try {
+    payload = JSON.parse(String(raw || ""))
+  } catch (error) {
+    return { ok: false, disks: [], error: "Filesystem data was not valid JSON" }
+  }
+  if (!plainObject(payload) || !Array.isArray(payload.filesystems))
+    return { ok: false, disks: [], error: "Filesystem data did not list mounts" }
+
+  var home = String(homePath || "")
+  var byKey = {}
+  var order = []
+  var homeKey = ""
+  var homeTargetLength = -1
+  for (var index = 0; index < payload.filesystems.length; index++) {
+    var fs = payload.filesystems[index]
+    if (!plainObject(fs)) continue
+    var source = String(fs.source || "").replace(/\[[^\]]*\]$/, "")
+    var target = String(fs.target || "")
+    var fstype = String(fs.fstype || "")
+    var percentMatch = /^([0-9]{1,3})%$/.exec(String(fs["use%"] || ""))
+    var percent = percentMatch ? Number(percentMatch[1]) : NaN
+    if (!source || target.charAt(0) !== "/" || target.length > MAX_PATH_LENGTH
+        || excludedDiskMount(fstype, target)
+        || !finiteBytes(fs.size) || Number(fs.size) <= 0
+        || !finiteBytes(fs.used) || !finiteBytes(fs.avail)
+        || !isFinite(percent) || percent > 100)
+      continue
+
+    var disk = byKey[source]
+    if (!disk) {
+      if (order.length >= MAX_DISKS) continue
+      disk = {
+        available: true,
+        key: source,
+        source: source,
+        target: target,
+        targets: [],
+        scanRoot: target,
+        holdsHome: false,
+        fstype: fstype,
+        size: Number(fs.size),
+        used: Number(fs.used),
+        avail: Number(fs.avail),
+        percent: percent,
+        error: ""
+      }
+      byKey[source] = disk
+      order.push(disk)
+    }
+    disk.targets.push(target)
+    if (target.length < disk.target.length) {
+      disk.target = target
+      disk.scanRoot = target
+    }
+    if (home && pathWithin(home, target) && target.length > homeTargetLength) {
+      homeKey = source
+      homeTargetLength = target.length
+    }
+  }
+
+  if (order.length === 0) return { ok: false, disks: [], error: "No local disks were found" }
+  var homeDisk = homeKey ? byKey[homeKey] : null
+  if (homeDisk) {
+    homeDisk.holdsHome = true
+    homeDisk.scanRoot = home
+  }
+  order.sort(function(left, right) {
+    if (left.holdsHome !== right.holdsHome) return left.holdsHome ? -1 : 1
+    return left.target < right.target ? -1 : (left.target > right.target ? 1 : 0)
+  })
+  return { ok: true, disks: order, error: "" }
+}
+
+function findDisk(disks, key) {
+  var list = Array.isArray(disks) ? disks : []
+  for (var index = 0; index < list.length; index++) {
+    if (list[index] && list[index].key === key) return list[index]
+  }
+  return null
+}
+
+// Chooses the disk to show: the saved source+target, then the saved source
+// alone (remounted elsewhere), then the Home disk, then the first disk.
+function chooseDisk(disks, saved) {
+  var list = Array.isArray(disks) ? disks : []
+  if (list.length === 0) return ""
+  var wanted = plainObject(saved) ? saved : {}
+  var sourceMatch = ""
+  for (var index = 0; index < list.length; index++) {
+    if (list[index].source !== wanted.source) continue
+    if (list[index].target === wanted.target) return list[index].key
+    if (!sourceMatch) sourceMatch = list[index].key
+  }
+  if (sourceMatch) return sourceMatch
+  for (var homeIndex = 0; homeIndex < list.length; homeIndex++) {
+    if (list[homeIndex].holdsHome) return list[homeIndex].key
+  }
+  return list[0].key
+}
+
+// Returns the key of the disk whose mount target is the longest prefix of path.
+function diskForPath(disks, path) {
+  var value = String(path || "")
+  var list = Array.isArray(disks) ? disks : []
+  var bestKey = ""
+  var bestLength = -1
+  for (var index = 0; index < list.length; index++) {
+    var targets = list[index].targets || []
+    for (var targetIndex = 0; targetIndex < targets.length; targetIndex++) {
+      var target = targets[targetIndex]
+      if (pathWithin(value, target) && target.length > bestLength) {
+        bestKey = list[index].key
+        bestLength = target.length
+      }
+    }
+  }
+  return bestKey
+}
+
+// Returns the disks of previous whose key is absent from next.
+function removedDisks(previous, next) {
+  var before = Array.isArray(previous) ? previous : []
+  var removed = []
+  for (var index = 0; index < before.length; index++) {
+    if (before[index] && !findDisk(next, before[index].key)) removed.push(before[index])
+  }
+  return removed
+}
+
+// Returns the keys of next that previous did not contain.
+function addedDiskKeys(previous, next) {
+  var after = Array.isArray(next) ? next : []
+  var added = []
+  for (var index = 0; index < after.length; index++) {
+    if (after[index] && !findDisk(previous, after[index].key)) added.push(after[index].key)
+  }
+  return added
+}
+
+function parseDiskSelection(raw) {
+  try {
+    var value = JSON.parse(String(raw || ""))
+    if (plainObject(value) && typeof value.source === "string" && typeof value.target === "string"
+        && value.source.length <= MAX_PATH_LENGTH && value.target.length <= MAX_PATH_LENGTH)
+      return { source: value.source, target: value.target }
+  } catch (error) {
+    return null
+  }
+  return null
+}
+
 function parseScan(raw) {
   var lines = String(raw || "").split("\n")
   var started = null
@@ -549,6 +729,13 @@ if (typeof module !== "undefined") {
     MAX_WARNINGS: MAX_WARNINGS,
     MAX_AGENT_PATH_LENGTH: MAX_AGENT_PATH_LENGTH,
     parseCapacity: parseCapacity,
+    parseDisks: parseDisks,
+    findDisk: findDisk,
+    chooseDisk: chooseDisk,
+    diskForPath: diskForPath,
+    removedDisks: removedDisks,
+    addedDiskKeys: addedDiskKeys,
+    parseDiskSelection: parseDiskSelection,
     parseScan: parseScan,
     parseFolderList: parseFolderList,
     formatBytes: formatBytes,
